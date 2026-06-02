@@ -2,6 +2,7 @@
   "name": "byteforge",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "pnpm@10.33.0",
   "description": "ByteForge - 数字熔炉 | Tech Blog",
   "type": "module",
   "scripts": {
