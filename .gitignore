@@ -1,0 +1,14 @@
+node_modules/
+dist/
+
+.superpowers/
+.tmp-chrome-cdp-profile/
+.tmp-chrome-cdp.pid
+
+*.log
+dev-server.out.log
+dev-server.err.log
+docs/byteforge-homepage-*.png
+
+.DS_Store
+Thumbs.db
