@@ -200,15 +200,15 @@ body {
     z-index: 2;
     pointer-events: none;
     background:
-      radial-gradient(circle at 50% 49%, rgba(242,244,234,.40) 0%, rgba(232,200,79,.16) 10%, rgba(255,106,26,.052) 28%, rgba(142,192,124,.035) 50%, transparent 72%);
+      radial-gradient(circle at 50% 49%, rgba(242,244,234,.42) 0%, rgba(232,200,79,.15) 12%, rgba(255,106,26,.044) 34%, rgba(142,192,124,.032) 62%, transparent 88%);
     mix-blend-mode: screen;
     filter: none;
     animation: light-breathe 3.4s cubic-bezier(.37,0,.24,1) infinite alternate;
   }
 
   @keyframes light-breathe {
-    from { opacity: .32; transform: translate3d(var(--parallax-light-x), var(--parallax-light-y), 0) scale(.985); }
-    to { opacity: .56; transform: translate3d(var(--parallax-light-x), var(--parallax-light-y), 0) scale(1.045); }
+    from { opacity: .34; transform: translate3d(var(--parallax-light-x), var(--parallax-light-y), 0) scale(.985); }
+    to { opacity: .60; transform: translate3d(var(--parallax-light-x), var(--parallax-light-y), 0) scale(1.055); }
   }
 
   .hotspot {
@@ -223,9 +223,9 @@ body {
     background: rgba(251,241,199,.98);
     box-shadow:
       0 0 32px rgba(251,241,199,.98),
-      0 0 112px rgba(232,200,79,.62),
-      0 0 220px rgba(255,106,26,.30),
-      0 0 380px rgba(142,192,124,.16);
+      0 0 132px rgba(232,200,79,.58),
+      0 0 280px rgba(255,106,26,.24),
+      0 0 520px rgba(142,192,124,.14);
     filter: blur(1.2px) saturate(1.06);
     animation:
       ignition 1.55s 1.08s cubic-bezier(.19,1,.22,1) both,
@@ -254,20 +254,6 @@ body {
     flex-direction: column;
     justify-content: space-between;
     width: min(540px, calc(100% - 80px));
-    pointer-events: none;
-  }
-
-  .left-panel-container::before {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    left: -40px;
-    top: -30px;
-    width: min(620px, calc(100vw - 24px));
-    height: 170px;
-    background:
-      linear-gradient(90deg, rgba(13,20,21,.92) 0%, rgba(13,20,21,.72) 56%, transparent 100%),
-      radial-gradient(ellipse at 24% 50%, rgba(13,20,21,.90), transparent 68%);
     pointer-events: none;
   }
 
