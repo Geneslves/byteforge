@@ -4,6 +4,40 @@ import { routeData, planetRoutes } from './content.js';
     const hub = document.querySelector('[data-boot-scope="byteforge-home"]');
     if (!hub) return;
 
+    // 主题管理
+    const THEME_KEY = 'byteforge:theme';
+    const themes = {
+      dark: {
+        name: '深色模式',
+        icon: '🌙'
+      },
+      light: {
+        name: '亮色模式',
+        icon: '☀️'
+      }
+    };
+
+    const initTheme = () => {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      hub.dataset.theme = savedTheme;
+      return savedTheme;
+    };
+
+    const toggleTheme = () => {
+      const current = hub.dataset.theme || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      hub.dataset.theme = next;
+      localStorage.setItem(THEME_KEY, next);
+
+      // 触发主题切换动画
+      hub.classList.add('theme-switching');
+      setTimeout(() => hub.classList.remove('theme-switching'), 400);
+
+      return next;
+    };
+
+    const currentTheme = initTheme();
+
     const skipKey = 'byteforge:skip-home-boot';
     const navEntry = performance.getEntriesByType('navigation')[0];
     const isRouteReturn = navEntry?.type === 'back_forward' || sessionStorage.getItem(skipKey) === '1';
@@ -88,12 +122,14 @@ import { routeData, planetRoutes } from './content.js';
 
       if (!routeView || !config) {
         hub.classList.remove('is-content-route');
-        if (routeView) routeView.hidden = true;
+        if (routeView) {
+          routeView.hidden = true;
+          routeView.innerHTML = '';
+        }
         return;
       }
 
-      hub.classList.add('is-content-route', 'is-route-return');
-      routeView.hidden = false;
+      // 先填充内容
       routeView.innerHTML = `
         <div class="route-kicker">
           <span>${escapeHtml(config.kicker)}</span>
@@ -106,6 +142,58 @@ import { routeData, planetRoutes } from './content.js';
         ` : ''}
         ${renderEntries(config.entries, config.search?.emptyText)}
       `;
+
+      // 显示卡片
+      routeView.hidden = false;
+
+      // 添加背景样式
+      hub.classList.add('is-content-route', 'is-route-return');
+
+      // 点击卡片外部返回首页（带动画）
+      const handleOutsideClick = (event) => {
+        if (!routeView.contains(event.target) &&
+            !event.target.closest('.cli-nav') &&
+            !event.target.closest('.theme-toggle') &&
+            event.target.closest('[data-boot-scope="byteforge-home"]')) {
+
+          // 防止重复触发
+          if (hub.dataset.returning) return;
+          hub.dataset.returning = 'true';
+
+          // 添加退出动画
+          routeView.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+          routeView.style.opacity = '0';
+          routeView.style.transform = 'translateY(-50%) scale(0.96)';
+
+          setTimeout(() => {
+            // 清除 is-content-route 类，恢复首页状态
+            hub.classList.remove('is-content-route');
+            hub.classList.add('is-route-return');
+            routeView.hidden = true;
+            routeView.innerHTML = '';
+
+            // 重置样式
+            routeView.style.transition = '';
+            routeView.style.opacity = '';
+            routeView.style.transform = '';
+
+            // 更新 URL
+            history.pushState(null, '', '/');
+
+            // 移除事件监听器
+            hub.removeEventListener('click', hub._outsideClickHandler);
+            delete hub._outsideClickHandler;
+            delete hub.dataset.returning;
+
+            sessionStorage.setItem(skipKey, '1');
+          }, 350);
+        }
+      };
+
+      // 移除旧的监听器（如果有）
+      hub.removeEventListener('click', hub._outsideClickHandler);
+      hub._outsideClickHandler = handleOutsideClick;
+      hub.addEventListener('click', handleOutsideClick);
 
       const searchInput = routeView.querySelector('[data-route-search]');
       if (searchInput) {
@@ -227,4 +315,20 @@ import { routeData, planetRoutes } from './content.js';
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) hub.classList.add('is-route-return');
     });
+
+    // 主题切换按钮
+    const themeToggle = hub.querySelector('.theme-toggle');
+    if (themeToggle) {
+      const updateThemeIcon = (theme) => {
+        const icon = themeToggle.querySelector('.theme-icon');
+        if (icon) icon.textContent = themes[theme].icon;
+      };
+
+      updateThemeIcon(currentTheme);
+
+      themeToggle.addEventListener('click', () => {
+        const newTheme = toggleTheme();
+        updateThemeIcon(newTheme);
+      });
+    }
   })();

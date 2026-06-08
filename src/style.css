@@ -58,6 +58,16 @@ body {
     --blur-light: blur(1.25px);
     --blur-soft: blur(3px);
     --blur-strong: blur(8px);
+    --transition-fast: 0.15s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+    --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+    --ease-smooth: cubic-bezier(.4, 0, .2, 1);
+    --transition-fast: 0.15s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+    --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+    --ease-smooth: cubic-bezier(.4, 0, .2, 1);
     --parallax-back-x: 0px;
     --parallax-back-y: 0px;
     --parallax-star-x: 0px;
@@ -465,6 +475,17 @@ body {
     11% { opacity: 0; transform: translate(-50%, -50%) scale(4.5); filter: blur(10px); }
   }
 
+  /* ===== Orbit Layer & Planets ===== */
+  .orbit-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 12;
+    pointer-events: none;
+    contain: layout style paint;
+    transform: translate3d(var(--parallax-orbit-x), var(--parallax-orbit-y), 0);
+    will-change: transform;
+  }
+
   .planet {
     appearance: none;
     -webkit-tap-highlight-color: transparent;
@@ -699,6 +720,7 @@ body {
   }
 
   .route-view {
+    display: block;
     position: absolute;
     left: clamp(40px, 8vw, 132px);
     right: clamp(40px, 8vw, 132px);
@@ -715,10 +737,28 @@ body {
     box-shadow:
       0 0 0 1px rgba(var(--fg-alt), 0.12),
       0 8px 32px rgba(0, 0, 0, 0.5);
+    transition: box-shadow var(--transition-normal) var(--ease-smooth);
+    content-visibility: auto;
+    contain-intrinsic-size: 760px 600px;
+  }
+
+  .route-view * {
+    font-family: var(--font-mono);
+  }
+
+  .route-view:hover {
+    box-shadow:
+      0 0 0 1px rgba(var(--fg-alt), 0.18),
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 60px rgba(var(--aqua-base), 0.08);
   }
 
   .route-view[hidden] {
     display: none;
+  }
+
+  .route-view:not([hidden]) {
+    display: block;
   }
 
   .route-kicker {
@@ -920,6 +960,33 @@ body {
     line-height: 1.7;
   }
 
+  .hub-v2.is-content-route {
+    cursor: pointer;
+  }
+
+  .hub-v2.is-content-route .route-view {
+    cursor: default;
+  }
+
+  .hub-v2.is-content-route {
+    cursor: pointer;
+  }
+
+  .hub-v2.is-content-route .route-view {
+    cursor: default;
+  }
+
+  .hub-v2.is-content-route .left-panel-container,
+  .hub-v2.is-content-route .choreo-strip,
+  .hub-v2.is-content-route .lightfield,
+  .hub-v2.is-content-route .hotspot,
+  .hub-v2.is-content-route .stage,
+  .hub-v2.is-content-route .orbit-layer,
+  .hub-v2.is-content-route .datafield,
+  .hub-v2.is-content-route .starfield {
+    transition: opacity 0.5s ease;
+  }
+
   .hub-v2.is-content-route .left-panel-container {
     opacity: .18;
     filter: saturate(.82);
@@ -962,14 +1029,14 @@ body {
   }
 
   .crt-overlay {
-    z-index: 38;
+    z-index: 3;
     background: linear-gradient(to bottom, transparent, transparent 50%, rgba(0,0,0,.035) 50%, rgba(0,0,0,.035));
     background-size: 100% 4px;
     opacity: .035;
   }
 
   .grain-overlay {
-    z-index: 39;
+    z-index: 4;
     opacity: .002;
     mix-blend-mode: soft-light;
     background-image:
@@ -981,7 +1048,7 @@ body {
   }
 
   .vignette {
-    z-index: 37;
+    z-index: 6;
     background:
       radial-gradient(circle at 50% 49%, transparent 48%, rgba(var(--bg-darkest),.06) 92%, rgba(var(--bg-darker),.32) 138%),
       linear-gradient(90deg, rgba(var(--bg-darker),.08), transparent 18%, transparent 82%, rgba(var(--bg-darker),.10)),

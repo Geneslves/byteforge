@@ -1,0 +1,125 @@
+/* ByteForge 主题系统 */
+
+/* 亮色主题 */
+.hub-v2[data-theme="light"] {
+  --bg0: #e8e6e1;
+  --bg: #d8d6d1;
+  --bg1: #c8c6c1;
+  --fg: #1a1a1a;
+  --dim: rgba(26, 26, 26, .78);
+
+  --fg-base: 26, 26, 26;
+  --fg-alt: 40, 40, 40;
+  --fg-dim: 60, 60, 60;
+  --bg-deep: 220, 218, 213;
+  --bg-darker: 232, 230, 225;
+  --bg-darkest: 240, 238, 233;
+}
+
+.hub-v2[data-theme="light"] {
+  background:
+    radial-gradient(circle at 50% 49%, rgba(var(--fg-base),.06) 0%, rgba(var(--yellow-base),.025) 7%, rgba(var(--orange-bright),.012) 15%, transparent 34%),
+    radial-gradient(ellipse at 76% 18%, rgba(var(--blue-base),.14), transparent 30%),
+    radial-gradient(ellipse at 18% 82%, rgba(var(--aqua-base),.11), transparent 34%),
+    linear-gradient(180deg, #f5f3ee 0%, #eae8e3 48%, #dfddd8 100%);
+}
+
+.hub-v2[data-theme="light"] .hotspot {
+  background: radial-gradient(circle, rgba(var(--yellow-base), 1) 0%, rgba(var(--yellow-bright), .98) 40%, rgba(var(--orange-base), .92) 100%);
+  filter: blur(1.5px) saturate(1.3);
+  opacity: .88;
+}
+
+.hub-v2[data-theme="light"] .lightfield {
+  opacity: .28;
+  mix-blend-mode: overlay;
+}
+
+.hub-v2[data-theme="light"] .starfield {
+  opacity: .5;
+}
+
+.hub-v2[data-theme="light"] .star-glint {
+  box-shadow:
+    0 0 12px var(--c),
+    var(--glow-sm) color-mix(in srgb, var(--c), transparent 20%),
+    0 0 4px 1px rgba(0, 0, 0, .4);
+}
+
+.hub-v2[data-theme="light"] .datafield {
+  opacity: .7;
+}
+
+.hub-v2[data-theme="light"] .stream-line {
+  opacity: calc(var(--o) * .5);
+}
+
+.hub-v2[data-theme="light"] .planet {
+  box-shadow:
+    var(--glow-sm) var(--color),
+    0 0 54px color-mix(in srgb, var(--color), transparent 30%),
+    0 0 2px rgba(0, 0, 0, .3);
+}
+
+.hub-v2[data-theme="light"] .route-view {
+  background: linear-gradient(180deg, rgba(var(--bg-darkest), 0.96) 0%, rgba(var(--bg-darkest), 0.94) 100%);
+  box-shadow:
+    0 0 0 1px rgba(var(--fg-alt), 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.hub-v2[data-theme="light"] .vignette {
+  background:
+    radial-gradient(circle at 50% 49%, transparent 48%, rgba(var(--bg-darker),.04) 92%, rgba(var(--bg-deep),.15) 138%),
+    linear-gradient(90deg, rgba(var(--bg-deep),.05), transparent 18%, transparent 82%, rgba(var(--bg-deep),.08));
+}
+
+/* 主题切换动画 */
+.theme-switching {
+  transition: filter 0.4s ease;
+}
+
+.theme-switching * {
+  transition: color 0.4s ease, background 0.4s ease, border-color 0.4s ease !important;
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: rgba(var(--bg-deep), .4);
+  color: var(--dim);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all var(--transition-normal) var(--ease-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.theme-toggle:hover {
+  background: rgba(var(--orange-base), .15);
+  box-shadow: 0 0 20px rgba(var(--orange-base), .25);
+  transform: scale(1.08);
+}
+
+.theme-toggle:active {
+  transform: scale(0.92);
+}
+
+.theme-icon {
+  display: block;
+  transform: rotate(0deg);
+  transition: transform 0.5s var(--ease-bounce);
+  filter: drop-shadow(0 0 4px rgba(var(--orange-base), .3));
+}
+
+.theme-toggle:hover .theme-icon {
+  transform: rotate(360deg);
+  filter: drop-shadow(0 0 8px rgba(var(--orange-base), .5));
+}
