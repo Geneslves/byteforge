@@ -738,27 +738,23 @@ body {
       0 0 0 1px rgba(var(--fg-alt), 0.12),
       0 8px 32px rgba(0, 0, 0, 0.5);
     transition: box-shadow var(--transition-normal) var(--ease-smooth);
-    content-visibility: auto;
-    contain-intrinsic-size: 760px 600px;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .hub-v2.is-content-route .route-view {
+    opacity: 1;
+    visibility: visible;
   }
 
   .route-view * {
     font-family: var(--font-mono);
-  }
-
-  .route-view:hover {
-    box-shadow:
-      0 0 0 1px rgba(var(--fg-alt), 0.18),
-      0 8px 32px rgba(0, 0, 0, 0.5),
-      0 0 60px rgba(var(--aqua-base), 0.08);
+    font-feature-settings: normal;
+    text-rendering: optimizeSpeed;
   }
 
   .route-view[hidden] {
-    display: none;
-  }
-
-  .route-view:not([hidden]) {
-    display: block;
+    display: none !important;
   }
 
   .route-kicker {

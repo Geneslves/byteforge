@@ -12,6 +12,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
   <link rel="stylesheet" href="/src/themes.css" />
+  <script>
+    // 在页面加载前立即应用主题，避免闪烁
+    (function() {
+      const savedTheme = localStorage.getItem('byteforge:theme') || 'dark';
+      document.documentElement.setAttribute('data-theme-init', savedTheme);
+    })();
+  </script>
 </head>
 <body>
   <main class="baseline-page">

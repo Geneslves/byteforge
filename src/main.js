@@ -19,6 +19,11 @@ import { routeData, planetRoutes } from './content.js';
 
     const initTheme = () => {
       const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      // 从 html 读取预设主题，避免闪烁
+      const presetTheme = document.documentElement.getAttribute('data-theme-init');
+      if (presetTheme) {
+        document.documentElement.removeAttribute('data-theme-init');
+      }
       hub.dataset.theme = savedTheme;
       return savedTheme;
     };

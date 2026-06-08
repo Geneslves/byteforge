@@ -1,7 +1,8 @@
 /* ByteForge 主题系统 */
 
 /* 亮色主题 */
-.hub-v2[data-theme="light"] {
+.hub-v2[data-theme="light"],
+html[data-theme-init="light"] .hub-v2 {
   --bg0: #e8e6e1;
   --bg: #d8d6d1;
   --bg1: #c8c6c1;
@@ -16,7 +17,8 @@
   --bg-darkest: 240, 238, 233;
 }
 
-.hub-v2[data-theme="light"] {
+.hub-v2[data-theme="light"],
+html[data-theme-init="light"] .hub-v2 {
   background:
     radial-gradient(circle at 50% 49%, rgba(var(--fg-base),.06) 0%, rgba(var(--yellow-base),.025) 7%, rgba(var(--orange-bright),.012) 15%, transparent 34%),
     radial-gradient(ellipse at 76% 18%, rgba(var(--blue-base),.14), transparent 30%),
@@ -24,51 +26,60 @@
     linear-gradient(180deg, #f5f3ee 0%, #eae8e3 48%, #dfddd8 100%);
 }
 
-.hub-v2[data-theme="light"] .hotspot {
+.hub-v2[data-theme="light"] .hotspot,
+html[data-theme-init="light"] .hub-v2 .hotspot {
   background: radial-gradient(circle, rgba(var(--yellow-base), 1) 0%, rgba(var(--yellow-bright), .98) 40%, rgba(var(--orange-base), .92) 100%);
   filter: blur(1.5px) saturate(1.3);
   opacity: .88;
 }
 
-.hub-v2[data-theme="light"] .lightfield {
+.hub-v2[data-theme="light"] .lightfield,
+html[data-theme-init="light"] .hub-v2 .lightfield {
   opacity: .28;
   mix-blend-mode: overlay;
 }
 
-.hub-v2[data-theme="light"] .starfield {
+.hub-v2[data-theme="light"] .starfield,
+html[data-theme-init="light"] .hub-v2 .starfield {
   opacity: .5;
 }
 
-.hub-v2[data-theme="light"] .star-glint {
+.hub-v2[data-theme="light"] .star-glint,
+html[data-theme-init="light"] .hub-v2 .star-glint {
   box-shadow:
     0 0 12px var(--c),
     var(--glow-sm) color-mix(in srgb, var(--c), transparent 20%),
     0 0 4px 1px rgba(0, 0, 0, .4);
 }
 
-.hub-v2[data-theme="light"] .datafield {
+.hub-v2[data-theme="light"] .datafield,
+html[data-theme-init="light"] .hub-v2 .datafield {
   opacity: .7;
 }
 
-.hub-v2[data-theme="light"] .stream-line {
+.hub-v2[data-theme="light"] .stream-line,
+html[data-theme-init="light"] .hub-v2 .stream-line {
   opacity: calc(var(--o) * .5);
 }
 
-.hub-v2[data-theme="light"] .planet {
+.hub-v2[data-theme="light"] .planet,
+html[data-theme-init="light"] .hub-v2 .planet {
   box-shadow:
     var(--glow-sm) var(--color),
     0 0 54px color-mix(in srgb, var(--color), transparent 30%),
     0 0 2px rgba(0, 0, 0, .3);
 }
 
-.hub-v2[data-theme="light"] .route-view {
+.hub-v2[data-theme="light"] .route-view,
+html[data-theme-init="light"] .hub-v2 .route-view {
   background: linear-gradient(180deg, rgba(var(--bg-darkest), 0.96) 0%, rgba(var(--bg-darkest), 0.94) 100%);
   box-shadow:
     0 0 0 1px rgba(var(--fg-alt), 0.18),
     0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
-.hub-v2[data-theme="light"] .vignette {
+.hub-v2[data-theme="light"] .vignette,
+html[data-theme-init="light"] .hub-v2 .vignette {
   background:
     radial-gradient(circle at 50% 49%, transparent 48%, rgba(var(--bg-darker),.04) 92%, rgba(var(--bg-deep),.15) 138%),
     linear-gradient(90deg, rgba(var(--bg-deep),.05), transparent 18%, transparent 82%, rgba(var(--bg-deep),.08));
