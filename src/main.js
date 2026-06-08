@@ -138,15 +138,15 @@ import { routeData, planetRoutes } from './content.js';
       };
 
       const updateParallax = () => {
-        current.x += (target.x - current.x) * 0.075;
-        current.y += (target.y - current.y) * 0.075;
+        current.x += (target.x - current.x) * 0.085;
+        current.y += (target.y - current.y) * 0.085;
 
-        setLayerOffset('back', current.x * -16, current.y * -10);
-        setLayerOffset('star', current.x * 14, current.y * 9);
-        setLayerOffset('stage', current.x * 22, current.y * 15);
-        setLayerOffset('orbit', current.x * 30, current.y * 20);
-        setLayerOffset('light', current.x * 10, current.y * 8);
-        setLayerOffset('core', current.x * 7, current.y * 5);
+        setLayerOffset('back', current.x * -18, current.y * -12);
+        setLayerOffset('star', current.x * 16, current.y * 11);
+        setLayerOffset('stage', current.x * 26, current.y * 18);
+        setLayerOffset('orbit', current.x * 34, current.y * 24);
+        setLayerOffset('light', current.x * 12, current.y * 9);
+        setLayerOffset('core', current.x * 8, current.y * 6);
 
         if (Math.abs(target.x - current.x) > 0.002 || Math.abs(target.y - current.y) > 0.002) {
           rafId = requestAnimationFrame(updateParallax);
