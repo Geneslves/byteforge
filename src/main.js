@@ -1,13 +1,14 @@
+import { routeData, planetRoutes } from './content.js';
+
 (() => {
     const hub = document.querySelector('[data-boot-scope="byteforge-home"]');
     if (!hub) return;
 
     const skipKey = 'byteforge:skip-home-boot';
     const navEntry = performance.getEntriesByType('navigation')[0];
-    const isHistoryReturn = navEntry?.type === 'back_forward';
-    const isRouteReturn = sessionStorage.getItem(skipKey) === '1';
+    const isRouteReturn = navEntry?.type === 'back_forward' || sessionStorage.getItem(skipKey) === '1';
 
-    if (isHistoryReturn || isRouteReturn) {
+    if (isRouteReturn) {
       hub.classList.add('is-route-return');
       sessionStorage.removeItem(skipKey);
     }
@@ -17,39 +18,6 @@
     });
 
     const routeView = hub.querySelector('[data-route-view]');
-    const routeData = {
-      '/logs': {
-        kicker: '>_ ~/logs',
-        title: 'Field Logs',
-        summary: '工程、研究、部署和知识归档的连续记录。这里将承载后续文章列表和系列索引。',
-        entries: [
-          ['2026-06-02', 'ByteForge visual baseline', '冻结首页动效、终端导航、粒子光场和中性色温规范。'],
-          ['2026-06-02', 'Interface clarity pass', '去黄、去灰雾、收紧光晕，让首屏保持明亮但不模糊。'],
-          ['2026-06-02', 'Route shell initialized', '为日志、部署和搜索建立第一版内容入口骨架。'],
-        ],
-      },
-      '/deployments': {
-        kicker: '>_ ~/deployments',
-        title: 'Deployments',
-        summary: '项目、实验和服务的发布索引。后续用于沉淀可访问作品、部署说明和运行状态。',
-        entries: [
-          ['WEB', 'ByteForge Home', '个人技术博客与作品集首页视觉系统。'],
-          ['DOCS', 'Design Baseline', '设计规则、禁用回退项和验收标准。'],
-          ['LAB', 'Future Modules', '搜索、归档、项目详情和知识库入口。'],
-        ],
-      },
-      '/search': {
-        kicker: '>_ /.search',
-        title: 'Search Core',
-        summary: '搜索模块骨架已接入。后续将连接静态索引，用于检索文章、项目和知识归档。',
-        search: true,
-        entries: [
-          ['INDEX', 'Logs', '文章、系列和工程记录。'],
-          ['INDEX', 'Projects', '部署项目、实验原型和工具链。'],
-          ['INDEX', 'Archive', '学术、参考文献和知识管理笔记。'],
-        ],
-      },
-    };
 
     const escapeHtml = (value) =>
       String(value).replace(/[&<>"']/g, (char) => ({
@@ -60,10 +28,54 @@
         "'": '&#39;',
       })[char]);
 
+    const normalizeSearch = (value) => String(value).trim().toLowerCase();
+
+    const matchesQuery = (entry, query) => {
+      if (!query) return true;
+
+      const haystack = [
+        entry.meta,
+        entry.title,
+        entry.text,
+        entry.collection,
+        ...(entry.tags || []),
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(query);
+    };
+
+    const renderEntry = (entry) => `
+      <article class="route-entry" id="${escapeHtml(entry.id)}">
+        <code>${escapeHtml(entry.meta)}</code>
+        <div>
+          <a class="route-entry-title" href="${escapeHtml(entry.href)}">${escapeHtml(entry.title)}</a>
+          <span>${escapeHtml(entry.text)}</span>
+          ${entry.tags?.length ? `
+            <div class="route-tags" aria-label="Tags">
+              ${entry.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      </article>
+    `;
+
+    const renderEntries = (entries, emptyText = 'No entries.') => {
+      if (!entries.length) {
+        return `<p class="route-empty">${escapeHtml(emptyText)}</p>`;
+      }
+
+      return `
+        <div class="route-list" data-route-list>
+          ${entries.map(renderEntry).join('')}
+        </div>
+      `;
+    };
+
     const setActiveNav = (pathname) => {
       const cursor = hub.querySelector('.nav-cursor');
       hub.querySelectorAll('.cli-nav a').forEach((link) => {
-        const isActive = new URL(link.href, location.origin).pathname === pathname;
+        const linkPathname = new URL(link.href, location.origin).pathname.replace(/\/$/, '') || '/';
+        const isActive = linkPathname === pathname;
         link.classList.toggle('active', isActive);
         if (isActive && cursor && !link.contains(cursor)) link.appendChild(cursor);
       });
@@ -83,25 +95,36 @@
       hub.classList.add('is-content-route', 'is-route-return');
       routeView.hidden = false;
       routeView.innerHTML = `
-        <p class="route-kicker">${escapeHtml(config.kicker)}</p>
+        <div class="route-kicker">
+          <span>${escapeHtml(config.kicker)}</span>
+          <a href="/" class="route-back">← 返回首页</a>
+        </div>
         <h1 class="route-title">${escapeHtml(config.title)}</h1>
         <p class="route-summary">${escapeHtml(config.summary)}</p>
-        ${config.search ? '<input class="route-search" type="search" placeholder="grep -r logs projects archive" aria-label="Search ByteForge" />' : ''}
-        <div class="route-list">
-          ${config.entries.map(([meta, title, text]) => `
-            <article class="route-entry">
-              <code>${escapeHtml(meta)}</code>
-              <div>
-                <strong>${escapeHtml(title)}</strong>
-                <span>${escapeHtml(text)}</span>
-              </div>
-            </article>
-          `).join('')}
-        </div>
+        ${config.search ? `
+          <input class="route-search" data-route-search type="search" placeholder="${escapeHtml(config.search.placeholder)}" aria-label="Search ByteForge" />
+        ` : ''}
+        ${renderEntries(config.entries, config.search?.emptyText)}
       `;
+
+      const searchInput = routeView.querySelector('[data-route-search]');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          const query = normalizeSearch(searchInput.value);
+          const filteredEntries = config.entries.filter((entry) => matchesQuery(entry, query));
+          const listTarget = routeView.querySelector('[data-route-list], .route-empty');
+          if (!listTarget) return;
+          listTarget.outerHTML = renderEntries(filteredEntries, config.search.emptyText);
+        });
+      }
     };
 
     renderRoute();
+
+    routeView?.addEventListener('click', (event) => {
+      const link = event.target.closest('a[href^="/"]');
+      if (link) sessionStorage.setItem(skipKey, '1');
+    });
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const current = { x: 0, y: 0 };
@@ -151,8 +174,19 @@
     }
 
     hub.querySelectorAll('.planet').forEach((planet) => {
+      const label = planet.getAttribute('aria-label');
+      const route = planetRoutes[label];
+
+      // 根据是否有路由映射，自动设置星球状态
+      if (route) {
+        planet.removeAttribute('data-kind');
+        planet.dataset.route = route;
+      } else {
+        planet.dataset.kind = 'future';
+      }
+
       const getOrbitAnimation = () =>
-        planet.getAnimations().find((animation) => animation.animationName === 'orbit-point') ||
+        planet.getAnimations().find((animation) => animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift') ||
         planet.getAnimations()[0];
 
       const setOrbitRate = (rate) => {
@@ -168,13 +202,26 @@
         event.preventDefault();
       });
       planet.addEventListener('click', () => {
+        if (planet.dataset.kind === 'future') return;
+
+        // 如果有路由，跳转
+        if (planet.dataset.route) {
+          window.location.href = planet.dataset.route;
+          sessionStorage.setItem(skipKey, '1');
+          return;
+        }
+
+        // 否则执行原有的锁定逻辑
         hub.querySelectorAll('.planet.is-locked').forEach((node) => {
           if (node !== planet) node.classList.remove('is-locked');
         });
         planet.classList.toggle('is-locked');
       });
       planet.addEventListener('pointerenter', slowOrbit);
-      planet.addEventListener('pointerleave', restoreOrbit);
+      planet.addEventListener('pointerleave', () => {
+        restoreOrbit();
+        planet.classList.remove('is-locked');
+      });
     });
 
     window.addEventListener('pageshow', (event) => {

@@ -3,6 +3,7 @@ dist/
 
 .superpowers/
 .tmp-chrome-cdp-profile/
+.tmp-chrome-cdp-*/
 .tmp-chrome-cdp.pid
 
 *.log
