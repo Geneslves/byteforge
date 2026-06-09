@@ -250,10 +250,18 @@ body {
     animation:
       ignition 1.55s 1.08s cubic-bezier(.19,1,.22,1) both,
       hotspot-breathe 2.4s 2.58s cubic-bezier(.37,0,.24,1) infinite alternate;
+    /* 防止移动端黑色闪烁 */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
   }
 
   @keyframes hotspot-breathe {
-    to { opacity: 1; transform: translate(calc(-50% + var(--parallax-core-x)), calc(-50% + var(--parallax-core-y))) scale(1.16); }
+    to {
+      opacity: 0.96;
+      transform: translate(calc(-50% + var(--parallax-core-x)), calc(-50% + var(--parallax-core-y))) scale(1.16);
+    }
   }
 
   @keyframes ignition {
@@ -484,6 +492,12 @@ body {
     contain: layout style paint;
     transform: translate3d(var(--parallax-orbit-x), var(--parallax-orbit-y), 0);
     will-change: transform;
+    opacity: 0;
+  }
+
+  /* 立即显示（跳过启动动画） */
+  .hub-v2.is-route-return .orbit-layer {
+    opacity: 1;
   }
 
   .planet {
@@ -637,6 +651,8 @@ body {
     font-size: 14px;
     line-height: 1;
     position: relative;
+    display: inline-flex;
+    align-items: center;
     transition: color .2s ease, text-shadow .2s ease;
   }
 

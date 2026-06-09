@@ -312,14 +312,14 @@ import { routeData, planetRoutes } from './content.js';
       const slowOrbit = () => setOrbitRate(0.18);
       const restoreOrbit = () => setOrbitRate(1);
 
-      planet.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
-      });
-      planet.addEventListener('click', () => {
+      planet.addEventListener('click', (event) => {
         if (planet.dataset.kind === 'future') return;
 
         // 如果有路由，使用 SPA 导航
         if (planet.dataset.route) {
+          event.preventDefault();
+          event.stopPropagation();
+
           const targetPath = planet.dataset.route;
 
           // 更新 URL
