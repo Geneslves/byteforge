@@ -309,7 +309,7 @@ import { routeData, planetRoutes } from './content.js';
         animation.updatePlaybackRate?.(rate);
         animation.playbackRate = rate;
       };
-      const pauseOrbit = () => setOrbitRate(0);  // 完全暂停
+      const slowOrbit = () => setOrbitRate(0.08);  // 极慢移动，便于点击
       const restoreOrbit = () => setOrbitRate(1);
 
       planet.addEventListener('click', (event) => {
@@ -339,7 +339,7 @@ import { routeData, planetRoutes } from './content.js';
         });
         planet.classList.toggle('is-locked');
       });
-      planet.addEventListener('pointerenter', pauseOrbit);
+      planet.addEventListener('pointerenter', slowOrbit);
       planet.addEventListener('pointerleave', () => {
         restoreOrbit();
         planet.classList.remove('is-locked');
