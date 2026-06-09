@@ -1260,6 +1260,27 @@ body {
     animation: hotspot-breathe 1.45s ease-in-out infinite alternate;
   }
 
+  /* 性能优化：减少重绘和回流 */
+  .planet,
+  .meteor,
+  .route-view,
+  .theme-toggle {
+    will-change: transform, opacity;
+  }
+
+  .planet:hover,
+  .meteor-container,
+  .hub-v2.theme-switching {
+    will-change: auto;
+  }
+
+  /* 使用 GPU 加速的属性 */
+  .route-view,
+  .planet {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
   @media (max-width: 760px) {
     .hub-v2 { min-height: 820px; }
     .left-panel-container { left: 22px; top: 24px; bottom: 98px; width: calc(100% - 44px); }
