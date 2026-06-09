@@ -28,11 +28,23 @@ import { routeData, planetRoutes } from './content.js';
       return savedTheme;
     };
 
-    const toggleTheme = () => {
+    const toggleTheme = (event) => {
       const current = hub.dataset.theme || 'dark';
       const next = current === 'dark' ? 'light' : 'dark';
       hub.dataset.theme = next;
       localStorage.setItem(THEME_KEY, next);
+
+      // 创建波纹扩散效果
+      if (event) {
+        const ripple = document.createElement('div');
+        ripple.className = 'theme-ripple';
+        ripple.style.left = event.clientX + 'px';
+        ripple.style.top = event.clientY + 'px';
+        ripple.style.width = '20px';
+        ripple.style.height = '20px';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 800);
+      }
 
       // 触发主题切换动画
       hub.classList.add('theme-switching');
@@ -321,6 +333,166 @@ import { routeData, planetRoutes } from './content.js';
       if (event.persisted) hub.classList.add('is-route-return');
     });
 
+    // 流星雨动画
+    const createMeteor = () => {
+      const meteor = document.createElement('div');
+      meteor.className = 'meteor';
+
+      // 随机起始位置（从顶部和右侧边缘）
+      const edge = Math.random();
+      if (edge < 0.7) {
+        // 70% 从顶部开始
+        meteor.style.left = (Math.random() * 100) + '%';
+        meteor.style.top = '-5%';
+      } else {
+        // 30% 从右侧开始
+        meteor.style.left = '105%';
+        meteor.style.top = (Math.random() * 50) + '%';
+      }
+
+      // 随机持续时间和大小变化
+      const duration = Math.random() * 0.8 + 0.6; // 0.6-1.4s
+      const scale = Math.random() * 0.5 + 0.7; // 0.7-1.2x
+      meteor.style.animationDuration = duration + 's';
+      meteor.style.transform = `scale(${scale})`;
+
+      return meteor;
+    };
+
+    const initMeteorShower = () => {
+      let container = document.querySelector('.meteor-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'meteor-container';
+        hub.appendChild(container);
+      }
+
+      const spawnMeteor = () => {
+        const meteor = createMeteor();
+        container.appendChild(meteor);
+        setTimeout(() => meteor.remove(), 2000);
+      };
+
+      // 流星雨爆发模式
+      const meteorBurst = () => {
+        const burstCount = Math.floor(Math.random() * 3) + 2; // 2-4颗
+        for (let i = 0; i < burstCount; i++) {
+          setTimeout(spawnMeteor, Math.random() * 1200);
+        }
+      };
+
+      // 持续小流星
+      const continuousMeteors = () => {
+        spawnMeteor();
+        const delay = Math.random() * 2500 + 2000; // 2-4.5秒
+        setTimeout(continuousMeteors, delay);
+      };
+
+      // 定期流星雨爆发
+      const scheduleBurst = () => {
+        const delay = Math.random() * 10000 + 8000; // 8-18秒爆发一次
+        setTimeout(() => {
+          meteorBurst();
+          scheduleBurst();
+        }, delay);
+      };
+
+      // 启动
+      continuousMeteors();
+      setTimeout(meteorBurst, 2000); // 2秒后第一次爆发
+      scheduleBurst();
+    };
+
+    // 页面加载进度条
+    const createLoadingBar = () => {
+      const bar = document.createElement('div');
+      bar.className = 'loading-bar';
+      document.body.appendChild(bar);
+      return bar;
+    };
+
+    const showLoadingBar = () => {
+      const bar = createLoadingBar();
+      let progress = 0;
+
+      const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        bar.style.width = progress + '%';
+      }, 200);
+
+      return {
+        complete: () => {
+          clearInterval(interval);
+          bar.style.width = '100%';
+          bar.classList.add('complete');
+          setTimeout(() => bar.remove(), 300);
+        }
+      };
+    };
+
+    // 键盘导航支持
+    const initKeyboardNav = () => {
+      const planets = Array.from(hub.querySelectorAll('.planet:not([data-kind="future"])'));
+      let focusIndex = -1;
+
+      // ESC 返回首页
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && hub.classList.contains('is-content-route')) {
+          e.preventDefault();
+          const clickEvent = new MouseEvent('click', { bubbles: true });
+          hub.dispatchEvent(clickEvent);
+        }
+
+        // Tab 切换星球焦点
+        if (e.key === 'Tab' && !hub.classList.contains('is-content-route')) {
+          e.preventDefault();
+
+          if (e.shiftKey) {
+            focusIndex = focusIndex <= 0 ? planets.length - 1 : focusIndex - 1;
+          } else {
+            focusIndex = (focusIndex + 1) % planets.length;
+          }
+
+          planets[focusIndex].focus();
+        }
+
+        // Enter 激活星球
+        if (e.key === 'Enter' && document.activeElement.classList.contains('planet')) {
+          e.preventDefault();
+          document.activeElement.click();
+        }
+      });
+
+      // 让星球可以获得焦点
+      planets.forEach((planet, index) => {
+        planet.setAttribute('tabindex', '0');
+        planet.setAttribute('role', 'button');
+        planet.setAttribute('aria-label', `星球 ${index + 1}`);
+      });
+    };
+
+    // 初始化所有效果
+    initMeteorShower();
+    initKeyboardNav();
+
+    // 监听页面导航，显示加载进度
+    let loadingBar = null;
+    hub.querySelectorAll('.planet[data-route]').forEach(planet => {
+      planet.addEventListener('click', () => {
+        if (planet.dataset.kind !== 'future') {
+          loadingBar = showLoadingBar();
+        }
+      });
+    });
+
+    window.addEventListener('pageshow', (event) => {
+      if (loadingBar) {
+        loadingBar.complete();
+        loadingBar = null;
+      }
+    });
+
     // 主题切换按钮
     const themeToggle = hub.querySelector('.theme-toggle');
     if (themeToggle) {
@@ -331,8 +503,8 @@ import { routeData, planetRoutes } from './content.js';
 
       updateThemeIcon(currentTheme);
 
-      themeToggle.addEventListener('click', () => {
-        const newTheme = toggleTheme();
+      themeToggle.addEventListener('click', (event) => {
+        const newTheme = toggleTheme(event);
         updateThemeIcon(newTheme);
       });
     }

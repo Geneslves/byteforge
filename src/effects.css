@@ -1,0 +1,485 @@
+/* ========================================
+   视觉效果增强样式
+   ======================================== */
+
+/* ==================== 流星雨动画 ==================== */
+.meteor-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.meteor {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.95) 30%,
+    rgba(248, 252, 255, 0.75) 60%,
+    transparent 100%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 4px 1.5px rgba(255, 255, 255, 0.9),
+    0 0 8px 3px rgba(240, 248, 255, 0.6),
+    0 0 14px 5px rgba(200, 235, 255, 0.35);
+  filter: blur(0.3px) drop-shadow(-15px 0 6px rgba(255, 255, 255, 0.35))
+          drop-shadow(-30px 0 10px rgba(220, 240, 255, 0.25))
+          drop-shadow(-50px 0 14px rgba(180, 225, 250, 0.15));
+  opacity: 0;
+  animation: meteor-fall linear forwards;
+}
+
+/* 外层拖尾 - 扩散光晕（收窄的橄榄形） */
+.meteor::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 140px;
+  height: 7px;
+  margin-top: -3.5px;
+  margin-right: -2.5px;
+  background: linear-gradient(to left,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(248, 252, 255, 0.85) 6%,
+    rgba(232, 246, 255, 0.7) 18%,
+    rgba(205, 235, 252, 0.48) 35%,
+    rgba(170, 220, 245, 0.28) 55%,
+    rgba(130, 200, 238, 0.14) 74%,
+    rgba(95, 175, 228, 0.05) 88%,
+    transparent 100%);
+  clip-path: polygon(
+    0% 50%,
+    10% 40%,
+    22% 32%,
+    36% 25%,
+    52% 19%,
+    68% 14%,
+    82% 9%,
+    92% 5%,
+    98% 2%,
+    100% 0%,
+    100% 100%,
+    98% 98%,
+    92% 95%,
+    82% 91%,
+    68% 86%,
+    52% 81%,
+    36% 75%,
+    22% 68%,
+    10% 60%
+  );
+  filter: blur(2px);
+  box-shadow:
+    0 0 3px 1px rgba(255, 255, 255, 0.4),
+    0 0 6px 2px rgba(200, 235, 255, 0.3),
+    0 0 10px 3px rgba(150, 215, 250, 0.2);
+}
+
+/* 核心拖尾 - 明亮中心（收窄的梭形） */
+.meteor::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 85px;
+  height: 4px;
+  margin-top: -2px;
+  margin-right: -1.5px;
+  background: linear-gradient(to left,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.95) 8%,
+    rgba(246, 251, 255, 0.86) 20%,
+    rgba(228, 244, 255, 0.68) 36%,
+    rgba(200, 232, 252, 0.46) 54%,
+    rgba(165, 218, 246, 0.25) 72%,
+    rgba(125, 198, 240, 0.1) 86%,
+    rgba(100, 180, 235, 0.03) 95%,
+    transparent 100%);
+  clip-path: polygon(
+    0% 50%,
+    15% 42%,
+    32% 34%,
+    50% 26%,
+    68% 19%,
+    82% 13%,
+    92% 8%,
+    98% 4%,
+    100% 0%,
+    100% 100%,
+    98% 96%,
+    92% 92%,
+    82% 87%,
+    68% 81%,
+    50% 74%,
+    32% 66%,
+    15% 58%
+  );
+  filter: blur(0.8px);
+  display: block;
+  box-shadow:
+    0 0 2px 1px rgba(255, 255, 255, 0.7),
+    0 0 4px 2px rgba(255, 255, 255, 0.5),
+    0 0 7px 3px rgba(230, 245, 255, 0.3);
+}
+
+@keyframes meteor-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(45deg);
+  }
+  5% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(400px, 400px) rotate(45deg);
+  }
+}
+
+/* ==================== 星球光晕增强 ==================== */
+.planet {
+  position: relative;
+}
+
+.planet::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 140%;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(var(--planet-glow-rgb), 0.3) 0%,
+    rgba(var(--planet-glow-rgb), 0.1) 40%,
+    transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.planet::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--planet-glow-rgb), 0);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.planet:hover::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.2);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.planet:hover::after {
+  border-color: rgba(var(--planet-glow-rgb), 0.5);
+  transform: translate(-50%, -50%) scale(1.4);
+  animation: ripple-wave 1.5s ease-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+@keyframes ripple-wave {
+  0% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* 星球颜色变量 */
+.planet[data-orbit="inner"] {
+  --planet-glow-rgb: 255, 107, 107; /* 红色 */
+}
+
+.planet[data-orbit="mid"] {
+  --planet-glow-rgb: 78, 205, 196; /* 青色 */
+}
+
+.planet[data-orbit="outer"] {
+  --planet-glow-rgb: 255, 195, 113; /* 橙色 */
+}
+
+/* ==================== 主题切换波纹动画 ==================== */
+.theme-ripple {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  animation: theme-ripple-expand 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hub-v2[data-theme="dark"] .theme-ripple {
+  background: radial-gradient(circle,
+    rgba(20, 20, 30, 0.95) 0%,
+    rgba(25, 25, 35, 0.85) 30%,
+    rgba(30, 30, 40, 0.6) 60%,
+    transparent 100%);
+  box-shadow: 0 0 60px 30px rgba(20, 20, 30, 0.5);
+}
+
+.hub-v2[data-theme="light"] .theme-ripple {
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(245, 245, 245, 0.9) 30%,
+    rgba(235, 235, 235, 0.7) 60%,
+    transparent 100%);
+  box-shadow: 0 0 80px 40px rgba(255, 255, 255, 0.6);
+}
+
+@keyframes theme-ripple-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(60);
+    opacity: 0;
+  }
+}
+
+.hub-v2.theme-switching {
+  animation: theme-fade 0.4s ease;
+}
+
+@keyframes theme-fade {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.98;
+  }
+}
+
+/* ==================== 页面加载进度条 ==================== */
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    #4facfe 0%,
+    #00f2fe 50%,
+    #4facfe 100%);
+  background-size: 200% 100%;
+  box-shadow: 0 0 10px rgba(79, 172, 254, 0.5),
+              0 0 20px rgba(0, 242, 254, 0.3);
+  z-index: 10000;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  animation: loading-shimmer 1.5s ease-in-out infinite;
+}
+
+.loading-bar.complete {
+  width: 100% !important;
+  opacity: 0;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==================== 页面骨架屏 ==================== */
+.skeleton-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  background: var(--bg1);
+  border-radius: 24px;
+  padding: 40px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.skeleton-card.visible {
+  opacity: 1;
+}
+
+.skeleton-line {
+  height: 20px;
+  background: linear-gradient(90deg,
+    var(--bg2) 0%,
+    var(--bg3) 50%,
+    var(--bg2) 100%);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-line:nth-child(1) { width: 60%; height: 32px; }
+.skeleton-line:nth-child(2) { width: 100%; }
+.skeleton-line:nth-child(3) { width: 90%; }
+.skeleton-line:nth-child(4) { width: 95%; }
+.skeleton-line:nth-child(5) { width: 70%; }
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ==================== 键盘焦点样式 ==================== */
+.planet:focus-visible {
+  outline: none;
+}
+
+.planet:focus-visible::after {
+  border-color: rgba(var(--planet-glow-rgb), 0.8);
+  transform: translate(-50%, -50%) scale(1.5);
+  box-shadow: 0 0 20px rgba(var(--planet-glow-rgb), 0.5);
+}
+
+/* 焦点指示器 */
+.focus-indicator {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-indicator.active {
+  opacity: 1;
+}
+
+.focus-indicator::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 2px solid rgba(79, 172, 254, 0.6);
+  border-radius: 50%;
+  animation: focus-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes focus-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+/* ==================== 响应式优化 ==================== */
+@media (max-width: 768px) {
+  .meteor::before {
+    width: 50px;
+  }
+
+  .planet::before {
+    width: 120%;
+    height: 120%;
+  }
+
+  .skeleton-card {
+    padding: 24px;
+  }
+}
+
+/* ==================== 深色/亮色主题适配 ==================== */
+.hub-v2[data-theme="light"] .loading-bar {
+  background: linear-gradient(90deg,
+    #667eea 0%,
+    #764ba2 50%,
+    #667eea 100%);
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5),
+              0 0 20px rgba(118, 75, 162, 0.3);
+}
+
+.hub-v2[data-theme="light"] .meteor {
+  background: radial-gradient(circle,
+    rgba(102, 126, 234, 1) 0%,
+    rgba(102, 126, 234, 0.95) 30%,
+    rgba(110, 120, 228, 0.75) 60%,
+    transparent 100%);
+  box-shadow:
+    0 0 4px 1.5px rgba(102, 126, 234, 0.9),
+    0 0 8px 3px rgba(110, 118, 225, 0.6),
+    0 0 14px 5px rgba(125, 105, 215, 0.35);
+  filter: blur(0.3px) drop-shadow(-15px 0 6px rgba(102, 126, 234, 0.35))
+          drop-shadow(-30px 0 10px rgba(118, 110, 220, 0.25))
+          drop-shadow(-50px 0 14px rgba(135, 115, 220, 0.15));
+}
+
+.hub-v2[data-theme="light"] .meteor::before {
+  background: linear-gradient(to left,
+    rgba(102, 126, 234, 0.92) 0%,
+    rgba(108, 120, 228, 0.85) 6%,
+    rgba(116, 110, 218, 0.7) 18%,
+    rgba(125, 105, 210, 0.48) 35%,
+    rgba(138, 115, 220, 0.28) 55%,
+    rgba(152, 128, 228, 0.14) 74%,
+    rgba(165, 142, 235, 0.05) 88%,
+    transparent 100%);
+  box-shadow:
+    0 0 3px 1px rgba(102, 126, 234, 0.4),
+    0 0 6px 2px rgba(118, 100, 210, 0.3),
+    0 0 10px 3px rgba(140, 115, 220, 0.2);
+}
+
+.hub-v2[data-theme="light"] .meteor::after {
+  background: linear-gradient(to left,
+    rgba(102, 126, 234, 1) 0%,
+    rgba(102, 126, 234, 0.95) 8%,
+    rgba(110, 118, 225, 0.86) 20%,
+    rgba(120, 108, 218, 0.68) 36%,
+    rgba(130, 110, 215, 0.46) 54%,
+    rgba(145, 122, 223, 0.25) 72%,
+    rgba(158, 135, 230, 0.1) 86%,
+    rgba(168, 148, 235, 0.03) 95%,
+    transparent 100%);
+  box-shadow:
+    0 0 2px 1px rgba(102, 126, 234, 0.7),
+    0 0 4px 2px rgba(102, 126, 234, 0.5),
+    0 0 7px 3px rgba(118, 100, 210, 0.3);
+  display: block;
+}
