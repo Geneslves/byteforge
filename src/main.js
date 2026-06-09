@@ -309,7 +309,7 @@ import { routeData, planetRoutes } from './content.js';
         animation.updatePlaybackRate?.(rate);
         animation.playbackRate = rate;
       };
-      const slowOrbit = () => setOrbitRate(0.18);
+      const pauseOrbit = () => setOrbitRate(0);  // 完全暂停
       const restoreOrbit = () => setOrbitRate(1);
 
       planet.addEventListener('click', (event) => {
@@ -339,7 +339,7 @@ import { routeData, planetRoutes } from './content.js';
         });
         planet.classList.toggle('is-locked');
       });
-      planet.addEventListener('pointerenter', slowOrbit);
+      planet.addEventListener('pointerenter', pauseOrbit);
       planet.addEventListener('pointerleave', () => {
         restoreOrbit();
         planet.classList.remove('is-locked');
@@ -508,21 +508,9 @@ import { routeData, planetRoutes } from './content.js';
     initMeteorShower();
     initKeyboardNav();
 
-    // 监听页面导航，显示加载进度
-    let loadingBar = null;
-    hub.querySelectorAll('.planet[data-route]').forEach(planet => {
-      planet.addEventListener('click', () => {
-        if (planet.dataset.kind !== 'future') {
-          loadingBar = showLoadingBar();
-        }
-      });
-    });
-
+    // 监听页面导航，显示加载进度（仅用于真正的页面加载，不用于 SPA 导航）
     window.addEventListener('pageshow', (event) => {
-      if (loadingBar) {
-        loadingBar.complete();
-        loadingBar = null;
-      }
+      // SPA 导航不需要加载进度条
     });
 
     // 主题切换按钮
