@@ -160,8 +160,11 @@ import { routeData, planetRoutes } from './content.js';
         ${renderEntries(config.entries, config.search?.emptyText)}
       `;
 
-      // 显示卡片
+      // 显示卡片（添加入场动画）
       routeView.hidden = false;
+
+      // 强制重排以触发动画
+      routeView.offsetHeight;
 
       // 添加背景样式
       hub.classList.add('is-content-route', 'is-route-return');
@@ -225,6 +228,12 @@ import { routeData, planetRoutes } from './content.js';
     };
 
     renderRoute();
+
+    // 监听浏览器前进/后退按钮
+    window.addEventListener('popstate', () => {
+      renderRoute();
+      sessionStorage.setItem(skipKey, '1');
+    });
 
     routeView?.addEventListener('click', (event) => {
       const link = event.target.closest('a[href^="/"]');
@@ -309,9 +318,17 @@ import { routeData, planetRoutes } from './content.js';
       planet.addEventListener('click', () => {
         if (planet.dataset.kind === 'future') return;
 
-        // 如果有路由，跳转
+        // 如果有路由，使用 SPA 导航
         if (planet.dataset.route) {
-          window.location.href = planet.dataset.route;
+          const targetPath = planet.dataset.route;
+
+          // 更新 URL
+          history.pushState(null, '', targetPath);
+
+          // 渲染路由内容
+          renderRoute();
+
+          // 标记跳过首页动画
           sessionStorage.setItem(skipKey, '1');
           return;
         }
