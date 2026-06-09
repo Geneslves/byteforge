@@ -1,0 +1,21 @@
+{
+  "name": "ByteForge",
+  "short_name": "ByteForge",
+  "description": "构筑于代码与协议之上的数字熔炉",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["technology", "development", "blog"],
+  "lang": "zh-CN",
+  "dir": "ltr"
+}
