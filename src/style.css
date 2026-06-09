@@ -1289,6 +1289,34 @@ body {
     .route-search {
       margin-bottom: 12px;
     }
+
+    /* 移动端触摸优化 */
+    .planet {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .theme-toggle,
+    .nav-item {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* 移动端减少流星雨密度以提升性能 */
+    .meteor-container {
+      will-change: auto;
+    }
+
+    /* 移动端优化卡片滚动 */
+    .route-view {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .route-list {
+      overscroll-behavior: contain;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

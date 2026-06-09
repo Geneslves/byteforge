@@ -384,6 +384,15 @@ import { routeData, planetRoutes } from './content.js';
         hub.appendChild(container);
       }
 
+      // 检测移动设备
+      const isMobile = window.matchMedia('(max-width: 760px)').matches;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 如果用户偏好减少动画，完全禁用流星雨
+      if (reducedMotion) {
+        return;
+      }
+
       const spawnMeteor = () => {
         const meteor = createMeteor();
         container.appendChild(meteor);
@@ -392,7 +401,9 @@ import { routeData, planetRoutes } from './content.js';
 
       // 流星雨爆发模式
       const meteorBurst = () => {
-        const burstCount = Math.floor(Math.random() * 3) + 2; // 2-4颗
+        const burstCount = isMobile
+          ? Math.floor(Math.random() * 2) + 1  // 移动端 1-2 颗
+          : Math.floor(Math.random() * 3) + 2; // 桌面端 2-4 颗
         for (let i = 0; i < burstCount; i++) {
           setTimeout(spawnMeteor, Math.random() * 1200);
         }
@@ -401,13 +412,17 @@ import { routeData, planetRoutes } from './content.js';
       // 持续小流星
       const continuousMeteors = () => {
         spawnMeteor();
-        const delay = Math.random() * 2500 + 2000; // 2-4.5秒
+        const delay = isMobile
+          ? Math.random() * 3500 + 3000  // 移动端 3-6.5 秒
+          : Math.random() * 2500 + 2000; // 桌面端 2-4.5 秒
         setTimeout(continuousMeteors, delay);
       };
 
       // 定期流星雨爆发
       const scheduleBurst = () => {
-        const delay = Math.random() * 10000 + 8000; // 8-18秒爆发一次
+        const delay = isMobile
+          ? Math.random() * 15000 + 12000  // 移动端 12-27 秒
+          : Math.random() * 10000 + 8000;  // 桌面端 8-18 秒
         setTimeout(() => {
           meteorBurst();
           scheduleBurst();
