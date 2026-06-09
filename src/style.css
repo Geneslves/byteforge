@@ -1279,7 +1279,6 @@ body {
   /* 性能优化：减少重绘和回流 */
   .planet,
   .meteor,
-  .route-view,
   .theme-toggle {
     will-change: transform, opacity;
   }
@@ -1291,9 +1290,7 @@ body {
   }
 
   /* 使用 GPU 加速的属性 */
-  .route-view,
   .planet {
-    transform: translateZ(0);
     backface-visibility: hidden;
   }
 

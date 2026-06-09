@@ -221,10 +221,15 @@ export const routeData = {
 
 // 星球到路由的映射表 - 添加新功能时在这里添加映射
 export const planetRoutes = {
+  'Infrastructure': null,  // 未来功能
   'Logs': '/logs',
+  'Dev and AI': '/dev-ai',
+  'Snippets': null,  // 未来功能
+  'Academic': null,  // 未来功能
   'Deployments': '/deployments',
-  'Search Core': '/search',
-  'Dev and AI': '/dev-ai',  // 测试自动绑定
-  // 未来功能在此添加，例如：
-  // 'Snippets': '/snippets',
+  'Search': '/search',  // 修正：HTML中是 "Search" 不是 "Search Core"
+  'Knowledge Base': null,  // 未来功能
+  'Toolbox': null,  // 未来功能
+  'Lab Notes': null,  // 未来功能
+  'Changelog': null,  // 未来功能
 };
