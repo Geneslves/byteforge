@@ -12,6 +12,8 @@ body {
   background: #1d2021;
   color: #ebdbb2;
   overflow-x: hidden;
+  /* 防止锚点链接导致页面滚动跳动 */
+  scroll-behavior: auto;
 }
 
 body {

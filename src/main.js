@@ -171,6 +171,17 @@ import { routeData, planetRoutes } from './content.js';
 
       // 点击卡片外部返回首页（带动画）
       const handleOutsideClick = (event) => {
+        // 防止卡片内的链接触发外部点击
+        if (event.target.tagName === 'A' && routeView.contains(event.target)) {
+          // 如果是 # 锚点链接，阻止默认行为（防止页面跳动）
+          const href = event.target.getAttribute('href');
+          if (href && href.includes('#')) {
+            event.preventDefault();
+            return;
+          }
+          return; // 允许正常链接跳转
+        }
+
         if (!routeView.contains(event.target) &&
             !event.target.closest('.cli-nav') &&
             !event.target.closest('.theme-toggle') &&
@@ -179,6 +190,9 @@ import { routeData, planetRoutes } from './content.js';
           // 防止重复触发
           if (hub.dataset.returning) return;
           hub.dataset.returning = 'true';
+
+          event.preventDefault();
+          event.stopPropagation();
 
           // 添加退出动画
           routeView.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
