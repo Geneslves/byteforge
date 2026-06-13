@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "vite",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
+    "clean": "node scripts/clean.js",
+    "check": "pnpm run check:project && pnpm build && pnpm run check:routes",
     "build": "node scripts/build.js",
     "check:project": "node scripts/check-project.js",
     "check:routes": "node scripts/check-routes.js",

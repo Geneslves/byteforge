@@ -9,6 +9,7 @@ const requiredFiles = [
   'src/modules/planets.js',
   'src/modules/routing.js',
   'src/modules/theme.js',
+  'scripts/clean.js',
   'src/styles/effects.css',
   'src/styles/style.css',
   'src/styles/themes.css',
@@ -78,6 +79,23 @@ const mainModule = readFileSync('src/main.js', 'utf8');
 for (const styleImport of ["import './styles/style.css'", "import './styles/themes.css'", "import './styles/effects.css'"]) {
   if (mainModule.includes(styleImport)) {
     errors.push(`src/main.js should not inject blocking page styles through JavaScript: ${styleImport}`);
+  }
+}
+
+const ecosystemConfig = readFileSync('ecosystem.config.cjs', 'utf8');
+if (!ecosystemConfig.includes('cwd: __dirname')) {
+  errors.push('ecosystem.config.cjs should use cwd: __dirname for PM2 apps');
+}
+
+const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+const requiredScripts = {
+  clean: 'node scripts/clean.js',
+  check: 'pnpm run check:project && pnpm build && pnpm run check:routes',
+};
+
+for (const [scriptName, expectedCommand] of Object.entries(requiredScripts)) {
+  if (pkg.scripts?.[scriptName] !== expectedCommand) {
+    errors.push(`package.json script "${scriptName}" should be: ${expectedCommand}`);
   }
 }
 

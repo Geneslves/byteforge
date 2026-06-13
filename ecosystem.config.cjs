@@ -4,7 +4,7 @@ module.exports = {
       name: 'byteforge-dev',
       script: 'pnpm',
       args: 'dev',
-      cwd: './',
+      cwd: __dirname,
       interpreter: 'none',
       watch: false,
       env: {
@@ -15,7 +15,7 @@ module.exports = {
       name: 'byteforge-preview',
       script: 'pnpm',
       args: 'preview',
-      cwd: './',
+      cwd: __dirname,
       interpreter: 'none',
       watch: false,
       env: {

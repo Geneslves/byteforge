@@ -30,10 +30,15 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 
 ```powershell
 pnpm dev
+pnpm run check
 pnpm build
 pnpm run check:project
+pnpm run check:routes
+pnpm run clean
 pnpm preview
 ```
+
+`pnpm run check` 会按顺序执行项目结构检查、生产构建和路由/静态入口检查。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
 
 构建脚本本体：
 
