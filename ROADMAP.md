@@ -11,11 +11,12 @@
 
 ### 当前版本：v2.0
 
-**前端状态**：✅ 生产就绪
+**前端状态**：✅ 静态前端可部署
 - 核心架构：Vite + Vanilla JS
-- 功能完整：双主题、SPA 路由、视差动画
-- 性能优化：74 KB（gzip: 20.22 KB）
-- SEO/PWA：完全就绪
+- 已实现：双主题、SPA 路由、视差动画、本地内容搜索、静态子路由入口
+- 当前路由：`/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/`
+- 构建产物：核心 HTML/CSS/JS gzip 约 20 KB，另有外部字体请求
+- SEO/PWA：基础 meta、manifest、sitemap 和社交分享图已接入，Lighthouse 自动化待补
 
 **后端状态**：⚠️ 未实现
 - 数据：硬编码在 `content.js`
@@ -23,7 +24,11 @@
 - 用户系统：无
 - CMS：无
 
-**技术债务**：无重大问题
+**近期技术债务**
+- 内容仍由 `src/content.js` 手工维护，缺少 Markdown/MDX 或 CMS 管线。
+- 搜索仍是本地数组过滤，Pagefind 或等价静态全文搜索待接入。
+- 缺少自动化测试、Lighthouse 检查和可访问性回归检查。
+- PWA 当前只有 manifest，尚未接入 Service Worker。
 
 ---
 
@@ -72,7 +77,7 @@ CI/CD：GitHub Actions
 │                        前端层（静态）                          │
 │  • Vite 构建的静态资源                                        │
 │  • HTML + CSS + JS                                          │
-│  • PWA Manifest + Service Worker                            │
+│  • Manifest + Sitemap + OG Image                            │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -645,10 +650,10 @@ export default async function handler(req, res) {
 - [ ] 备份策略
 
 **交付物**：
-- ✅ 性能达标（Lighthouse 90+）
-- ✅ 监控告警完整
-- ✅ 安全防护到位
-- ✅ 正式上线
+- [ ] 性能达标（Lighthouse 90+）
+- [ ] 监控告警完整
+- [ ] 安全防护到位
+- [ ] 正式上线
 
 **成本**：$20-30/月（监控工具）
 
@@ -1000,24 +1005,23 @@ export const authLimiter = rateLimit({
 ### 本周（立即执行）
 
 #### Day 1-2：部署上线
-- [ ] 部署前端到 Vercel
-- [ ] 购买域名（byteforge.dev）
-- [ ] 配置 DNS 和 SSL
-- [ ] 设置 Google Analytics
-- [ ] 提交 sitemap
+- [ ] 部署当前静态前端到 Vercel 或 Cloudflare Pages
+- [ ] 验证 `/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 直接刷新
+- [ ] 配置域名、DNS 和 SSL
+- [ ] 验证 sitemap、manifest 和 `og-image.svg`
+- [ ] 跑一次 Lighthouse 与键盘可访问性检查
 
 #### Day 3-5：后端搭建
-- [ ] 注册 Supabase 账号
-- [ ] 创建数据库
-- [ ] 运行数据库迁移脚本
-- [ ] 配置环境变量
-- [ ] 测试数据库连接
+- [ ] 明确内容系统是否先走 Markdown/MDX、Pagefind，还是直接进入 Supabase/CMS
+- [ ] 如果走静态内容，建立 `content/` 或 `posts/` 目录和 frontmatter 规范
+- [ ] 如果走后端方案，注册 Supabase 并创建数据库
+- [ ] 准备环境变量模板和部署密钥说明
+- [ ] 补充最小数据迁移或内容导入脚本
 
 #### Day 6-7：用户系统
-- [ ] 安装 Supabase SDK
-- [ ] 实现注册页面
-- [ ] 实现登录页面
-- [ ] 测试认证流程
+- [ ] 根据内容系统选择决定是否推迟用户系统
+- [ ] 先补齐基础自动化检查：构建、路由一致性、无缺失静态资源
+- [ ] 为搜索和内容卡片补充最小交互回归检查
 
 ---
 
@@ -1105,22 +1109,22 @@ export const authLimiter = rateLimit({
 - ✅ 基础 CMS
 
 ### Milestone 2：核心功能（第 8 周）
-- ✅ 完整 CMS
-- ✅ 评论系统
-- ✅ 点赞收藏
-- ✅ 通知系统
+- [ ] 完整 CMS
+- [ ] 评论系统
+- [ ] 点赞收藏
+- [ ] 通知系统
 
 ### Milestone 3：高级功能（第 12 周）
-- ✅ 全文搜索
-- ✅ 数据统计
-- ✅ 推荐系统
-- ✅ 性能优化
+- [ ] 全文搜索
+- [ ] 数据统计
+- [ ] 推荐系统
+- [ ] 性能优化
 
 ### Milestone 4：完整上线（第 16 周）
-- ✅ 所有功能完成
-- ✅ 性能达标
-- ✅ 监控完善
-- ✅ 正式运营
+- [ ] 所有功能完成
+- [ ] 性能达标
+- [ ] 监控完善
+- [ ] 正式运营
 
 ---
 
@@ -1184,4 +1188,3 @@ export const authLimiter = rateLimit({
 ---
 
 **🎉 祝项目开发顺利！**
-

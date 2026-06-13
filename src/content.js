@@ -3,7 +3,7 @@ const logEntries = [
     id: 'performance-optimization-complete',
     meta: '2026-06-09',
     title: '性能优化完成',
-    text: '完成构建配置优化、移动端适配和渲染性能提升，总体积压缩至 18.5 KB (gzip)。',
+    text: '完成构建配置优化、移动端适配和渲染性能提升，核心构建产物 gzip 体积约 20 KB。',
     href: '/logs/#performance-optimization-complete',
     tags: ['performance', 'vite', 'optimization'],
   },
@@ -70,7 +70,7 @@ const deploymentEntries = [
     id: 'performance-benchmark',
     meta: 'METRICS',
     title: 'Performance Benchmark',
-    text: '首屏加载 < 20 KB (gzip)，Lighthouse 评分 95+，移动端流畅 60fps。',
+    text: '核心 HTML/CSS/JS 构建产物 gzip 约 20 KB，移动端按 reduced-motion 与低密度动效优化。',
     href: '/deployments/#performance-benchmark',
     tags: ['performance', 'lighthouse', 'metrics'],
   },
@@ -170,10 +170,67 @@ const devAiEntries = [
   },
 ];
 
+const snippetsEntries = [
+  {
+    id: 'route-planet-binding',
+    meta: 'PATTERN',
+    title: 'Route and planet binding',
+    text: '新增页面时先配置 routeData，再用 planetRoutes 绑定星球 route、state 和 collection。',
+    href: '/snippets/#route-planet-binding',
+    tags: ['routing', 'planet', 'state'],
+  },
+  {
+    id: 'static-route-check',
+    meta: 'SCRIPT',
+    title: 'Static route consistency check',
+    text: '使用 check:routes 验证路由、星球配置、sitemap 和构建产物是否一致。',
+    href: '/snippets/#static-route-check',
+    tags: ['scripts', 'build', 'qa'],
+  },
+  {
+    id: 'search-query-url',
+    meta: 'UX',
+    title: 'Search query URL',
+    text: '搜索页支持 ?q= 查询参数，便于分享和刷新后保留过滤状态。',
+    href: '/snippets/#search-query-url',
+    tags: ['search', 'url', 'ux'],
+  },
+];
+
+const academicEntries = [
+  {
+    id: 'som-dual-spectrum-paper',
+    meta: 'PAPER',
+    title: 'SOM 双光谱研究笔记',
+    text: '整理近红外与拉曼双光谱建模、特征融合和实验结论，作为课程论文与后续实验复盘入口。',
+    href: '/academic/#som-dual-spectrum-paper',
+    tags: ['som', 'spectroscopy', 'paper'],
+  },
+  {
+    id: 'method-notes-index',
+    meta: 'METHOD',
+    title: '方法札记索引',
+    text: '沉淀特征处理、模型验证、误差分析和可复现实验记录，避免研究过程散落在临时文件中。',
+    href: '/academic/#method-notes-index',
+    tags: ['method', 'experiment', 'notes'],
+  },
+  {
+    id: 'reference-reading-queue',
+    meta: 'READING',
+    title: '参考文献阅读队列',
+    text: '记录待读论文、关键结论和可复用引用，后续可迁移到正式文献管理或静态内容集合。',
+    href: '/academic/#reference-reading-queue',
+    tags: ['references', 'reading', 'archive'],
+  },
+];
+
 export const contentCollections = {
   logs: logEntries,
   deployments: deploymentEntries,
   archive: archiveEntries,
+  'dev-ai': devAiEntries,
+  snippets: snippetsEntries,
+  academic: academicEntries,
 };
 
 const withCollection = (collection, entries) =>
@@ -186,6 +243,9 @@ export const searchEntries = [
   ...withCollection('logs', logEntries),
   ...withCollection('deployments', deploymentEntries),
   ...withCollection('archive', archiveEntries),
+  ...withCollection('dev-ai', devAiEntries),
+  ...withCollection('snippets', snippetsEntries),
+  ...withCollection('academic', academicEntries),
 ];
 
 export const routeData = {
@@ -217,19 +277,32 @@ export const routeData = {
     summary: '开发工具、AI 辅助编程和工作流优化的实践与探索。',
     entries: devAiEntries,
   },
+  '/snippets': {
+    kicker: '>_ ~/snippets',
+    title: 'Snippets',
+    summary: '小型实现模式、配置片段和工程约束的快速索引。当前作为新页面与星球状态绑定的 beta 试点。',
+    entries: snippetsEntries,
+  },
+  '/academic': {
+    kicker: '>_ ~/academic',
+    title: 'Academic Notes',
+    summary: '论文、方法与研究札记。这个界面采用现代纸页和水墨气质，承载课程论文、实验复盘与文献阅读线索。',
+    theme: 'ink',
+    entries: academicEntries,
+  },
 };
 
-// 星球到路由的映射表 - 添加新功能时在这里添加映射
+// 星球配置表 - 添加新功能时优先在 routeData 中建路由，再在这里绑定星球状态。
 export const planetRoutes = {
-  'Infrastructure': null,  // 未来功能
-  'Logs': '/logs',
-  'Dev and AI': '/dev-ai',
-  'Snippets': null,  // 未来功能
-  'Academic': null,  // 未来功能
-  'Deployments': '/deployments',
-  'Search': '/search',  // 修正：HTML中是 "Search" 不是 "Search Core"
-  'Knowledge Base': null,  // 未来功能
-  'Toolbox': null,  // 未来功能
-  'Lab Notes': null,  // 未来功能
-  'Changelog': null,  // 未来功能
+  'Infrastructure': { route: null, state: 'future', collection: 'infrastructure' },
+  'Logs': { route: '/logs', state: 'ready', collection: 'logs' },
+  'Dev and AI': { route: '/dev-ai', state: 'ready', collection: 'dev-ai' },
+  'Snippets': { route: '/snippets', state: 'beta', collection: 'snippets' },
+  'Academic': { route: '/academic', state: 'beta', collection: 'academic' },
+  'Deployments': { route: '/deployments', state: 'ready', collection: 'deployments' },
+  'Search': { route: '/search', state: 'ready', collection: 'search' },
+  'Knowledge Base': { route: null, state: 'future', collection: 'knowledge-base' },
+  'Toolbox': { route: null, state: 'future', collection: 'toolbox' },
+  'Lab Notes': { route: null, state: 'future', collection: 'lab-notes' },
+  'Changelog': { route: null, state: 'future', collection: 'changelog' },
 };

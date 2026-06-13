@@ -514,7 +514,9 @@ body {
     border-radius: 50%;
     padding: 0;
     background: var(--color);
-    box-shadow: var(--glow-sm) var(--color), 0 0 54px color-mix(in srgb, var(--color), transparent 40%);
+    box-shadow:
+      0 0 6px color-mix(in srgb, var(--color), transparent 52%),
+      0 0 20px color-mix(in srgb, var(--color), transparent 86%);
     cursor: pointer;
     outline: none;
     pointer-events: auto;
@@ -527,11 +529,11 @@ body {
   }
 
   .planet:hover {
-    filter: brightness(1.3) saturate(1.2);
+    filter: brightness(1.22) saturate(1.18);
     box-shadow:
-      0 0 24px var(--color),
-      0 0 68px color-mix(in srgb, var(--color), transparent 30%),
-      0 0 120px color-mix(in srgb, var(--color), transparent 60%);
+      0 0 14px color-mix(in srgb, var(--color), transparent 16%),
+      0 0 38px color-mix(in srgb, var(--color), transparent 62%),
+      0 0 66px color-mix(in srgb, var(--color), transparent 84%);
   }
 
   .planet:active {
@@ -544,9 +546,10 @@ body {
     position: absolute;
     inset: -20px;  /* 增大点击区域 */
     border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--color), transparent 42%), transparent 66%);
-    opacity: .68;
-    pointer-events: auto;  /* 确保可点击 */
+    background: radial-gradient(circle, color-mix(in srgb, var(--color), transparent 84%), transparent 66%);
+    opacity: .22;
+    pointer-events: none;
+    z-index: -1;
   }
 
   .planet span {
@@ -577,12 +580,31 @@ body {
   .planet:focus-visible {
     box-shadow:
       0 0 0 1px rgba(var(--fg-alt),.45),
-      0 0 18px var(--color),
-      0 0 54px color-mix(in srgb, var(--color), transparent 40%);
+      0 0 12px color-mix(in srgb, var(--color), transparent 22%),
+      0 0 36px color-mix(in srgb, var(--color), transparent 66%);
   }
 
   @keyframes orbit-point {
     to { transform: rotate(calc(var(--a) + 360deg)) translateX(var(--r)); }
+  }
+
+  .planet[data-state="ready"] {
+    opacity: 1;
+    cursor: pointer;
+    filter: saturate(1.18) brightness(1.05);
+    box-shadow:
+      0 0 8px color-mix(in srgb, var(--color), transparent 44%),
+      0 0 24px color-mix(in srgb, var(--color), transparent 86%);
+  }
+
+  .planet[data-state="beta"] {
+    opacity: .94;
+    cursor: pointer;
+    filter: saturate(1.22) brightness(1.08);
+    box-shadow:
+      0 0 8px color-mix(in srgb, var(--color), transparent 42%),
+      0 0 26px color-mix(in srgb, var(--color), transparent 84%),
+      0 0 0 1px rgba(var(--yellow-base), .42);
   }
 
   .planet[data-kind="future"] {
@@ -593,7 +615,19 @@ body {
     cursor: not-allowed;
   }
 
-  .planet[data-kind="future"]::before {
+  .planet[data-state="future"],
+  .planet[data-state="disabled"] {
+    opacity: .38;
+    filter: grayscale(0.75);
+    cursor: not-allowed;
+  }
+
+  .planet[data-state="disabled"] {
+    opacity: .24;
+  }
+
+  .planet[data-kind="future"]::before,
+  .planet[data-state="future"]::before {
     animation: future-pulse 2.6s ease-in-out infinite;
   }
 
@@ -973,6 +1007,99 @@ body {
     color: rgba(var(--fg-alt), .58);
     font-size: 12px;
     line-height: 1.7;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-view {
+    color: #201b15;
+    border: 1px solid rgba(47, 39, 30, .18);
+    background:
+      radial-gradient(ellipse at 18% 8%, rgba(36, 34, 31, .10), transparent 34%),
+      radial-gradient(ellipse at 90% 18%, rgba(71, 92, 102, .10), transparent 32%),
+      linear-gradient(100deg, rgba(255,255,255,.22), transparent 32%, rgba(90,66,46,.05) 64%, transparent),
+      #f3efe4;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, .38) inset,
+      0 18px 52px rgba(18, 17, 15, .34);
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-view::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: .42;
+    background:
+      repeating-linear-gradient(90deg, rgba(48, 42, 35, .035) 0 1px, transparent 1px 9px),
+      repeating-linear-gradient(0deg, rgba(48, 42, 35, .025) 0 1px, transparent 1px 11px);
+    mix-blend-mode: multiply;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-kicker {
+    color: #8b1e16;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-title,
+  .hub-v2[data-route-theme="ink"] .route-summary,
+  .hub-v2[data-route-theme="ink"] .route-entry-title,
+  .hub-v2[data-route-theme="ink"] .route-entry span {
+    font-family: 'Noto Serif SC', 'Source Han Serif SC', 'SimSun', serif;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-title {
+    color: #17130f;
+    font-weight: 700;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-summary {
+    color: rgba(32, 27, 21, .76);
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-entry {
+    border-top-color: rgba(47, 39, 30, .18);
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-entry code {
+    color: #6f7660;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-entry-title {
+    color: #201b15;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-entry-title::before,
+  .hub-v2[data-route-theme="ink"] .route-entry-title:hover,
+  .hub-v2[data-route-theme="ink"] .route-entry-title:focus-visible {
+    color: #8b1e16;
+    text-shadow: none;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-entry span {
+    color: rgba(32, 27, 21, .62);
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-tags span {
+    border-color: rgba(139, 30, 22, .24);
+    color: rgba(139, 30, 22, .88);
+    background: rgba(255, 252, 242, .46);
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-back {
+    border-color: rgba(111, 118, 96, .32);
+    color: #6f7660;
+  }
+
+  .hub-v2[data-route-theme="ink"] .route-back:hover {
+    border-color: #8b1e16;
+    color: #8b1e16;
+    text-shadow: none;
+  }
+
+  .hub-v2[data-route-theme="ink"].is-content-route .lightfield,
+  .hub-v2[data-route-theme="ink"].is-content-route .hotspot,
+  .hub-v2[data-route-theme="ink"].is-content-route .stage,
+  .hub-v2[data-route-theme="ink"].is-content-route .orbit-layer {
+    opacity: .18;
   }
 
   .hub-v2.is-content-route {

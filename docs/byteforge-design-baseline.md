@@ -42,6 +42,17 @@ user@forge: ~/logs
 /.search
 ```
 
+内容入口：
+
+```text
+Logs
+Dev and AI
+Snippets
+Academic
+Deployments
+Search
+```
+
 ## 视觉系统
 
 主配色采用 Gruvbox Dark 风格：
@@ -121,6 +132,17 @@ Boot Sequence：
 - 鼠标离开后恢复原速。
 - 点击时使用 `.is-locked` 展示标签，避免原生按钮焦点造成反向闪现。
 - 键盘访问保留 `focus-visible` 状态。
+- 不劫持浏览器默认 `Tab` 顺序；主题按钮、导航链接和入口光点都必须可键盘到达。
+- 入口光点的 `aria-label` 使用真实业务名称，不使用无语义的序号。
+- 入口状态由 `data-state` 表达，至少包含 `ready`、`beta`、`future`、`disabled`。
+- `future` 和 `disabled` 状态不可点击；`ready` 和 `beta` 状态可绑定内容路由。
+
+内容面板：
+
+- 同站内容链接使用 SPA 导航，保留浏览器前进后退。
+- 带 hash 的内容链接必须能定位到对应条目，不得被空拦截。
+- `/search/?q=` 必须能初始化搜索结果，输入框变化同步 URL 查询参数。
+- `/academic` 使用 `data-route-theme="ink"`，表现为现代纸页、水墨纹理、墨色正文和朱砂强调。
 
 ## 禁止回退项
 
@@ -144,3 +166,5 @@ Boot Sequence：
 - 入口光点 hover 降速到 0.18，离开恢复到 1。
 - 中文文案无乱码。
 - 移动端无横向溢出。
+- `/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 可直接刷新访问。
+- `og-image.svg` 存在于静态资源目录并随构建产出。

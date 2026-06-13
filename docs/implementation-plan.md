@@ -1,7 +1,7 @@
 # ByteForge Implementation Plan
 
-版本：2026-06-02
-状态：执行中
+版本：2026-06-09
+状态：前端内容骨架已落地，后续进入内容规模化与搜索增强
 
 ## 目标
 
@@ -21,7 +21,7 @@
 
 验收：
 
-- `npm run build` 通过。
+- `pnpm build` 或 `node scripts/build.js` 通过。
 - 首页首屏显示 ByteForge v17 基线。
 - 无 `.core-comets` 旋转流星残留。
 - 入口光点点击、悬停、返回逻辑正常。
@@ -30,35 +30,40 @@
 
 ## 阶段 2：内容站基础结构
 
-状态：执行中
+状态：已完成基础骨架
 
 任务：
 
 - 从 Vite 单页升级为 Astro 内容站，或在现有 Vite 基础上先建立内容路由。
-- 建立 `/logs`、`/deployments`、`/search` 入口。
-- 增加文章、项目、知识归档的数据模型。
+- 建立 `/logs`、`/deployments`、`/search`、`/dev-ai`、`/snippets`、`/academic` 入口。
+- 增加文章、项目、知识归档和开发工具记录的数据模型。
 - 保留首页动效作为全站视觉基线。
 
 当前实施策略：
 
 - 先在现有 Vite 基础上建立轻量内容路由骨架。
-- `/logs`、`/deployments`、`/search` 先接入同一套终端式内容面板。
+- `/logs`、`/deployments`、`/search`、`/dev-ai`、`/snippets`、`/academic` 接入同一套终端式内容面板。
 - 后续内容规模稳定后，再评估是否迁移到 Astro 内容集合。
 
 本轮进展：
 
 - 已在首页视觉系统内加入 `data-route-view` 内容面板。
-- 已为 `/logs`、`/deployments`、`/search` 建立第一版路由数据和渲染逻辑。
+- 已为 `/logs`、`/deployments`、`/search`、`/dev-ai`、`/snippets`、`/academic` 建立第一版路由数据和渲染逻辑。
 - 已将内容路由数据抽离到 `src/content.js`，作为文章、项目、归档数据模型的起点。
 - 已建立本地内容索引，条目支持 `id`、`href`、`tags` 和 `collection` 字段。
-- `/search/` 已支持基于标题、正文、标签和集合名的即时过滤，并补充空状态展示。
-- 已增加构建后静态路由入口生成逻辑，`/logs/`、`/deployments/`、`/search/` 可在静态托管环境中直接刷新访问。
+- `/search/` 已支持基于标题、正文、标签和集合名的即时过滤，支持 `?q=` 查询参数，并补充空状态展示。
+- `dev-ai` 条目已纳入本地搜索索引。
+- 构建后静态路由入口由 `routeData` 自动生成，`/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 可在静态托管环境中直接刷新访问。
+- `/academic` 已作为水墨纸页风格的第二个 beta 界面，使用 `theme: 'ink'` 路由主题。
+- 星球入口由 `planetRoutes` 对象配置驱动，支持 `route`、`state` 和 `collection` 元数据。
 - 导航 active 状态和闪烁光标会随当前路径移动。
+- 内容卡片内同站链接通过 SPA 导航处理，保留 hash 定位。
 - 内容路由进入时跳过 Boot Sequence，保留背景动效作为全站视觉基线。
+- 已补充真实存在的 `og-image.svg`，避免社交分享图 404。
 
 ## 阶段 3：搜索与归档
 
-状态：待开始
+状态：本地搜索已接入，静态全文搜索待增强
 
 任务：
 
@@ -68,11 +73,13 @@
 
 ## 阶段 4：性能与可访问性
 
-状态：待开始
+状态：基础修复已完成，自动化验收待补充
 
 任务：
 
-- 补充 reduced-motion 体验。
+- 保持 reduced-motion 体验。
 - 检查移动端首屏文本与导航布局。
 - 为未来页面切换补充终端式转场。
-- 增加 Lighthouse 和构建检查。
+- 增加 Lighthouse、可访问性和构建一致性检查。
+- 不劫持浏览器默认 `Tab` 导航；星球入口保留真实 `aria-label`。
+- `pnpm run check:routes` 用于检查路由、星球配置、sitemap 和构建产物一致性。

@@ -122,10 +122,28 @@ import { routeData, planetRoutes } from './content.js';
       `;
     };
 
+    const getRoutePath = (urlLike = location) => urlLike.pathname.replace(/\/$/, '') || '/';
+
+    const scrollToRouteHash = () => {
+      let id = location.hash.slice(1);
+      if (!id || !routeView) return;
+
+      try {
+        id = decodeURIComponent(id);
+      } catch {
+        // Keep the raw hash if it is not valid percent-encoded text.
+      }
+
+      requestAnimationFrame(() => {
+        const target = document.getElementById(id);
+        if (target && routeView.contains(target)) target.scrollIntoView({ block: 'nearest' });
+      });
+    };
+
     const setActiveNav = (pathname) => {
       const cursor = hub.querySelector('.nav-cursor');
       hub.querySelectorAll('.cli-nav a').forEach((link) => {
-        const linkPathname = new URL(link.href, location.origin).pathname.replace(/\/$/, '') || '/';
+        const linkPathname = getRoutePath(new URL(link.href, location.origin));
         const isActive = linkPathname === pathname;
         link.classList.toggle('active', isActive);
         if (isActive && cursor && !link.contains(cursor)) link.appendChild(cursor);
@@ -133,17 +151,26 @@ import { routeData, planetRoutes } from './content.js';
     };
 
     const renderRoute = () => {
-      const pathname = location.pathname.replace(/\/$/, '') || '/';
+      const pathname = getRoutePath(location);
       const config = routeData[pathname];
       setActiveNav(config ? pathname : '/logs');
 
       if (!routeView || !config) {
         hub.classList.remove('is-content-route');
+        delete hub.dataset.routeTheme;
+        hub.removeEventListener('click', hub._outsideClickHandler);
+        delete hub._outsideClickHandler;
         if (routeView) {
           routeView.hidden = true;
           routeView.innerHTML = '';
         }
         return;
+      }
+
+      if (config.theme) {
+        hub.dataset.routeTheme = config.theme;
+      } else {
+        delete hub.dataset.routeTheme;
       }
 
       // 先填充内容
@@ -171,21 +198,14 @@ import { routeData, planetRoutes } from './content.js';
 
       // 点击卡片外部返回首页（带动画）
       const handleOutsideClick = (event) => {
-        // 防止卡片内的链接触发外部点击
-        if (event.target.tagName === 'A' && routeView.contains(event.target)) {
-          // 如果是 # 锚点链接，阻止默认行为（防止页面跳动）
-          const href = event.target.getAttribute('href');
-          if (href && href.includes('#')) {
-            event.preventDefault();
-            return;
-          }
-          return; // 允许正常链接跳转
-        }
+        const targetElement = event.target instanceof Element ? event.target : event.target.parentElement;
+        if (routeView.contains(event.target)) return;
+        if (!targetElement) return;
 
         if (!routeView.contains(event.target) &&
-            !event.target.closest('.cli-nav') &&
-            !event.target.closest('.theme-toggle') &&
-            event.target.closest('[data-boot-scope="byteforge-home"]')) {
+            !targetElement.closest('.cli-nav') &&
+            !targetElement.closest('.theme-toggle') &&
+            targetElement.closest('[data-boot-scope="byteforge-home"]')) {
 
           // 防止重复触发
           if (hub.dataset.returning) return;
@@ -231,14 +251,31 @@ import { routeData, planetRoutes } from './content.js';
 
       const searchInput = routeView.querySelector('[data-route-search]');
       if (searchInput) {
-        searchInput.addEventListener('input', () => {
+        const applySearch = (syncUrl = false) => {
           const query = normalizeSearch(searchInput.value);
           const filteredEntries = config.entries.filter((entry) => matchesQuery(entry, query));
           const listTarget = routeView.querySelector('[data-route-list], .route-empty');
           if (!listTarget) return;
           listTarget.outerHTML = renderEntries(filteredEntries, config.search.emptyText);
-        });
+
+          if (syncUrl) {
+            const nextUrl = new URL(location.href);
+            const rawQuery = searchInput.value.trim();
+            if (rawQuery) {
+              nextUrl.searchParams.set('q', rawQuery);
+            } else {
+              nextUrl.searchParams.delete('q');
+            }
+            history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+          }
+        };
+
+        searchInput.value = new URLSearchParams(location.search).get('q') || '';
+        applySearch();
+        searchInput.addEventListener('input', () => applySearch(true));
       }
+
+      scrollToRouteHash();
     };
 
     renderRoute();
@@ -250,8 +287,20 @@ import { routeData, planetRoutes } from './content.js';
     });
 
     routeView?.addEventListener('click', (event) => {
-      const link = event.target.closest('a[href^="/"]');
-      if (link) sessionStorage.setItem(skipKey, '1');
+      const targetElement = event.target instanceof Element ? event.target : event.target.parentElement;
+      const link = targetElement?.closest('a[href]');
+      if (!link || !routeView.contains(link)) return;
+
+      const url = new URL(link.href, location.origin);
+      if (url.origin !== location.origin) return;
+
+      const targetPath = getRoutePath(url);
+      if (targetPath !== '/' && !routeData[targetPath]) return;
+
+      event.preventDefault();
+      sessionStorage.setItem(skipKey, '1');
+      history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);
+      renderRoute();
     });
 
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -301,15 +350,28 @@ import { routeData, planetRoutes } from './content.js';
       });
     }
 
+    const normalizePlanetConfig = (label) => {
+      const config = planetRoutes[label];
+      if (typeof config === 'string') return { route: config, state: 'ready' };
+      if (config && typeof config === 'object') return config;
+      return { route: null, state: 'future' };
+    };
+
     hub.querySelectorAll('.planet').forEach((planet) => {
       const label = planet.getAttribute('aria-label');
-      const route = planetRoutes[label];
+      const config = normalizePlanetConfig(label);
+      const route = config.route || null;
+      const state = config.state || (route ? 'ready' : 'future');
+      const isInteractive = Boolean(route) && !['future', 'disabled'].includes(state);
 
-      // 根据是否有路由映射，自动设置星球状态
-      if (route) {
-        planet.removeAttribute('data-kind');
+      planet.dataset.state = state;
+      if (config.collection) planet.dataset.collection = config.collection;
+
+      if (isInteractive) {
         planet.dataset.route = route;
+        planet.removeAttribute('data-kind');
       } else {
+        delete planet.dataset.route;
         planet.dataset.kind = 'future';
       }
 
@@ -327,7 +389,7 @@ import { routeData, planetRoutes } from './content.js';
       const restoreOrbit = () => setOrbitRate(1);
 
       planet.addEventListener('click', (event) => {
-        if (planet.dataset.kind === 'future') return;
+        if (planet.dataset.kind === 'future' || planet.dataset.state === 'disabled') return;
 
         // 如果有路由，使用 SPA 导航
         if (planet.dataset.route) {
@@ -369,23 +431,32 @@ import { routeData, planetRoutes } from './content.js';
       const meteor = document.createElement('div');
       meteor.className = 'meteor';
 
-      // 随机起始位置（从顶部和右侧边缘）
+      const width = window.innerWidth || document.documentElement.clientWidth || 1200;
+      const height = window.innerHeight || document.documentElement.clientHeight || 800;
+      const tailPadding = 220;
       const edge = Math.random();
-      if (edge < 0.7) {
-        // 70% 从顶部开始
-        meteor.style.left = (Math.random() * 100) + '%';
-        meteor.style.top = '-5%';
+      let startX;
+      let startY;
+
+      if (edge < 0.72) {
+        startX = Math.random() * (width * 0.88) - tailPadding * 0.35;
+        startY = -tailPadding;
       } else {
-        // 30% 从右侧开始
-        meteor.style.left = '105%';
-        meteor.style.top = (Math.random() * 50) + '%';
+        startX = -tailPadding;
+        startY = Math.random() * (height * 0.46) - tailPadding * 0.25;
       }
 
-      // 随机持续时间和大小变化
-      const duration = Math.random() * 0.8 + 0.6; // 0.6-1.4s
+      const travel = Math.max(width - startX, height - startY) + tailPadding;
+      const duration = Math.max(1.15, Math.min(2.35, travel / 760 + Math.random() * 0.35));
       const scale = Math.random() * 0.5 + 0.7; // 0.7-1.2x
+
+      meteor.style.left = `${startX}px`;
+      meteor.style.top = `${startY}px`;
+      meteor.style.setProperty('--meteor-travel-x', `${travel}px`);
+      meteor.style.setProperty('--meteor-travel-y', `${travel}px`);
+      meteor.style.setProperty('--meteor-scale', scale.toFixed(2));
       meteor.style.animationDuration = duration + 's';
-      meteor.style.transform = `scale(${scale})`;
+      meteor.dataset.duration = String(duration);
 
       return meteor;
     };
@@ -410,7 +481,8 @@ import { routeData, planetRoutes } from './content.js';
       const spawnMeteor = () => {
         const meteor = createMeteor();
         container.appendChild(meteor);
-        setTimeout(() => meteor.remove(), 2000);
+        const duration = Number(meteor.dataset.duration) || 1.6;
+        setTimeout(() => meteor.remove(), (duration + 0.3) * 1000);
       };
 
       // 流星雨爆发模式
@@ -480,7 +552,6 @@ import { routeData, planetRoutes } from './content.js';
     // 键盘导航支持
     const initKeyboardNav = () => {
       const planets = Array.from(hub.querySelectorAll('.planet:not([data-kind="future"])'));
-      let focusIndex = -1;
 
       // ESC 返回首页
       document.addEventListener('keydown', (e) => {
@@ -488,19 +559,6 @@ import { routeData, planetRoutes } from './content.js';
           e.preventDefault();
           const clickEvent = new MouseEvent('click', { bubbles: true });
           hub.dispatchEvent(clickEvent);
-        }
-
-        // Tab 切换星球焦点
-        if (e.key === 'Tab' && !hub.classList.contains('is-content-route')) {
-          e.preventDefault();
-
-          if (e.shiftKey) {
-            focusIndex = focusIndex <= 0 ? planets.length - 1 : focusIndex - 1;
-          } else {
-            focusIndex = (focusIndex + 1) % planets.length;
-          }
-
-          planets[focusIndex].focus();
         }
 
         // Enter 激活星球
@@ -514,7 +572,9 @@ import { routeData, planetRoutes } from './content.js';
       planets.forEach((planet, index) => {
         planet.setAttribute('tabindex', '0');
         planet.setAttribute('role', 'button');
-        planet.setAttribute('aria-label', `星球 ${index + 1}`);
+        if (!planet.hasAttribute('aria-label')) {
+          planet.setAttribute('aria-label', planet.textContent.trim() || `Planet ${index + 1}`);
+        }
       });
     };
 

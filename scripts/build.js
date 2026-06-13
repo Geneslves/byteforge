@@ -1,9 +1,12 @@
 import { cp, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { build } from 'vite';
+import { routeData } from '../src/content.js';
 
 const distDir = 'dist';
-const routePaths = ['logs', 'deployments', 'search'];
+const routePaths = Object.keys(routeData)
+  .map((routePath) => routePath.replace(/^\//, ''))
+  .filter(Boolean);
 
 await build();
 
