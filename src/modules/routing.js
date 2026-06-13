@@ -76,10 +76,6 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     sessionStorage.removeItem(skipKey);
   }
 
-  hub.querySelectorAll('.cli-nav a').forEach((link) => {
-    link.addEventListener('click', () => sessionStorage.setItem(skipKey, '1'));
-  });
-
   const renderRoute = () => {
     const pathname = getRoutePath(location);
     const config = routeData[pathname];
@@ -192,7 +188,37 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     scrollToRouteHash(routeView);
   };
 
+  const navigateToRoute = (url) => {
+    const targetPath = getRoutePath(url);
+    if (targetPath !== '/' && !routeData[targetPath]) return false;
+
+    sessionStorage.setItem(skipKey, '1');
+    history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);
+    renderRoute();
+    return true;
+  };
+
   renderRoute();
+
+  hub.querySelectorAll('.cli-nav a').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const url = new URL(link.href, location.origin);
+      if (url.origin !== location.origin) return;
+
+      if (navigateToRoute(url)) event.preventDefault();
+    });
+  });
 
   window.addEventListener('popstate', () => {
     renderRoute();
@@ -207,13 +233,7 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     const url = new URL(link.href, location.origin);
     if (url.origin !== location.origin) return;
 
-    const targetPath = getRoutePath(url);
-    if (targetPath !== '/' && !routeData[targetPath]) return;
-
-    event.preventDefault();
-    sessionStorage.setItem(skipKey, '1');
-    history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);
-    renderRoute();
+    if (navigateToRoute(url)) event.preventDefault();
   });
 
   return { renderRoute };

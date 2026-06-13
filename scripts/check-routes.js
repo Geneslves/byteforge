@@ -59,11 +59,26 @@ for (const config of planetConfigs) {
 const html = readFileSync('index.html', 'utf8');
 const planetLabels = [...html.matchAll(/class="planet"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
 const configuredLabels = new Set(planetConfigs.map((config) => config.label));
+const navHtml = html.match(/<nav class="cli-nav">[\s\S]*?<\/nav>/)?.[0] || '';
+const navRoutes = [...navHtml.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) =>
+  normalizeRoutePath(match[1])
+);
 
 for (const label of planetLabels) {
   if (!configuredLabels.has(label)) {
     errors.push(`HTML planet has no planetRoutes config: ${label}`);
   }
+}
+
+for (const routePath of navRoutes) {
+  if (routePath && routePath !== '/' && !routes.has(routePath)) {
+    errors.push(`CLI nav links to unknown route: ${routePath}`);
+  }
+}
+
+const routingModule = readFileSync('src/modules/routing.js', 'utf8');
+if (!routingModule.includes("link.addEventListener('click', (event) => {")) {
+  errors.push('CLI nav links must be intercepted by SPA routing instead of forcing a full page reload');
 }
 
 const sitemap = existsSync('public/sitemap.xml') ? readFileSync('public/sitemap.xml', 'utf8') : '';

@@ -61,7 +61,7 @@
 - 内容路由进入时跳过 Boot Sequence，保留背景动效作为全站视觉基线。
 - 已补充真实存在的 `og-image.svg`，避免社交分享图 404。
 - 已将前端行为拆分到 `src/modules/`，样式迁移到 `src/styles/`，静态音频迁移到 `public/audio/`。
-- 已添加背景音乐开关，默认关闭，用户点击后播放 `public/audio/ink-wash-terminal.mp3`。
+- 已添加背景音乐开关，默认开启；浏览器阻止自动播放时会回退为关闭状态，用户仍可点击播放 `public/audio/ink-wash-terminal.mp3`。
 
 ## 阶段 3：搜索与归档
 

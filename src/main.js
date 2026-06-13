@@ -1,7 +1,3 @@
-import './styles/style.css';
-import './styles/themes.css';
-import './styles/effects.css';
-
 import { routeData, planetRoutes } from './data/content.js';
 import { initAudioControl } from './modules/audio.js';
 import { initEffects, initKeyboardNav } from './modules/effects.js';

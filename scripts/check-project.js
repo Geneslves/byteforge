@@ -37,23 +37,47 @@ for (const legacyHref of ['/src/style.css', '/src/themes.css', '/src/effects.css
   if (html.includes(legacyHref)) errors.push(`index.html should not link legacy stylesheet: ${legacyHref}`);
 }
 
+for (const styleHref of ['/src/styles/themes.css', '/src/styles/style.css', '/src/styles/effects.css']) {
+  if (!html.includes(`rel="stylesheet" href="${styleHref}"`)) {
+    errors.push(`index.html should load stylesheet before app boot: ${styleHref}`);
+  }
+}
+
+const appScriptIndex = html.indexOf('src="/src/main.js"');
+const lastStyleIndex = Math.max(
+  html.indexOf('href="/src/styles/themes.css"'),
+  html.indexOf('href="/src/styles/style.css"'),
+  html.indexOf('href="/src/styles/effects.css"')
+);
+if (appScriptIndex !== -1 && lastStyleIndex !== -1 && lastStyleIndex > appScriptIndex) {
+  errors.push('stylesheet links must appear before the application module script');
+}
+
 if (!html.includes('data-audio-toggle')) {
   errors.push('index.html is missing the audio toggle control');
 }
-if (!html.includes('aria-pressed="false"')) {
-  errors.push('audio toggle should declare aria-pressed="false" by default');
+if (!html.includes('aria-pressed="true"')) {
+  errors.push('audio toggle should declare aria-pressed="true" by default');
 }
 
 const audioModule = readFileSync('src/modules/audio.js', 'utf8');
 for (const requiredSnippet of [
   "const AUDIO_SRC = '/audio/ink-wash-terminal.mp3'",
   "const AUDIO_KEY = 'byteforge:audio-enabled'",
+  "localStorage.getItem(AUDIO_KEY) !== '0'",
   'audio.loop = true',
   'audio.play()',
   'aria-pressed',
 ]) {
   if (!audioModule.includes(requiredSnippet)) {
     errors.push(`audio module is missing behavior marker: ${requiredSnippet}`);
+  }
+}
+
+const mainModule = readFileSync('src/main.js', 'utf8');
+for (const styleImport of ["import './styles/style.css'", "import './styles/themes.css'", "import './styles/effects.css'"]) {
+  if (mainModule.includes(styleImport)) {
+    errors.push(`src/main.js should not inject blocking page styles through JavaScript: ${styleImport}`);
   }
 }
 
