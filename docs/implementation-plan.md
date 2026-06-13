@@ -51,6 +51,8 @@
 - 已为 `/logs`、`/deployments`、`/search`、`/dev-ai`、`/snippets`、`/academic` 建立第一版路由数据和渲染逻辑。
 - 已将内容路由数据抽离到 `src/data/content.js`，作为文章、项目、归档数据模型的起点。
 - 已建立本地内容索引，条目支持 `id`、`href`、`tags` 和 `collection` 字段。
+- 已将内容路由升级为 `routeDefinitions` 定义表驱动，路由会自动绑定 collection、entries、stats 和 topTags，减少新增页面时的重复配置。
+- 内容面板已补充 collection、entries、tags 和 topTags 元信息，进入子页面时能更快判断当前内容范围。
 - `/search/` 已支持基于标题、正文、标签和集合名的即时过滤，支持 `?q=` 查询参数，并补充空状态展示。
 - `dev-ai` 条目已纳入本地搜索索引。
 - 构建后静态路由入口由 `routeData` 自动生成，`/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 可在静态托管环境中直接刷新访问。
@@ -63,8 +65,9 @@
 - 已将前端行为拆分到 `src/modules/`，样式迁移到 `src/styles/`，静态音频迁移到 `public/audio/`。
 - 已添加背景音乐开关，默认开启；浏览器阻止自动播放时会回退为关闭状态，用户仍可点击播放 `public/audio/ink-wash-terminal.mp3`。
 - 构建脚本会为每个静态子路由写入独立 title、description、canonical、OG 和 Twitter URL，避免所有子路由复用首页 head。
-- 已新增 `check:static`、`check:source` 和官方 registry `audit` 脚本，统一 `pnpm run check` 会覆盖结构、构建、路由 head、静态产物和源码质量。
-- 已新增 `check:visual`，使用本机 Chrome/Edge 对构建后的 `/`、`/logs/`、`/deployments/`、`/search/`、`/academic/` 做桌面和移动视口的浏览器级回归检查，覆盖 CSS 生效、内容面板、空白截图、横向溢出和控制台/资源错误。
+- 已新增 `check:content`，检查用户可见内容乱码、内容集合字段、路由定义、搜索索引和重复 id。
+- 已新增 `check:static`、`check:source` 和官方 registry `audit` 脚本，统一 `pnpm run check` 会覆盖结构、内容、构建、路由 head、静态产物和源码质量。
+- 已新增 `check:visual`，使用本机 Chrome/Edge 对构建后的 `/`、`/logs/`、`/deployments/`、`/search/`、`/academic/` 做桌面和移动视口的浏览器级回归检查，覆盖 CSS 生效、内容面板、内容元信息、空白截图、横向溢出和控制台/资源错误。
 - 通过 `pnpm.overrides` 将 Vite 传递依赖 `esbuild` 固定到安全版本，依赖审计当前无已知漏洞。
 
 ## 阶段 3：搜索与归档
@@ -90,6 +93,7 @@
 - 不劫持浏览器默认 `Tab` 导航；星球入口保留真实 `aria-label`。
 - `pnpm run check:routes` 用于检查路由、星球配置、sitemap 和构建产物一致性。
 - `pnpm run check:project` 用于检查项目目录结构、模块拆分和音频资产位置。
+- `pnpm run check:content` 用于检查内容集合、路由定义、搜索索引和用户可见内容乱码。
 - `pnpm run check:static` 用于检查构建产物中的 CSS/JS 资产链接、静态入口和关键公共资源。
 - `pnpm run check:source` 用于检查源码语法、浏览器源码 console/debug 残留和未完成标记。
 - `pnpm run check:visual` 用于检查关键路由在真实浏览器渲染环境中的样式加载、内容可见性和移动端溢出。

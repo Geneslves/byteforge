@@ -39,6 +39,22 @@ const renderEntries = (entries, emptyText = 'No entries.') => {
   `;
 };
 
+const renderRouteMeta = (config) => {
+  const stats = config.stats || { entries: config.entries.length, tags: 0 };
+  const topTags = config.topTags || [];
+
+  return `
+    <div class="route-meta" data-route-meta>
+      <span>${escapeHtml(config.collection)} collection</span>
+      <span>${escapeHtml(stats.entries)} entries</span>
+      <span>${escapeHtml(stats.tags)} tags</span>
+      ${topTags.length ? `
+        <span class="route-meta-tags">${topTags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</span>
+      ` : ''}
+    </div>
+  `;
+};
+
 const scrollToRouteHash = (routeView) => {
   let id = location.hash.slice(1);
   if (!id || !routeView) return;
@@ -105,7 +121,9 @@ export const initRouting = (hub, routeData, { skipKey }) => {
         <a href="/" class="route-back">return home</a>
       </div>
       <h1 class="route-title">${escapeHtml(config.title)}</h1>
+      ${renderRouteMeta(config)}
       <p class="route-summary">${escapeHtml(config.summary)}</p>
+      <p class="route-description">${escapeHtml(config.description)}</p>
       ${config.search ? `
         <input class="route-search" data-route-search type="search" placeholder="${escapeHtml(config.search.placeholder)}" aria-label="Search ByteForge" />
       ` : ''}

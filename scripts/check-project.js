@@ -13,6 +13,7 @@ const requiredFiles = [
   'scripts/check-source.js',
   'scripts/check-static.js',
   'scripts/check-visual.js',
+  'scripts/check-content.js',
   'src/styles/effects.css',
   'src/styles/style.css',
   'src/styles/themes.css',
@@ -93,7 +94,8 @@ if (!ecosystemConfig.includes('cwd: __dirname')) {
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const requiredScripts = {
   clean: 'node scripts/clean.js',
-  check: 'pnpm run check:project && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:source && pnpm run check:visual',
+  check: 'pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:source && pnpm run check:visual',
+  'check:content': 'node scripts/check-content.js',
   'check:source': 'node scripts/check-source.js',
   'check:static': 'node scripts/check-static.js',
   'check:visual': 'node scripts/check-visual.js',

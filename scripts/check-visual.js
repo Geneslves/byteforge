@@ -293,6 +293,7 @@ const evaluatePageState = async (client) => {
       const hubStyle = style('.hub-v2');
       const pageStyle = style('.baseline-page');
       const routeView = pick('[data-route-view]');
+      const routeMeta = pick('[data-route-meta]');
       const activeNav = [...document.querySelectorAll('.cli-nav a.active')].map((node) => node.textContent.trim());
       return {
         title: document.title,
@@ -304,6 +305,7 @@ const evaluatePageState = async (client) => {
         activeNavCount: activeNav.length,
         routeViewVisible: Boolean(routeView && !routeView.hidden && routeView.textContent.trim().length > 20),
         routeTitle: pick('.route-title')?.textContent.trim() || '',
+        routeMetaText: routeMeta?.textContent.trim() || '',
         hubPosition: hubStyle?.position || '',
         pageMinHeight: pageStyle?.minHeight || '',
         bodyFont: getComputedStyle(document.body).fontFamily,
@@ -381,6 +383,9 @@ const runVisualChecks = async () => {
         }
         if (route !== '/' && (!state.routeViewVisible || !state.routeTitle)) {
           errors.push(`${context}: route content panel is not visible`);
+        }
+        if (route !== '/' && (!state.routeMetaText.includes('entries') || !state.routeMetaText.includes('tags'))) {
+          errors.push(`${context}: route content metadata is missing`);
         }
         if (cliNavRoutes.has(route) && state.activeNavCount !== 1) {
           errors.push(`${context}: exactly one navigation item should be active`);
