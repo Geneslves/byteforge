@@ -136,6 +136,8 @@ Boot Sequence：
 - 入口光点的 `aria-label` 使用真实业务名称，不使用无语义的序号。
 - 入口状态由 `data-state` 表达，至少包含 `ready`、`beta`、`future`、`disabled`。
 - `future` 和 `disabled` 状态不可点击；`ready` 和 `beta` 状态可绑定内容路由。
+- 背景音乐开关位于终端导航栏，默认关闭，点击后播放或暂停 `public/audio/ink-wash-terminal.mp3`。
+- 音乐按钮必须保留 `aria-pressed` 和明确的 `aria-label`，不得依赖自动播放。
 
 内容面板：
 
@@ -168,3 +170,4 @@ Boot Sequence：
 - 移动端无横向溢出。
 - `/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 可直接刷新访问。
 - `og-image.svg` 存在于静态资源目录并随构建产出。
+- `src/main.js` 只做模块装配；内容数据位于 `src/data/`，交互逻辑位于 `src/modules/`，样式位于 `src/styles/`。

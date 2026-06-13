@@ -25,7 +25,7 @@
 - CMS：无
 
 **近期技术债务**
-- 内容仍由 `src/content.js` 手工维护，缺少 Markdown/MDX 或 CMS 管线。
+- 内容仍由 `src/data/content.js` 手工维护，缺少 Markdown/MDX 或 CMS 管线。
 - 搜索仍是本地数组过滤，Pagefind 或等价静态全文搜索待接入。
 - 缺少自动化测试、Lighthouse 检查和可访问性回归检查。
 - PWA 当前只有 manifest，尚未接入 Service Worker。

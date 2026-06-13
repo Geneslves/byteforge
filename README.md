@@ -8,11 +8,14 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 - 运行时：Vanilla JavaScript + 原生 Web API
 - 样式：CSS Variables + 原生 CSS
 - 路由：History API + 构建期静态入口生成
-- 内容来源：`src/content.js`
+- 内容来源：`src/data/content.js`
+- 行为模块：`src/modules/`
+- 样式入口：`src/styles/`
+- 静态音频：`public/audio/ink-wash-terminal.mp3`
 
 ## 当前路由
 
-路由配置的唯一来源是 `src/content.js` 里的 `routeData`。
+路由配置的唯一来源是 `src/data/content.js` 里的 `routeData`。
 
 - `/logs/`
 - `/deployments/`
@@ -28,6 +31,7 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 ```powershell
 pnpm dev
 pnpm build
+pnpm run check:project
 pnpm preview
 ```
 
@@ -98,7 +102,7 @@ pm2 startup
 
 ## 内容模型
 
-`src/content.js` 包含以下核心数据：
+`src/data/content.js` 包含以下核心数据：
 
 - `contentCollections`：按 logs、deployments、archive、dev-ai 分组的内容集合。
 - `searchEntries`：`/search/` 使用的本地搜索索引。
@@ -109,7 +113,7 @@ pm2 startup
 
 ## 新增页面与星球绑定
 
-1. 在 `src/content.js` 新增内容条目数组。
+1. 在 `src/data/content.js` 新增内容条目数组。
 2. 在 `routeData` 中新增路由，例如 `/snippets`。
 3. 在 `planetRoutes` 中把 HTML 星球的 `aria-label` 绑定到该路由。
 4. 如果是新星球，还需要在 `index.html` 的 `.orbit-layer` 中添加对应按钮。
@@ -137,6 +141,7 @@ export const planetRoutes = {
 
 ```powershell
 pnpm build
+pnpm run check:project
 pnpm run check:routes
 ```
 

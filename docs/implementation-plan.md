@@ -14,7 +14,7 @@
 任务：
 
 - 建立正式设计基线文档。
-- 将 v17 首屏动效迁移到项目 `index.html`、`src/style.css`、`src/main.js`。
+- 将 v17 首屏动效迁移到项目 `index.html`、`src/styles/style.css`、`src/main.js`。
 - 修复当前项目乱码文案。
 - 保留 Boot Sequence、鼠标视差、入口光点、终端导航和粒子光效。
 - 运行构建验证。
@@ -49,7 +49,7 @@
 
 - 已在首页视觉系统内加入 `data-route-view` 内容面板。
 - 已为 `/logs`、`/deployments`、`/search`、`/dev-ai`、`/snippets`、`/academic` 建立第一版路由数据和渲染逻辑。
-- 已将内容路由数据抽离到 `src/content.js`，作为文章、项目、归档数据模型的起点。
+- 已将内容路由数据抽离到 `src/data/content.js`，作为文章、项目、归档数据模型的起点。
 - 已建立本地内容索引，条目支持 `id`、`href`、`tags` 和 `collection` 字段。
 - `/search/` 已支持基于标题、正文、标签和集合名的即时过滤，支持 `?q=` 查询参数，并补充空状态展示。
 - `dev-ai` 条目已纳入本地搜索索引。
@@ -60,6 +60,8 @@
 - 内容卡片内同站链接通过 SPA 导航处理，保留 hash 定位。
 - 内容路由进入时跳过 Boot Sequence，保留背景动效作为全站视觉基线。
 - 已补充真实存在的 `og-image.svg`，避免社交分享图 404。
+- 已将前端行为拆分到 `src/modules/`，样式迁移到 `src/styles/`，静态音频迁移到 `public/audio/`。
+- 已添加背景音乐开关，默认关闭，用户点击后播放 `public/audio/ink-wash-terminal.mp3`。
 
 ## 阶段 3：搜索与归档
 
@@ -83,3 +85,4 @@
 - 增加 Lighthouse、可访问性和构建一致性检查。
 - 不劫持浏览器默认 `Tab` 导航；星球入口保留真实 `aria-label`。
 - `pnpm run check:routes` 用于检查路由、星球配置、sitemap 和构建产物一致性。
+- `pnpm run check:project` 用于检查项目目录结构、模块拆分和音频资产位置。

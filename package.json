@@ -9,6 +9,7 @@
     "dev": "vite",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "build": "node scripts/build.js",
+    "check:project": "node scripts/check-project.js",
     "check:routes": "node scripts/check-routes.js",
     "preview": "vite preview"
   },

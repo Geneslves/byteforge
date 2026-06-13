@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { planetRoutes, routeData } from '../src/content.js';
+import { planetRoutes, routeData } from '../src/data/content.js';
 
 const errors = [];
 const warnings = [];

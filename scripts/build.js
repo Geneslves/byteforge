@@ -1,7 +1,7 @@
 import { cp, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { build } from 'vite';
-import { routeData } from '../src/content.js';
+import { routeData } from '../src/data/content.js';
 
 const distDir = 'dist';
 const routePaths = Object.keys(routeData)

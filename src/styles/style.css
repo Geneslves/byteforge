@@ -693,6 +693,40 @@ body {
     transition: color .2s ease, text-shadow .2s ease;
   }
 
+  .audio-toggle {
+    width: 30px;
+    height: 30px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(var(--green-base), .28);
+    border-radius: 4px;
+    color: var(--green);
+    background: rgba(var(--bg0), .24);
+    font: 600 13px/1 var(--font-mono);
+    cursor: pointer;
+    transition: border-color .2s ease, color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+
+  .audio-toggle:hover,
+  .audio-toggle:focus-visible {
+    border-color: rgba(var(--orange-base), .64);
+    color: var(--orange);
+    box-shadow: 0 0 12px rgba(var(--orange-base), .22);
+    outline: none;
+  }
+
+  .audio-toggle.is-active {
+    border-color: rgba(var(--green-base), .76);
+    color: var(--green);
+    background: rgba(var(--green-base), .10);
+    box-shadow: 0 0 14px rgba(var(--green-base), .24);
+  }
+
+  .audio-icon {
+    display: block;
+    transform: translateY(-1px);
+  }
+
   .nav-item::after {
     content: '';
     position: absolute;
@@ -1461,6 +1495,7 @@ body {
     }
 
     .theme-toggle,
+    .audio-toggle,
     .nav-item {
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
