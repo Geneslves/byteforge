@@ -9,13 +9,22 @@
     "dev": "vite",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "clean": "node scripts/clean.js",
-    "check": "pnpm run check:project && pnpm build && pnpm run check:routes",
+    "check": "pnpm run check:project && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:source && pnpm run check:visual",
     "build": "node scripts/build.js",
     "check:project": "node scripts/check-project.js",
     "check:routes": "node scripts/check-routes.js",
+    "check:static": "node scripts/check-static.js",
+    "check:source": "node scripts/check-source.js",
+    "check:visual": "node scripts/check-visual.js",
+    "audit": "pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate",
     "preview": "vite preview"
   },
   "devDependencies": {
     "vite": "^6.3.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.28.1"
+    }
   }
 }

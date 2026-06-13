@@ -10,6 +10,9 @@ const requiredFiles = [
   'src/modules/routing.js',
   'src/modules/theme.js',
   'scripts/clean.js',
+  'scripts/check-source.js',
+  'scripts/check-static.js',
+  'scripts/check-visual.js',
   'src/styles/effects.css',
   'src/styles/style.css',
   'src/styles/themes.css',
@@ -90,7 +93,11 @@ if (!ecosystemConfig.includes('cwd: __dirname')) {
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const requiredScripts = {
   clean: 'node scripts/clean.js',
-  check: 'pnpm run check:project && pnpm build && pnpm run check:routes',
+  check: 'pnpm run check:project && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:source && pnpm run check:visual',
+  'check:source': 'node scripts/check-source.js',
+  'check:static': 'node scripts/check-static.js',
+  'check:visual': 'node scripts/check-visual.js',
+  audit: 'pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate',
 };
 
 for (const [scriptName, expectedCommand] of Object.entries(requiredScripts)) {

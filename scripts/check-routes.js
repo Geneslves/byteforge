@@ -18,6 +18,15 @@ const normalizePlanetConfig = (label, config) => {
   return { label, route: null, state: 'future' };
 };
 
+const escapeHtml = (value) =>
+  String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+
 const routes = new Set(Object.keys(routeData));
 const routeEntries = Object.entries(routeData);
 const planetConfigs = Object.entries(planetRoutes).map(([label, config]) =>
@@ -90,11 +99,34 @@ for (const routePath of routes) {
 }
 
 if (existsSync('dist/index.html')) {
-  for (const routePath of routes) {
+  for (const [routePath, config] of routeEntries) {
     if (routePath === '/') continue;
     const staticEntry = join('dist', routePath.slice(1), 'index.html');
     if (!existsSync(staticEntry)) {
       errors.push(`dist is missing static entry: ${staticEntry}`);
+      continue;
+    }
+
+    const routeHtml = readFileSync(staticEntry, 'utf8');
+    const publicPath = `${routePath}/`;
+    const canonicalUrl = `https://byteforge.dev${publicPath}`;
+    const routeTitle = escapeHtml(`${config.title} - ByteForge`);
+    const routeDescription = escapeHtml(config.summary);
+
+    if (!routeHtml.includes(`<title>${routeTitle}</title>`)) {
+      errors.push(`dist route has incorrect title: ${staticEntry}`);
+    }
+    if (!routeHtml.includes(`<link rel="canonical" href="${canonicalUrl}" />`)) {
+      errors.push(`dist route has incorrect canonical URL: ${staticEntry}`);
+    }
+    if (!routeHtml.includes(`<meta property="og:url" content="${canonicalUrl}" />`)) {
+      errors.push(`dist route has incorrect og:url: ${staticEntry}`);
+    }
+    if (!routeHtml.includes(`<meta name="twitter:url" content="${canonicalUrl}" />`)) {
+      errors.push(`dist route has incorrect twitter:url: ${staticEntry}`);
+    }
+    if (!routeHtml.includes(`<meta name="description" content="${routeDescription}" />`)) {
+      errors.push(`dist route has incorrect description: ${staticEntry}`);
     }
   }
   if (!existsSync('dist/og-image.svg')) {

@@ -34,11 +34,15 @@ pnpm run check
 pnpm build
 pnpm run check:project
 pnpm run check:routes
+pnpm run check:static
+pnpm run check:source
+pnpm run check:visual
+pnpm run audit
 pnpm run clean
 pnpm preview
 ```
 
-`pnpm run check` 会按顺序执行项目结构检查、生产构建和路由/静态入口检查。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
+`pnpm run check` 会按顺序执行项目结构检查、生产构建、路由/head 检查、静态构建产物烟测、源码质量检查和浏览器级视觉回归检查。`pnpm run check:visual` 会用本机 Chrome/Edge 检查构建后的关键路由在桌面和移动视口下是否加载样式、显示内容面板、没有明显空白或横向溢出。`pnpm run audit` 固定使用官方 npm registry 做依赖安全审计，避免本地镜像缺少 audit endpoint。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
 
 构建脚本本体：
 
