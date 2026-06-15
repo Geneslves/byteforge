@@ -36,18 +36,24 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 ## 常用命令
 
 ```powershell
-pnpm dev
-pnpm run check
-pnpm build
-pnpm run check:project
-pnpm run check:content
-pnpm run check:routes
-pnpm run check:static
-pnpm run check:source
-pnpm run check:visual
-pnpm run audit
-pnpm run clean
-pnpm preview
+# 开发
+pnpm dev                    # 启动开发服务器
+pnpm stop                   # 停止开发服务器
+
+# 检查与构建
+pnpm run check              # 完整检查流程
+pnpm build                  # 生产构建
+pnpm run check:project      # 项目结构检查
+pnpm run check:content      # 内容数据检查
+pnpm run check:routes       # 路由一致性检查
+pnpm run check:static       # 静态产物检查
+pnpm run check:source       # 源码质量检查
+pnpm run check:visual       # 视觉回归检查
+pnpm run audit              # 依赖安全审计
+pnpm run clean              # 清理构建产物
+
+# 预览
+pnpm preview                # 预览生产构建
 ```
 
 `pnpm run check` 会按顺序执行项目结构检查、内容数据检查、生产构建、路由/head 检查、静态构建产物烟测、源码质量检查和浏览器级视觉回归检查。`pnpm run check:content` 会检查用户可见内容是否出现乱码，并验证内容集合、路由数据、搜索 facets、Pagefind 预备配置和搜索索引文档。`pnpm run check:static` 会检查构建后的 `search-index.json`。`pnpm run check:visual` 会用本机 Chrome/Edge 检查构建后的关键路由在桌面和移动视口下是否加载样式、显示内容面板、没有明显空白或横向溢出，并验证搜索过滤控件和 URL 状态恢复。`pnpm run audit` 固定使用官方 npm registry 做依赖安全审计，避免本地镜像缺少 audit endpoint。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
@@ -64,17 +70,25 @@ node scripts/build.js
 node node_modules\vite\bin\vite.js --host 127.0.0.1 --port 5173
 ```
 
-## 使用 PM2 启动
+## 后台运行（关闭命令窗口后继续运行）
 
-项目已配置 PM2 管理进程（`ecosystem.config.cjs`），提供两种运行模式：
+### 方法 1：使用 PM2（推荐）
 
-### 开发模式
+PM2 是专业的 Node.js 进程管理工具，支持后台运行、自动重启、日志管理等功能。
+
+#### 安装 PM2
 
 ```bash
-# 启动开发服务器
+npm install -g pm2
+```
+
+#### 开发模式
+
+```bash
+# 启动开发服务器（后台运行）
 pm2 start ecosystem.config.cjs --only byteforge-dev
 
-# 查看日志
+# 查看实时日志
 pm2 logs byteforge-dev
 
 # 停止
@@ -82,22 +96,25 @@ pm2 stop byteforge-dev
 
 # 重启
 pm2 restart byteforge-dev
+
+# 查看状态
+pm2 list
 ```
 
-### 预览模式（需先构建）
+#### 预览模式（需先构建）
 
 ```bash
 # 先构建生产版本
 pnpm build
 
-# 启动预览服务器
+# 启动预览服务器（后台运行）
 pm2 start ecosystem.config.cjs --only byteforge-preview
 
 # 查看日志
 pm2 logs byteforge-preview
 ```
 
-### 常用 PM2 命令
+#### 常用 PM2 命令
 
 ```bash
 # 查看所有进程状态
@@ -115,6 +132,46 @@ pm2 delete byteforge-dev
 # 保存进程列表（开机自启动）
 pm2 save
 pm2 startup
+```
+
+### 方法 2：使用 Windows 后台启动
+
+如果不想安装 PM2，可以使用 PowerShell 后台启动：
+
+```powershell
+# 后台启动（关闭窗口后继续运行）
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "pnpm dev" -WindowStyle Hidden
+
+# 停止服务器（通过端口查找并停止）
+pnpm stop
+```
+
+或者创建一个 VBS 脚本 `start-dev-hidden.vbs`：
+
+```vbscript
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "powershell -NoProfile -ExecutionPolicy Bypass -Command ""cd 'e:\Code\byteforge'; pnpm dev""", 0, False
+```
+
+双击运行即可在后台启动，完全无窗口。
+
+### 停止后台服务器
+
+无论使用哪种方法启动，都可以通过以下方式停止：
+
+```powershell
+# 方法 1：使用项目脚本（推荐）
+pnpm stop
+
+# 方法 2：直接运行停止脚本
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1
+
+# 方法 3：手动查找并停止进程
+netstat -ano | findstr :5173
+taskkill /PID <进程ID> /F
+
+# 方法 4：使用 PM2（如果用 PM2 启动）
+pm2 stop byteforge-dev
 ```
 
 ## 内容模型
