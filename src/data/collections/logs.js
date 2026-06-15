@@ -1,6 +1,8 @@
 export const logEntries = [
   {
     id: 'performance-optimization-complete',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-09',
     title: '性能优化完成',
     text: '完成构建配置优化、移动端适配和渲染性能提升，核心构建产物 gzip 体积约 20 KB。',
@@ -9,6 +11,8 @@ export const logEntries = [
   },
   {
     id: 'mobile-experience-enhanced',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-09',
     title: '移动端体验增强',
     text: '优化触摸交互、降低流星雨频率 40%、支持 reduced-motion 偏好设置。',
@@ -17,6 +21,8 @@ export const logEntries = [
   },
   {
     id: 'spa-navigation-fixed',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-09',
     title: 'SPA 导航修复',
     text: '恢复无刷新路由跳转，支持浏览器前进后退，使用 history.pushState 实现真正的单页应用。',
@@ -25,6 +31,8 @@ export const logEntries = [
   },
   {
     id: 'visual-effects-system',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-09',
     title: '视觉效果系统',
     text: '实现流星雨动画、主题切换波纹、键盘导航和加载进度条等视觉增强功能。',
@@ -33,6 +41,8 @@ export const logEntries = [
   },
   {
     id: 'byteforge-visual-baseline',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-02',
     title: 'ByteForge visual baseline',
     text: '冻结首页动效、终端导航、粒子光场和中性色温规范。',
@@ -41,6 +51,8 @@ export const logEntries = [
   },
   {
     id: 'interface-clarity-pass',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-02',
     title: 'Interface clarity pass',
     text: '去黄、去灰雾、收紧光晕，让首屏保持明亮但不模糊。',
@@ -49,6 +61,8 @@ export const logEntries = [
   },
   {
     id: 'route-shell-initialized',
+    status: 'published',
+    type: 'log',
     meta: '2026-06-02',
     title: 'Route shell initialized',
     text: '为日志、部署和搜索建立第一版内容入口骨架。',

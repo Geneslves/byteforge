@@ -53,6 +53,16 @@ for (const [collection, entries] of Object.entries(contentCollections)) {
     if (!Array.isArray(entry.tags) || entry.tags.length === 0) {
       errors.push(`content entry "${collection}.${entry.id || 'unknown'}" should include tags`);
     }
+
+    // Validate status field
+    if (!['draft', 'preview', 'published', 'archived'].includes(entry.status)) {
+      errors.push(`content entry "${collection}.${entry.id || 'unknown'}" has invalid status: ${entry.status}`);
+    }
+
+    // Validate type field
+    if (typeof entry.type !== 'string' || !entry.type.trim()) {
+      errors.push(`content entry "${collection}.${entry.id || 'unknown'}" missing type field`);
+    }
   }
 }
 

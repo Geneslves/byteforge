@@ -1,6 +1,8 @@
 export const deploymentEntries = [
   {
     id: 'byteforge-home-v2',
+    status: 'published',
+    type: 'deployment',
     meta: 'WEB',
     title: 'ByteForge Home v2.0',
     text: '完整的个人技术站点：流星雨背景、双主题系统、SPA 路由、移动端优化。',
@@ -9,6 +11,8 @@ export const deploymentEntries = [
   },
   {
     id: 'performance-benchmark',
+    status: 'published',
+    type: 'deployment',
     meta: 'METRICS',
     title: 'Performance Benchmark',
     text: '核心 HTML/CSS/JS 构建产物 gzip 约 20 KB，移动端按 reduced-motion 与低密度动效优化。',
@@ -17,6 +21,8 @@ export const deploymentEntries = [
   },
   {
     id: 'design-baseline',
+    status: 'published',
+    type: 'deployment',
     meta: 'DOCS',
     title: 'Design Baseline',
     text: '设计规则、禁用回退项和验收标准。',
@@ -25,6 +31,8 @@ export const deploymentEntries = [
   },
   {
     id: 'tech-stack',
+    status: 'published',
+    type: 'deployment',
     meta: 'TECH',
     title: 'Tech Stack',
     text: 'Vite 6 + Vanilla JS + CSS Variables，无框架依赖，原生 Web 标准。',
@@ -33,6 +41,8 @@ export const deploymentEntries = [
   },
   {
     id: 'future-modules',
+    status: 'published',
+    type: 'deployment',
     meta: 'LAB',
     title: 'Future Modules',
     text: '搜索、归档、项目详情和知识库入口。',

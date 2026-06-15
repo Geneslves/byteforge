@@ -1,6 +1,8 @@
 export const archiveEntries = [
   {
     id: 'meteor-shower-implementation',
+    status: 'published',
+    type: 'archive',
     meta: '2026-06-09',
     title: '流星雨动画实现',
     text: '使用 clip-path 和 drop-shadow 创建真实的锥形拖尾和光晕包络效果。',
@@ -9,6 +11,8 @@ export const archiveEntries = [
   },
   {
     id: 'spa-routing-pattern',
+    status: 'published',
+    type: 'archive',
     meta: '2026-06-09',
     title: 'SPA 路由模式',
     text: 'history.pushState + popstate 实现无刷新导航，静态路由生成支持直接访问。',
@@ -17,6 +21,8 @@ export const archiveEntries = [
   },
   {
     id: 'theme-system-design',
+    status: 'published',
+    type: 'archive',
     meta: '2026-06-09',
     title: '主题系统设计',
     text: 'CSS 变量 + data 属性 + localStorage 实现深色/亮色双主题，防闪烁内联脚本。',
@@ -25,6 +31,8 @@ export const archiveEntries = [
   },
   {
     id: 'static-content-routing',
+    status: 'published',
+    type: 'archive',
     meta: 'ARCHIVE',
     title: 'Static content routing',
     text: '记录 Vite 单页站点如何生成可刷新访问的静态子路由入口。',
@@ -33,6 +41,8 @@ export const archiveEntries = [
   },
   {
     id: 'search-index-plan',
+    status: 'published',
+    type: 'archive',
     meta: 'INDEX',
     title: 'Search index plan',
     text: '后续接入 Pagefind 前，先维护轻量本地内容索引和标签体系。',
@@ -41,6 +51,8 @@ export const archiveEntries = [
   },
   {
     id: 'knowledge-archive',
+    status: 'published',
+    type: 'archive',
     meta: 'NOTES',
     title: 'Knowledge archive',
     text: '学术、参考文献和知识管理笔记只作为计划记录来源，不直接成为页面依赖。',
