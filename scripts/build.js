@@ -25,13 +25,13 @@ const escapeAttribute = (value) =>
 
 const escapeXml = escapeAttribute;
 
-const withRouteHead = (html, routePath, config) => {
+const withRouteHead = (html, routePath, config, documentData = null) => {
   const publicPath = `${routePath}/`;
   const canonicalUrl = `https://byteforge.dev${publicPath}`;
   const title = `${config.title} - ByteForge`;
   const description = config.summary;
 
-  return html
+  let result = html
     .replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttribute(title)}</title>`)
     .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${escapeAttribute(description)}" />`)
     .replace(/<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${canonicalUrl}" />`)
@@ -41,6 +41,28 @@ const withRouteHead = (html, routePath, config) => {
     .replace(/<meta name="twitter:url" content="[^"]*" \/>/, `<meta name="twitter:url" content="${canonicalUrl}" />`)
     .replace(/<meta name="twitter:title" content="[^"]*" \/>/, `<meta name="twitter:title" content="${escapeAttribute(title)}" />`)
     .replace(/<meta name="twitter:description" content="[^"]*" \/>/, `<meta name="twitter:description" content="${escapeAttribute(description)}" />`);
+
+  // Add JSON-LD for document detail pages
+  if (documentData) {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": documentData.title,
+      "description": documentData.summary,
+      "datePublished": documentData.publishedAt,
+      "url": `https://byteforge.dev${documentData.url}`,
+      "keywords": documentData.tags.join(', '),
+      "author": {
+        "@type": "Person",
+        "name": "ByteForge"
+      }
+    };
+
+    const jsonLdScript = `\n  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
+    result = result.replace('</head>', `${jsonLdScript}\n  </head>`);
+  }
+
+  return result;
 };
 
 await build();
@@ -62,7 +84,7 @@ await Promise.all(contentDocuments.map(async (document) => {
   await writeFile(join(routeDir, 'index.html'), withRouteHead(baseHtml, document.path, {
     title: document.title,
     summary: document.summary,
-  }));
+  }, document));
 }));
 
 const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -96,3 +118,34 @@ console.log(`Generated static route entries: ${routePaths.map((routePath) => `/$
 console.log(`Generated document entries: ${contentDocuments.length}`);
 console.log(`Generated RSS feed: ${rssItems.length} items`);
 console.log(`Generated search index: ${searchIndexDocuments.length} documents`);
+
+// Generate sitemap
+const baseUrl = 'https://byteforge.dev';
+const sitemapUrls = [
+  { loc: `${baseUrl}/`, priority: '1.0', changefreq: 'weekly' },
+  ...routeEntries.map(([path]) => ({
+    loc: `${baseUrl}${path}/`,
+    priority: '0.8',
+    changefreq: 'weekly'
+  })),
+  ...contentDocuments.map(doc => ({
+    loc: `${baseUrl}${doc.url}`,
+    lastmod: doc.publishedAt,
+    priority: '0.6',
+    changefreq: 'monthly'
+  }))
+];
+
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapUrls.map(u => `  <url>
+    <loc>${escapeXml(u.loc)}</loc>
+    ${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>\n    ` : ''}<changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>
+`;
+
+await writeFile(join(distDir, 'sitemap.xml'), sitemapXml);
+console.log(`Generated sitemap: ${sitemapUrls.length} URLs`);
+
