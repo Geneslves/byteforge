@@ -70,7 +70,8 @@ if (!existsSync(backendDocsPath)) {
 
 // Check admin API endpoints
 const adminDir = 'functions/api/admin';
-const requiredAdminFunctions = ['feedback.js', 'analytics.js'];
+const requiredAdminFunctions = ['feedback.js', 'analytics.js', 'content-stats.js'];
+const requiredAdminSubdirs = ['functions/api/admin/feedback'];
 
 if (!existsSync(adminDir)) {
   errors.push('missing functions/api/admin directory');
@@ -83,8 +84,25 @@ if (!existsSync(adminDir)) {
   }
 }
 
+// Check admin subdirectories
+for (const subdir of requiredAdminSubdirs) {
+  if (existsSync(subdir)) {
+    const deleteFile = join(subdir, 'delete.js');
+    if (!existsSync(deleteFile)) {
+      errors.push(`missing ${deleteFile}`);
+    }
+  }
+}
+
 // Check admin dashboard files
-const adminFiles = ['public/admin.html', 'public/admin.js', 'public/admin.css'];
+const adminFiles = [
+  'public/admin.html',
+  'public/admin.js',
+  'public/admin.css',
+  'public/admin-v2.html',
+  'public/admin-v2.js',
+  'public/admin-v2.css',
+];
 for (const file of adminFiles) {
   if (!existsSync(file)) {
     errors.push(`missing admin dashboard file: ${file}`);
@@ -96,4 +114,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Backend check passed: 5 API endpoints, 2 database tables, admin dashboard, wrangler.toml configured.');
+console.log('Backend check passed: 6 API endpoints, 2 database tables, 2 admin dashboards, wrangler.toml configured.');
