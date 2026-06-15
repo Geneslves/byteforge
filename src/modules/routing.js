@@ -114,6 +114,33 @@ const renderSearchControls = (searchConfig) => {
   `;
 };
 
+const renderArchiveGroup = (title, groups) => `
+  <section class="archive-group">
+    <h2>${escapeHtml(title)}</h2>
+    <div class="archive-chip-grid">
+      ${groups.map((group) => `
+        <a href="/search/?${escapeHtml(new URLSearchParams({ q: group.label }).toString())}" class="archive-chip">
+          <span>${escapeHtml(group.label)}</span>
+          <code>${escapeHtml(group.count)}</code>
+        </a>
+      `).join('')}
+    </div>
+  </section>
+`;
+
+const renderArchiveIndex = (archive) => {
+  if (!archive) return '';
+
+  return `
+    <div class="archive-index" data-archive-index>
+      ${renderArchiveGroup('timeline', archive.timeline)}
+      ${renderArchiveGroup('category', archive.categories)}
+      ${renderArchiveGroup('series', archive.series)}
+      ${renderArchiveGroup('tag', archive.tags.slice(0, 18))}
+    </div>
+  `;
+};
+
 const scrollToRouteHash = (routeView) => {
   let id = location.hash.slice(1);
   if (!id || !routeView) return;
@@ -184,6 +211,7 @@ export const initRouting = (hub, routeData, { skipKey }) => {
       <p class="route-summary">${escapeHtml(config.summary)}</p>
       <p class="route-description">${escapeHtml(config.description)}</p>
       ${config.search ? renderSearchControls(config.search) : ''}
+      ${config.archive ? renderArchiveIndex(config.archive) : ''}
       ${renderEntries(config.entries, config.search?.emptyText)}
     `;
 

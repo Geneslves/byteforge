@@ -19,6 +19,7 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 
 - `/logs/`
 - `/deployments/`
+- `/archive/`
 - `/search/`
 - `/dev-ai/`
 - `/snippets/`
@@ -28,7 +29,7 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 
 ## 搜索索引
 
-搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`searchFacets`、`searchIndexDocuments` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；构建时会生成 `dist/search-index.json`，作为后续接入 Pagefind 的稳定数据出口。
+搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`searchFacets`、`searchIndexDocuments`、`archiveIndex` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；`/archive/` 使用同一份索引按 timeline、category、series 和 tag 聚合浏览；构建时会生成 `dist/search-index.json`，作为后续接入 Pagefind 的稳定数据出口。
 
 ## 常用命令
 
@@ -118,9 +119,11 @@ pm2 startup
 
 `src/data/content.js` 包含以下核心数据：
 
-- `contentCollections`：按 logs、deployments、archive、dev-ai 分组的内容集合。
+- `contentCollections`：按 logs、deployments、archive、dev-ai、snippets、academic 分组的内容集合。
 - `searchEntries`：`/search/` 使用的本地搜索索引。
-- `routeData`：内容面板的路由标题、摘要和条目数据。
+- `searchFacets`：collection、category、series 和 tag 过滤项。
+- `archiveIndex`：`/archive/` 使用的 timeline、category、series 和 tag 聚合索引。
+- `routeDefinitions` / `routeData`：内容面板的路由标题、摘要、条目和专题数据。
 - `planetRoutes`：首页轨道节点到内容路由、状态和集合元数据的映射。
 
 新增内容路由时，优先更新 `routeData`。构建脚本会自动生成对应静态入口。
@@ -171,4 +174,4 @@ pnpm run check:routes
 node scripts/build.js
 ```
 
-预期构建产物应包含 `/logs/`、`/deployments/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 六个静态入口，并包含 `og-image.svg`。
+预期构建产物应包含 `/logs/`、`/deployments/`、`/archive/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 七个静态入口，并包含 `og-image.svg` 和 `search-index.json`。

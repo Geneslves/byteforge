@@ -12,11 +12,12 @@ const routes = [
   '/',
   '/logs/',
   '/deployments/',
+  '/archive/',
   '/search/',
   '/search/?q=vite&collection=logs&category=Engineering&series=Build%20Journal&tag=vite',
   '/academic/',
 ];
-const cliNavRoutes = new Set(['/logs/', '/deployments/', '/search/']);
+const cliNavRoutes = new Set(['/logs/', '/deployments/', '/archive/', '/search/']);
 const viewports = [
   { name: 'desktop', width: 1365, height: 768, deviceScaleFactor: 1, mobile: false },
   { name: 'mobile', width: 390, height: 844, deviceScaleFactor: 2, mobile: true },
@@ -301,6 +302,7 @@ const evaluatePageState = async (client) => {
       const pageStyle = style('.baseline-page');
       const routeView = pick('[data-route-view]');
       const routeMeta = pick('[data-route-meta]');
+      const archiveIndex = pick('[data-archive-index]');
       const searchFilters = pick('[data-search-filters]');
       const searchInput = pick('[data-route-search]');
       const activeNav = [...document.querySelectorAll('.cli-nav a.active')].map((node) => node.textContent.trim());
@@ -317,6 +319,7 @@ const evaluatePageState = async (client) => {
         routeViewVisible: Boolean(routeView && !routeView.hidden && routeView.textContent.trim().length > 20),
         routeTitle: pick('.route-title')?.textContent.trim() || '',
         routeMetaText: routeMeta?.textContent.trim() || '',
+        archiveIndexText: archiveIndex?.textContent.trim() || '',
         searchFilterText: searchFilters?.textContent.trim() || '',
         searchInputValue: searchInput?.value || '',
         activeFilterValues,
@@ -407,6 +410,9 @@ const runVisualChecks = async () => {
         }
         if (routePathname === '/search/' && (!state.searchFilterText.includes('collection') || !state.searchFilterText.includes('category') || !state.searchFilterText.includes('series'))) {
           errors.push(`${context}: search filter controls are missing`);
+        }
+        if (routePathname === '/archive/' && (!state.archiveIndexText.includes('timeline') || !state.archiveIndexText.includes('category') || !state.archiveIndexText.includes('series') || !state.archiveIndexText.includes('tag'))) {
+          errors.push(`${context}: archive index groups are missing`);
         }
         if (route.includes('?') && (
           state.searchInputValue !== 'vite' ||

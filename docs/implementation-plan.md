@@ -88,6 +88,9 @@
 - 搜索过滤状态会同步到 URL 参数，刷新或直接访问带参数的 `/search/` 可恢复过滤条件。
 - `scripts/build.js` 会生成 `dist/search-index.json`，其中包含 Pagefind 预备配置、facets 和搜索文档。
 - `check:content`、`check:static` 和 `check:visual` 已覆盖搜索索引结构、静态索引产物、搜索过滤控件和 URL 状态恢复。
+- 已新增 `/archive/` 归档浏览入口，使用 `archiveIndex` 按 timeline、category、series 和 tag 聚合全站内容。
+- Knowledge Base 星球已升级为 Archive Map 入口，CLI 导航也新增 `/archive/`。
+- `check:content` 和 `check:visual` 已覆盖 `/archive/` 路由、归档聚合数据和浏览器渲染。
 
 ## 阶段 4：性能与可访问性
 

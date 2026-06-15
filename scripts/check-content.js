@@ -21,6 +21,7 @@ for (const filePath of filesToCheck) {
 }
 
 const {
+  archiveIndex,
   contentCollections,
   pagefindIndexConfig,
   routeData,
@@ -65,6 +66,20 @@ for (const [routePath, config] of Object.entries(routeData)) {
   }
   if (!Array.isArray(config.entries) || config.entries.length === 0) {
     errors.push(`route "${routePath}" should include entries`);
+  }
+}
+
+if (routeData['/archive']?.collection !== 'archive') {
+  errors.push('route "/archive" should expose the archive collection');
+}
+
+if (!archiveIndex || typeof archiveIndex !== 'object') {
+  errors.push('archiveIndex export is missing');
+} else {
+  for (const field of ['timeline', 'categories', 'series', 'tags']) {
+    if (!Array.isArray(archiveIndex[field]) || archiveIndex[field].length === 0) {
+      errors.push(`archiveIndex.${field} should contain grouped archive data`);
+    }
   }
 }
 

@@ -106,7 +106,7 @@ const archiveEntries = [
     meta: '2026-06-09',
     title: '流星雨动画实现',
     text: '使用 clip-path 和 drop-shadow 创建真实的锥形拖尾和光晕包络效果。',
-    href: '/search/#meteor-shower-implementation',
+    href: '/archive/#meteor-shower-implementation',
     tags: ['css', 'animation', 'visual-effects'],
   },
   {
@@ -114,7 +114,7 @@ const archiveEntries = [
     meta: '2026-06-09',
     title: 'SPA 路由模式',
     text: 'history.pushState + popstate 实现无刷新导航，静态路由生成支持直接访问。',
-    href: '/search/#spa-routing-pattern',
+    href: '/archive/#spa-routing-pattern',
     tags: ['spa', 'routing', 'history-api'],
   },
   {
@@ -122,7 +122,7 @@ const archiveEntries = [
     meta: '2026-06-09',
     title: '主题系统设计',
     text: 'CSS 变量 + data 属性 + localStorage 实现深色/亮色双主题，防闪烁内联脚本。',
-    href: '/search/#theme-system-design',
+    href: '/archive/#theme-system-design',
     tags: ['theme', 'css-variables', 'dark-mode'],
   },
   {
@@ -130,7 +130,7 @@ const archiveEntries = [
     meta: 'ARCHIVE',
     title: 'Static content routing',
     text: '记录 Vite 单页站点如何生成可刷新访问的静态子路由入口。',
-    href: '/search/#static-content-routing',
+    href: '/archive/#static-content-routing',
     tags: ['routing', 'deployment', 'static-site'],
   },
   {
@@ -138,7 +138,7 @@ const archiveEntries = [
     meta: 'INDEX',
     title: 'Search index plan',
     text: '后续接入 Pagefind 前，先维护轻量本地内容索引和标签体系。',
-    href: '/search/#search-index-plan',
+    href: '/archive/#search-index-plan',
     tags: ['pagefind', 'search', 'tags'],
   },
   {
@@ -146,7 +146,7 @@ const archiveEntries = [
     meta: 'NOTES',
     title: 'Knowledge archive',
     text: '学术、参考文献和知识管理笔记只作为计划记录来源，不直接成为页面依赖。',
-    href: '/search/#knowledge-archive',
+    href: '/archive/#knowledge-archive',
     tags: ['notes', 'archive', 'knowledge'],
   },
 ];
@@ -319,6 +319,32 @@ export const searchIndexDocuments = searchEntries.map((entry) => ({
   },
 }));
 
+const groupEntries = (entries, getKey) =>
+  Object.entries(entries.reduce((groups, entry) => {
+    const key = getKey(entry);
+    if (!key) return groups;
+    groups[key] = groups[key] || [];
+    groups[key].push(entry);
+    return groups;
+  }, {}))
+    .map(([label, items]) => ({ label, count: items.length, items }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+const getTimelineBucket = (entry) => {
+  const year = entry.meta.match(/\d{4}/)?.[0];
+  return year || entry.meta;
+};
+
+export const archiveIndex = {
+  timeline: groupEntries(searchEntries, getTimelineBucket).sort((a, b) => b.label.localeCompare(a.label)),
+  categories: groupEntries(searchEntries, (entry) => entry.category),
+  series: groupEntries(searchEntries, (entry) => entry.series),
+  tags: groupEntries(
+    searchEntries.flatMap((entry) => (entry.tags || []).map((tag) => ({ ...entry, archiveTag: tag }))),
+    (entry) => entry.archiveTag
+  ),
+};
+
 export const routeDefinitions = [
   {
     path: '/logs',
@@ -335,6 +361,15 @@ export const routeDefinitions = [
     title: 'Deployments',
     summary: '项目、实验和服务的发布索引。后续用于沉淀可访问作品、部署说明和运行状态。',
     description: '汇总已经落地或进入验证期的站点、文档、指标和工程模块。',
+  },
+  {
+    path: '/archive',
+    collection: 'archive',
+    kicker: '>_ ~/archive',
+    title: 'Archive Map',
+    summary: '按时间线、分类、系列和标签整理站点内容，让搜索之外也有可浏览的知识地图。',
+    description: '这里聚合工程记录、项目索引、知识归档、AI 工作流、代码片段和学术笔记的浏览入口。',
+    archive: archiveIndex,
   },
   {
     path: '/search',
@@ -409,7 +444,7 @@ export const planetRoutes = {
   'Academic': { route: '/academic', state: 'beta', collection: 'academic' },
   'Deployments': { route: '/deployments', state: 'ready', collection: 'deployments' },
   'Search': { route: '/search', state: 'ready', collection: 'search' },
-  'Knowledge Base': { route: null, state: 'future', collection: 'knowledge-base' },
+  'Knowledge Base': { route: '/archive', state: 'ready', collection: 'archive' },
   'Toolbox': { route: null, state: 'future', collection: 'toolbox' },
   'Lab Notes': { route: null, state: 'future', collection: 'lab-notes' },
   'Changelog': { route: null, state: 'future', collection: 'changelog' },
