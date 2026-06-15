@@ -13,6 +13,7 @@ const routes = [
   '/logs/',
   '/deployments/',
   '/archive/',
+  '/documents/performance-optimization-complete/',
   '/search/',
   '/search/?q=vite&collection=logs&category=Engineering&series=Build%20Journal&tag=vite',
   '/academic/',
@@ -303,6 +304,7 @@ const evaluatePageState = async (client) => {
       const routeView = pick('[data-route-view]');
       const routeMeta = pick('[data-route-meta]');
       const archiveIndex = pick('[data-archive-index]');
+      const documentView = pick('[data-document-view]');
       const searchFilters = pick('[data-search-filters]');
       const searchInput = pick('[data-route-search]');
       const activeNav = [...document.querySelectorAll('.cli-nav a.active')].map((node) => node.textContent.trim());
@@ -320,6 +322,7 @@ const evaluatePageState = async (client) => {
         routeTitle: pick('.route-title')?.textContent.trim() || '',
         routeMetaText: routeMeta?.textContent.trim() || '',
         archiveIndexText: archiveIndex?.textContent.trim() || '',
+        documentViewText: documentView?.textContent.trim() || '',
         searchFilterText: searchFilters?.textContent.trim() || '',
         searchInputValue: searchInput?.value || '',
         activeFilterValues,
@@ -405,7 +408,7 @@ const runVisualChecks = async () => {
         if (routePathname !== '/' && (!state.routeViewVisible || !state.routeTitle)) {
           errors.push(`${context}: route content panel is not visible`);
         }
-        if (routePathname !== '/' && (!state.routeMetaText.includes('entries') || !state.routeMetaText.includes('tags'))) {
+        if (!routePathname.startsWith('/documents/') && routePathname !== '/' && (!state.routeMetaText.includes('entries') || !state.routeMetaText.includes('tags'))) {
           errors.push(`${context}: route content metadata is missing`);
         }
         if (routePathname === '/search/' && (!state.searchFilterText.includes('collection') || !state.searchFilterText.includes('category') || !state.searchFilterText.includes('series'))) {
@@ -413,6 +416,9 @@ const runVisualChecks = async () => {
         }
         if (routePathname === '/archive/' && (!state.archiveIndexText.includes('timeline') || !state.archiveIndexText.includes('category') || !state.archiveIndexText.includes('series') || !state.archiveIndexText.includes('tag'))) {
           errors.push(`${context}: archive index groups are missing`);
+        }
+        if (routePathname.startsWith('/documents/') && (!state.documentViewText.includes('collection') || !state.documentViewText.includes('RSS') || !state.documentViewText.includes('Pagefind'))) {
+          errors.push(`${context}: document detail view is missing`);
         }
         if (route.includes('?') && (
           state.searchInputValue !== 'vite' ||

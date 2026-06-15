@@ -253,9 +253,14 @@ const buildSearchableText = (entry, metadata, collection) => [
   ...(entry.tags || []),
 ].join(' ').toLowerCase();
 
+const toDocumentUrl = (id) => `/documents/${id}/`;
+const toDocumentPath = (id) => `/documents/${id}`;
+
 const withCollection = (collection, entries) =>
   entries.map((entry) => ({
     ...entry,
+    sourceHref: entry.href,
+    href: toDocumentUrl(entry.id),
     collection,
     category: entry.category || collectionMetadata[collection].category,
     series: entry.series || collectionMetadata[collection].series,
@@ -270,6 +275,42 @@ export const searchEntries = [
   ...withCollection('snippets', snippetsEntries),
   ...withCollection('academic', academicEntries),
 ];
+
+const getPublishedAt = (entry) => entry.meta.match(/\d{4}-\d{2}-\d{2}/)?.[0] || '2026-06-09';
+
+const buildDocumentBody = (entry) => [
+  entry.text,
+  `This document belongs to the ${entry.collection} collection, ${entry.category} category, and ${entry.series} series.`,
+  `Tags: ${(entry.tags || []).join(', ')}.`,
+  'Pagefind source: this entity page is the stable document target for future static full-text indexing.',
+  'RSS source: this entity page is also the canonical item URL for feed generation.',
+].join('\n\n');
+
+export const contentDocuments = searchEntries.map((entry) => ({
+  id: entry.id,
+  path: toDocumentPath(entry.id),
+  url: toDocumentUrl(entry.id),
+  sourceHref: entry.sourceHref,
+  title: entry.title,
+  summary: entry.text,
+  body: buildDocumentBody(entry),
+  collection: entry.collection,
+  category: entry.category,
+  series: entry.series,
+  tags: entry.tags,
+  publishedAt: getPublishedAt(entry),
+  searchableText: entry.searchableText,
+}));
+
+export const documentRoutes = Object.fromEntries(contentDocuments.map((document) => [document.path, document]));
+
+export const rssItems = contentDocuments.map((document) => ({
+  title: document.title,
+  url: `https://byteforge.dev${document.url}`,
+  description: document.summary,
+  pubDate: new Date(`${document.publishedAt}T00:00:00Z`).toUTCString(),
+  guid: `byteforge:${document.id}`,
+}));
 
 const uniqueSorted = (values) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 const toFacetOptions = (values) => uniqueSorted(values).map((value) => ({ id: value, label: value }));
@@ -303,7 +344,7 @@ export const searchIndexDocuments = searchEntries.map((entry) => ({
   tags: entry.tags,
   content: entry.searchableText,
   pagefind: {
-    url: entry.href.split('#')[0],
+    url: entry.href,
     meta: {
       title: entry.title,
       collection: entry.collection,
@@ -344,6 +385,11 @@ export const archiveIndex = {
     (entry) => entry.archiveTag
   ),
 };
+
+const searchEntriesByCollection = Object.fromEntries(Object.keys(contentCollections).map((collection) => [
+  collection,
+  searchEntries.filter((entry) => entry.collection === collection),
+]));
 
 export const routeDefinitions = [
   {
@@ -412,7 +458,7 @@ export const routeDefinitions = [
 ];
 
 const getRouteEntries = (collection) =>
-  collection === 'all' ? searchEntries : contentCollections[collection] || [];
+  collection === 'all' ? searchEntries : searchEntriesByCollection[collection] || [];
 
 const getRouteTags = (entries) =>
   [...new Set(entries.flatMap((entry) => entry.tags || []))].sort((a, b) => a.localeCompare(b));

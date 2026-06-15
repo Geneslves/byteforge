@@ -25,11 +25,13 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 - `/snippets/`
 - `/academic/`
 
+每个内容条目现在也会实体化为独立详情页，路径为 `/documents/<id>/`。列表页和搜索页只负责发现与过滤，真正的可索引正文、Pagefind 预备标记和 RSS item 来源都落在详情页上。
+
 `scripts/build.js` 会读取 `routeData`，并把 `dist/index.html` 复制到每个路由目录下，保证静态托管环境中可以直接刷新访问子路由。
 
 ## 搜索索引
 
-搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`searchFacets`、`searchIndexDocuments`、`archiveIndex` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；`/archive/` 使用同一份索引按 timeline、category、series 和 tag 聚合浏览；构建时会生成 `dist/search-index.json`，作为后续接入 Pagefind 的稳定数据出口。
+搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`contentDocuments`、`documentRoutes`、`rssItems`、`searchFacets`、`searchIndexDocuments`、`archiveIndex` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；`/archive/` 使用同一份索引按 timeline、category、series 和 tag 聚合浏览；构建时会生成 `dist/search-index.json` 和 `dist/rss.xml`，作为后续接入 Pagefind 与 RSS 发布的稳定数据出口。
 
 ## 常用命令
 
@@ -121,12 +123,14 @@ pm2 startup
 
 - `contentCollections`：按 logs、deployments、archive、dev-ai、snippets、academic 分组的内容集合。
 - `searchEntries`：`/search/` 使用的本地搜索索引。
+- `contentDocuments` / `documentRoutes`：每个条目的详情页实体和 `/documents/<id>/` 路由映射。
+- `rssItems`：从详情页实体派生的 RSS feed 条目数据。
 - `searchFacets`：collection、category、series 和 tag 过滤项。
 - `archiveIndex`：`/archive/` 使用的 timeline、category、series 和 tag 聚合索引。
 - `routeDefinitions` / `routeData`：内容面板的路由标题、摘要、条目和专题数据。
 - `planetRoutes`：首页轨道节点到内容路由、状态和集合元数据的映射。
 
-新增内容路由时，优先更新 `routeData`。构建脚本会自动生成对应静态入口。
+新增内容条目时，优先更新 `contentCollections` 中对应集合。`searchEntries`、`contentDocuments`、`documentRoutes`、`searchIndexDocuments` 和 `rssItems` 会从集合数据自动派生；新增顶层内容路由时再更新 `routeData`。
 
 ## 新增页面与星球绑定
 
@@ -174,4 +178,4 @@ pnpm run check:routes
 node scripts/build.js
 ```
 
-预期构建产物应包含 `/logs/`、`/deployments/`、`/archive/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 七个静态入口，并包含 `og-image.svg` 和 `search-index.json`。
+预期构建产物应包含 `/logs/`、`/deployments/`、`/archive/`、`/search/`、`/dev-ai/`、`/snippets/`、`/academic/` 七个静态入口、每个 `/documents/<id>/` 详情页入口，并包含 `og-image.svg`、`search-index.json` 和 `rss.xml`。

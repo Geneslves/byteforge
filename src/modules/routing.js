@@ -49,6 +49,65 @@ const renderEntries = (entries, emptyText = 'No entries.') => {
   `;
 };
 
+const collectionRouteMap = {
+  logs: '/logs',
+  deployments: '/deployments',
+  archive: '/archive',
+  'dev-ai': '/dev-ai',
+  snippets: '/snippets',
+  academic: '/academic',
+};
+
+const getDocumentSourcePath = (document) => {
+  const fallback = collectionRouteMap[document.collection] || '/archive';
+  if (!document.sourceHref) return fallback;
+
+  try {
+    const sourcePath = getRoutePath(new URL(document.sourceHref, location.origin));
+    return sourcePath === '/' ? fallback : sourcePath;
+  } catch {
+    return fallback;
+  }
+};
+
+const renderDocumentDetail = (document) => {
+  const sourcePath = getDocumentSourcePath(document);
+  const tagList = document.tags || [];
+
+  return `
+    <article class="document-view" data-document-view data-pagefind-body>
+      <div class="route-kicker">
+        <span>>_ ~/documents/${escapeHtml(document.id)}</span>
+        <a href="/" class="route-back">return home</a>
+      </div>
+      <p class="document-kicker">${escapeHtml(document.collection)} collection</p>
+      <h1 class="route-title document-title">${escapeHtml(document.title)}</h1>
+      <div class="route-meta document-meta" data-route-meta>
+        <span>${escapeHtml(document.collection)} collection</span>
+        <span>${escapeHtml(document.category)} category</span>
+        <span>${escapeHtml(document.series)} series</span>
+        <span>${escapeHtml(document.publishedAt)}</span>
+        <span>${escapeHtml(tagList.length)} tags</span>
+      </div>
+      <p class="route-summary document-summary">${escapeHtml(document.summary)}</p>
+      <div class="document-body">
+        ${document.body.split(/\n\n+/).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+      </div>
+      <div class="route-tags document-tags" aria-label="Tags">
+        ${tagList.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}
+      </div>
+      <div class="document-pipeline" aria-label="Indexing pipeline">
+        <span>Pagefind document target</span>
+        <span>RSS item source</span>
+      </div>
+      <div class="document-actions">
+        <a class="route-back" href="${escapeHtml(sourcePath)}">source collection</a>
+        <a class="route-back" href="/search/?${escapeHtml(new URLSearchParams({ q: document.title }).toString())}">find related</a>
+      </div>
+    </article>
+  `;
+};
+
 const renderRouteMeta = (config) => {
   const stats = config.stats || { entries: config.entries.length, tags: 0 };
   const topTags = config.topTags || [];
@@ -168,7 +227,7 @@ const setActiveNav = (hub, pathname) => {
   });
 };
 
-export const initRouting = (hub, routeData, { skipKey }) => {
+export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) => {
   const routeView = hub.querySelector('[data-route-view]');
   const navEntry = performance.getEntriesByType('navigation')[0];
   const isRouteReturn = navEntry?.type === 'back_forward' || sessionStorage.getItem(skipKey) === '1';
@@ -178,46 +237,8 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     sessionStorage.removeItem(skipKey);
   }
 
-  const renderRoute = () => {
-    const pathname = getRoutePath(location);
-    const config = routeData[pathname];
-    setActiveNav(hub, config ? pathname : '/logs');
-
-    if (!routeView || !config) {
-      hub.classList.remove('is-content-route');
-      delete hub.dataset.routeTheme;
-      hub.removeEventListener('click', hub._outsideClickHandler);
-      delete hub._outsideClickHandler;
-      if (routeView) {
-        routeView.hidden = true;
-        routeView.innerHTML = '';
-      }
-      return;
-    }
-
-    if (config.theme) {
-      hub.dataset.routeTheme = config.theme;
-    } else {
-      delete hub.dataset.routeTheme;
-    }
-
-    routeView.innerHTML = `
-      <div class="route-kicker">
-        <span>${escapeHtml(config.kicker)}</span>
-        <a href="/" class="route-back">return home</a>
-      </div>
-      <h1 class="route-title">${escapeHtml(config.title)}</h1>
-      ${renderRouteMeta(config)}
-      <p class="route-summary">${escapeHtml(config.summary)}</p>
-      <p class="route-description">${escapeHtml(config.description)}</p>
-      ${config.search ? renderSearchControls(config.search) : ''}
-      ${config.archive ? renderArchiveIndex(config.archive) : ''}
-      ${renderEntries(config.entries, config.search?.emptyText)}
-    `;
-
-    routeView.hidden = false;
-    routeView.offsetHeight;
-    hub.classList.add('is-content-route', 'is-route-return');
+  const installOutsideClickHandler = () => {
+    if (!routeView) return;
 
     const handleOutsideClick = (event) => {
       const targetElement = event.target instanceof Element ? event.target : event.target.parentElement;
@@ -261,6 +282,67 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     hub.removeEventListener('click', hub._outsideClickHandler);
     hub._outsideClickHandler = handleOutsideClick;
     hub.addEventListener('click', handleOutsideClick);
+  };
+
+  const renderRoute = () => {
+    const pathname = getRoutePath(location);
+    const config = routeData[pathname];
+    const document = documentRoutes[pathname];
+    const activePath = config ? pathname : document ? getDocumentSourcePath(document) : '/logs';
+    setActiveNav(hub, activePath);
+
+    if (!routeView || (!config && !document)) {
+      hub.classList.remove('is-content-route');
+      delete hub.dataset.routeTheme;
+      hub.removeEventListener('click', hub._outsideClickHandler);
+      delete hub._outsideClickHandler;
+      if (routeView) {
+        routeView.hidden = true;
+        routeView.innerHTML = '';
+      }
+      return;
+    }
+
+    if (config?.theme || document?.collection === 'academic') {
+      hub.dataset.routeTheme = config?.theme || 'ink';
+    } else {
+      delete hub.dataset.routeTheme;
+    }
+
+    if (document) {
+      routeView.innerHTML = renderDocumentDetail(document);
+      routeView.hidden = false;
+      routeView.offsetHeight;
+      hub.classList.add('is-content-route', 'is-route-return');
+      installOutsideClickHandler();
+      return;
+    }
+
+    if (config.theme) {
+      hub.dataset.routeTheme = config.theme;
+    } else {
+      delete hub.dataset.routeTheme;
+    }
+
+    routeView.innerHTML = `
+      <div class="route-kicker">
+        <span>${escapeHtml(config.kicker)}</span>
+        <a href="/" class="route-back">return home</a>
+      </div>
+      <h1 class="route-title">${escapeHtml(config.title)}</h1>
+      ${renderRouteMeta(config)}
+      <p class="route-summary">${escapeHtml(config.summary)}</p>
+      <p class="route-description">${escapeHtml(config.description)}</p>
+      ${config.search ? renderSearchControls(config.search) : ''}
+      ${config.archive ? renderArchiveIndex(config.archive) : ''}
+      ${renderEntries(config.entries, config.search?.emptyText)}
+    `;
+
+    routeView.hidden = false;
+    routeView.offsetHeight;
+    hub.classList.add('is-content-route', 'is-route-return');
+
+    installOutsideClickHandler();
 
     const searchControls = routeView.querySelector('[data-search-filters]');
     const searchInput = routeView.querySelector('[data-route-search]');
@@ -349,7 +431,7 @@ export const initRouting = (hub, routeData, { skipKey }) => {
 
   const navigateToRoute = (url) => {
     const targetPath = getRoutePath(url);
-    if (targetPath !== '/' && !routeData[targetPath]) return false;
+    if (targetPath !== '/' && !routeData[targetPath] && !documentRoutes[targetPath]) return false;
 
     sessionStorage.setItem(skipKey, '1');
     history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);

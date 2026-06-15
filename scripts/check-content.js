@@ -22,9 +22,12 @@ for (const filePath of filesToCheck) {
 
 const {
   archiveIndex,
+  contentDocuments,
   contentCollections,
+  documentRoutes,
   pagefindIndexConfig,
   routeData,
+  rssItems,
   searchEntries,
   searchFacets,
   searchIndexDocuments,
@@ -90,9 +93,48 @@ for (const entry of searchEntries) {
   if (typeof entry.collection !== 'string' || !entry.collection.trim()) {
     errors.push(`search entry "${entry.id}" is missing collection`);
   }
+  if (entry.href !== `/documents/${entry.id}/`) {
+    errors.push(`search entry "${entry.id}" should link to its document route`);
+  }
   for (const field of ['category', 'series', 'searchableText']) {
     if (typeof entry[field] !== 'string' || !entry[field].trim()) {
       errors.push(`search entry "${entry.id}" is missing ${field}`);
+    }
+  }
+}
+
+if (!Array.isArray(contentDocuments) || contentDocuments.length !== searchEntries.length) {
+  errors.push('contentDocuments should mirror searchEntries');
+} else {
+  for (const document of contentDocuments) {
+    for (const field of ['id', 'path', 'url', 'title', 'summary', 'body', 'collection', 'category', 'series', 'publishedAt']) {
+      if (typeof document[field] !== 'string' || !document[field].trim()) {
+        errors.push(`content document "${document.id || 'unknown'}" is missing ${field}`);
+      }
+    }
+    if (document.path !== `/documents/${document.id}` || document.url !== `/documents/${document.id}/`) {
+      errors.push(`content document "${document.id}" should use the /documents/<id>/ URL shape`);
+    }
+    if (!Array.isArray(document.tags) || document.tags.length === 0) {
+      errors.push(`content document "${document.id}" should include tags`);
+    }
+  }
+}
+
+if (!documentRoutes || typeof documentRoutes !== 'object') {
+  errors.push('documentRoutes export is missing');
+} else if (Object.keys(documentRoutes).length !== searchEntries.length) {
+  errors.push('documentRoutes should include every content document');
+}
+
+if (!Array.isArray(rssItems) || rssItems.length !== searchEntries.length) {
+  errors.push('rssItems should mirror searchEntries');
+} else {
+  for (const item of rssItems) {
+    for (const field of ['title', 'url', 'description', 'pubDate', 'guid']) {
+      if (typeof item[field] !== 'string' || !item[field].trim()) {
+        errors.push(`RSS item "${item.guid || 'unknown'}" is missing ${field}`);
+      }
     }
   }
 }
@@ -118,6 +160,9 @@ if (!Array.isArray(searchIndexDocuments) || searchIndexDocuments.length !== sear
     }
     if (!Array.isArray(document.tags) || document.tags.length === 0) {
       errors.push(`search index document "${document.id || 'unknown'}" should include tags`);
+    }
+    if (!document.url.startsWith('/documents/')) {
+      errors.push(`search index document "${document.id}" should point to its document route`);
     }
   }
 }

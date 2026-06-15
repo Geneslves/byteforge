@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { routeData } from '../src/data/content.js';
+import { contentDocuments, routeData } from '../src/data/content.js';
 
 const errors = [];
 const distDir = 'dist';
@@ -50,9 +50,14 @@ for (const routePath of Object.keys(routeData)) {
   checkHtml(join(distDir, routeDir, 'index.html'), routePath);
 }
 
+for (const document of contentDocuments) {
+  checkHtml(join(distDir, document.path.slice(1), 'index.html'), document.path);
+}
+
 requireFile(join(distDir, 'audio', 'ink-wash-terminal.mp3'));
 requireFile(join(distDir, 'og-image.svg'));
 requireFile(join(distDir, 'manifest.json'));
+requireFile(join(distDir, 'rss.xml'));
 
 const searchIndexPath = join(distDir, 'search-index.json');
 if (requireFile(searchIndexPath)) {
@@ -77,4 +82,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Static build check passed: ${Object.keys(routeData).length + 1} HTML entry points.`);
+console.log(`Static build check passed: ${Object.keys(routeData).length + contentDocuments.length + 1} HTML entry points.`);

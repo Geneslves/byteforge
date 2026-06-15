@@ -1,7 +1,14 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { build } from 'vite';
-import { pagefindIndexConfig, routeData, searchFacets, searchIndexDocuments } from '../src/data/content.js';
+import {
+  contentDocuments,
+  pagefindIndexConfig,
+  routeData,
+  rssItems,
+  searchFacets,
+  searchIndexDocuments,
+} from '../src/data/content.js';
 
 const distDir = 'dist';
 const routeEntries = Object.entries(routeData);
@@ -15,6 +22,8 @@ const escapeAttribute = (value) =>
     '"': '&quot;',
     "'": '&#39;',
   })[char]);
+
+const escapeXml = escapeAttribute;
 
 const withRouteHead = (html, routePath, config) => {
   const publicPath = `${routePath}/`;
@@ -47,6 +56,36 @@ await Promise.all(routeEntries.map(async ([routePath, config]) => {
   await writeFile(join(routeDir, 'index.html'), withRouteHead(baseHtml, routePath, config));
 }));
 
+await Promise.all(contentDocuments.map(async (document) => {
+  const routeDir = join(distDir, document.path.replace(/^\//, ''));
+  await mkdir(routeDir, { recursive: true });
+  await writeFile(join(routeDir, 'index.html'), withRouteHead(baseHtml, document.path, {
+    title: document.title,
+    summary: document.summary,
+  }));
+}));
+
+const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>ByteForge</title>
+    <link>https://byteforge.dev/</link>
+    <description>ByteForge content document feed</description>
+    <language>zh-CN</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+${rssItems.map((item) => `    <item>
+      <title>${escapeXml(item.title)}</title>
+      <link>${escapeXml(item.url)}</link>
+      <description>${escapeXml(item.description)}</description>
+      <pubDate>${escapeXml(item.pubDate)}</pubDate>
+      <guid>${escapeXml(item.guid)}</guid>
+    </item>`).join('\n')}
+  </channel>
+</rss>
+`;
+
+await writeFile(join(distDir, 'rss.xml'), rssXml);
+
 await writeFile(join(distDir, 'search-index.json'), `${JSON.stringify({
   pagefind: pagefindIndexConfig,
   facets: searchFacets,
@@ -54,4 +93,6 @@ await writeFile(join(distDir, 'search-index.json'), `${JSON.stringify({
 }, null, 2)}\n`);
 
 console.log(`Generated static route entries: ${routePaths.map((routePath) => `/${routePath}/`).join(', ')}`);
+console.log(`Generated document entries: ${contentDocuments.length}`);
+console.log(`Generated RSS feed: ${rssItems.length} items`);
 console.log(`Generated search index: ${searchIndexDocuments.length} documents`);

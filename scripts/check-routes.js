@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { planetRoutes, routeData } from '../src/data/content.js';
+import { documentRoutes, planetRoutes, routeData } from '../src/data/content.js';
 
 const errors = [];
 const warnings = [];
@@ -28,6 +28,7 @@ const escapeHtml = (value) =>
   })[char]);
 
 const routes = new Set(Object.keys(routeData));
+const contentRoutes = new Set([...routes, ...Object.keys(documentRoutes)]);
 const routeEntries = Object.entries(routeData);
 const planetConfigs = Object.entries(planetRoutes).map(([label, config]) =>
   normalizePlanetConfig(label, config)
@@ -46,9 +47,21 @@ for (const [routePath, config] of routeEntries) {
 
   for (const entry of config.entries || []) {
     const hrefPath = normalizeRoutePath(entry.href);
-    if (hrefPath && hrefPath !== '/' && !routes.has(hrefPath)) {
+    if (hrefPath && hrefPath !== '/' && !contentRoutes.has(hrefPath)) {
       errors.push(`entry "${entry.id}" links to unknown route: ${entry.href}`);
     }
+  }
+}
+
+for (const [routePath, document] of Object.entries(documentRoutes)) {
+  if (!routePath.startsWith('/documents/')) {
+    errors.push(`document route should live under /documents/: ${routePath}`);
+  }
+  if (document.path !== routePath) {
+    errors.push(`document route key should match document.path: ${routePath}`);
+  }
+  if (!document.url || normalizeRoutePath(document.url) !== routePath) {
+    errors.push(`document route should expose a matching URL: ${routePath}`);
   }
 }
 
@@ -141,4 +154,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Route check passed: ${routes.size} routes, ${planetConfigs.length} planet configs.`);
+console.log(`Route check passed: ${routes.size} routes, ${Object.keys(documentRoutes).length} document routes, ${planetConfigs.length} planet configs.`);

@@ -87,6 +87,10 @@
 - `/search/` 已支持关键词、collection 标签页、category 下拉、series 下拉和 tag chip 组合过滤。
 - 搜索过滤状态会同步到 URL 参数，刷新或直接访问带参数的 `/search/` 可恢复过滤条件。
 - `scripts/build.js` 会生成 `dist/search-index.json`，其中包含 Pagefind 预备配置、facets 和搜索文档。
+- 已将列表条目实体化为 `contentDocuments`，每个条目都拥有 `/documents/<id>/` 独立详情页、canonical head 和可刷新静态入口。
+- 详情页渲染使用 `data-pagefind-body` 标记正文区域，作为后续真正运行 Pagefind 索引器时的稳定抓取目标。
+- 已新增 `rssItems` 数据出口，并在构建时生成 `dist/rss.xml`，让内容实体可以同时服务站内搜索和 RSS feed。
+- `check:content`、`check:routes`、`check:static` 和 `check:visual` 已覆盖 document route、RSS 产物和详情页浏览器渲染。
 - `check:content`、`check:static` 和 `check:visual` 已覆盖搜索索引结构、静态索引产物、搜索过滤控件和 URL 状态恢复。
 - 已新增 `/archive/` 归档浏览入口，使用 `archiveIndex` 按 timeline、category、series 和 tag 聚合全站内容。
 - Knowledge Base 星球已升级为 Archive Map 入口，CLI 导航也新增 `/archive/`。
