@@ -105,6 +105,22 @@ const renderDocumentDetail = (document) => {
         <a class="route-back" href="${escapeHtml(sourcePath)}">查看 ${escapeHtml(document.collection)} 集合</a>
         <a class="route-back" href="/search/?${escapeHtml(new URLSearchParams({ q: document.title }).toString())}">搜索相关内容</a>
       </div>
+
+      <div class="document-feedback">
+        <h3>💬 留下你的想法</h3>
+        <form data-feedback-form>
+          <textarea
+            placeholder="觉得这篇文章怎么样？有什么建议或问题？（2-1000 字符）"
+            maxlength="1000"
+            rows="4"
+            required
+          ></textarea>
+          <div class="feedback-actions">
+            <button type="submit">提交反馈</button>
+            <span data-status></span>
+          </div>
+        </form>
+      </div>
     </article>
   `;
 };
@@ -324,6 +340,14 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
           e.preventDefault();
           window.history.back();
         });
+      });
+
+      // 动态导入反馈模块并初始化
+      import('./feedback.js').then(({ initFeedbackForm, trackEvent }) => {
+        initFeedbackForm(routeView, document);
+        trackEvent(document.path, 'view', document.id);
+      }).catch(() => {
+        // 反馈功能加载失败，静默处理
       });
 
       return;
