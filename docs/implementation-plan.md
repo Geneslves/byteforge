@@ -72,13 +72,22 @@
 
 ## 阶段 3：搜索与归档
 
-状态：本地搜索已接入，静态全文搜索待增强
+状态：本地搜索已增强，Pagefind 接入预备结构已落地
 
 任务：
 
 - 接入 Pagefind 或同等静态搜索。
 - 建立标签、系列、项目索引。
 - 将 SiYuan 笔记仅作为计划和实现过程记录来源，不直接作为页面内容依赖。
+
+本轮进展：
+
+- 已在 `src/data/content.js` 中建立正式搜索索引结构，导出 `searchEntries`、`searchFacets`、`searchIndexDocuments` 和 `pagefindIndexConfig`。
+- 搜索条目会自动补充 `collection`、`category`、`series` 和 `searchableText`，用于本地过滤和后续 Pagefind 索引生成。
+- `/search/` 已支持关键词、collection 标签页、category 下拉、series 下拉和 tag chip 组合过滤。
+- 搜索过滤状态会同步到 URL 参数，刷新或直接访问带参数的 `/search/` 可恢复过滤条件。
+- `scripts/build.js` 会生成 `dist/search-index.json`，其中包含 Pagefind 预备配置、facets 和搜索文档。
+- `check:content`、`check:static` 和 `check:visual` 已覆盖搜索索引结构、静态索引产物、搜索过滤控件和 URL 状态恢复。
 
 ## 阶段 4：性能与可访问性
 

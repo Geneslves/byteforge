@@ -1,7 +1,7 @@
-import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { build } from 'vite';
-import { routeData } from '../src/data/content.js';
+import { pagefindIndexConfig, routeData, searchFacets, searchIndexDocuments } from '../src/data/content.js';
 
 const distDir = 'dist';
 const routeEntries = Object.entries(routeData);
@@ -47,4 +47,11 @@ await Promise.all(routeEntries.map(async ([routePath, config]) => {
   await writeFile(join(routeDir, 'index.html'), withRouteHead(baseHtml, routePath, config));
 }));
 
+await writeFile(join(distDir, 'search-index.json'), `${JSON.stringify({
+  pagefind: pagefindIndexConfig,
+  facets: searchFacets,
+  documents: searchIndexDocuments,
+}, null, 2)}\n`);
+
 console.log(`Generated static route entries: ${routePaths.map((routePath) => `/${routePath}/`).join(', ')}`);
+console.log(`Generated search index: ${searchIndexDocuments.length} documents`);

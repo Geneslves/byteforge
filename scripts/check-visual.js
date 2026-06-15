@@ -8,7 +8,14 @@ import { inflateSync } from 'node:zlib';
 
 const distDir = resolve('dist');
 const errors = [];
-const routes = ['/', '/logs/', '/deployments/', '/search/', '/academic/'];
+const routes = [
+  '/',
+  '/logs/',
+  '/deployments/',
+  '/search/',
+  '/search/?q=vite&collection=logs&category=Engineering&series=Build%20Journal&tag=vite',
+  '/academic/',
+];
 const cliNavRoutes = new Set(['/logs/', '/deployments/', '/search/']);
 const viewports = [
   { name: 'desktop', width: 1365, height: 768, deviceScaleFactor: 1, mobile: false },
@@ -294,7 +301,11 @@ const evaluatePageState = async (client) => {
       const pageStyle = style('.baseline-page');
       const routeView = pick('[data-route-view]');
       const routeMeta = pick('[data-route-meta]');
+      const searchFilters = pick('[data-search-filters]');
+      const searchInput = pick('[data-route-search]');
       const activeNav = [...document.querySelectorAll('.cli-nav a.active')].map((node) => node.textContent.trim());
+      const activeFilterValues = [...document.querySelectorAll('[data-filter-button].is-active')]
+        .map((node) => node.dataset.filterButton + ':' + node.dataset.filterValue);
       return {
         title: document.title,
         cssHrefs: [...document.styleSheets].map((sheet) => sheet.href).filter(Boolean),
@@ -306,6 +317,12 @@ const evaluatePageState = async (client) => {
         routeViewVisible: Boolean(routeView && !routeView.hidden && routeView.textContent.trim().length > 20),
         routeTitle: pick('.route-title')?.textContent.trim() || '',
         routeMetaText: routeMeta?.textContent.trim() || '',
+        searchFilterText: searchFilters?.textContent.trim() || '',
+        searchInputValue: searchInput?.value || '',
+        activeFilterValues,
+        selectedCategory: pick('[data-filter-select="category"]')?.value || '',
+        selectedSeries: pick('[data-filter-select="series"]')?.value || '',
+        routeEntryCount: document.querySelectorAll('.route-entry').length,
         hubPosition: hubStyle?.position || '',
         pageMinHeight: pageStyle?.minHeight || '',
         bodyFont: getComputedStyle(document.body).fontFamily,
@@ -371,6 +388,7 @@ const runVisualChecks = async () => {
         const screenshot = await client.send('Page.captureScreenshot', { format: 'png', fromSurface: true });
         const stats = screenshotStats(screenshot.data);
         const context = `${viewport.name} ${route}`;
+        const routePathname = new URL(route, 'https://byteforge.test').pathname;
 
         if (!state.baselineExists || !state.hubExists) errors.push(`${context}: app shell is missing`);
         if (!state.audioToggleExists) errors.push(`${context}: audio toggle is missing`);
@@ -381,13 +399,26 @@ const runVisualChecks = async () => {
         if (state.hubPosition === 'static' || state.bodyFont.includes('Times New Roman')) {
           errors.push(`${context}: computed styles look like unstyled HTML`);
         }
-        if (route !== '/' && (!state.routeViewVisible || !state.routeTitle)) {
+        if (routePathname !== '/' && (!state.routeViewVisible || !state.routeTitle)) {
           errors.push(`${context}: route content panel is not visible`);
         }
-        if (route !== '/' && (!state.routeMetaText.includes('entries') || !state.routeMetaText.includes('tags'))) {
+        if (routePathname !== '/' && (!state.routeMetaText.includes('entries') || !state.routeMetaText.includes('tags'))) {
           errors.push(`${context}: route content metadata is missing`);
         }
-        if (cliNavRoutes.has(route) && state.activeNavCount !== 1) {
+        if (routePathname === '/search/' && (!state.searchFilterText.includes('collection') || !state.searchFilterText.includes('category') || !state.searchFilterText.includes('series'))) {
+          errors.push(`${context}: search filter controls are missing`);
+        }
+        if (route.includes('?') && (
+          state.searchInputValue !== 'vite' ||
+          !state.activeFilterValues.includes('collection:logs') ||
+          !state.activeFilterValues.includes('tag:vite') ||
+          state.selectedCategory !== 'Engineering' ||
+          state.selectedSeries !== 'Build Journal' ||
+          state.routeEntryCount < 1
+        )) {
+          errors.push(`${context}: search filter URL state was not restored`);
+        }
+        if (cliNavRoutes.has(routePathname) && state.activeNavCount !== 1) {
           errors.push(`${context}: exactly one navigation item should be active`);
         }
         if (state.scrollWidth > state.clientWidth + 4) {

@@ -233,10 +233,33 @@ export const contentCollections = {
   academic: academicEntries,
 };
 
+export const collectionMetadata = {
+  logs: { label: 'Logs', category: 'Engineering', series: 'Build Journal' },
+  deployments: { label: 'Deployments', category: 'Projects', series: 'Release Notes' },
+  archive: { label: 'Archive', category: 'Knowledge', series: 'Knowledge Archive' },
+  'dev-ai': { label: 'Dev & AI', category: 'Workflow', series: 'AI Development' },
+  snippets: { label: 'Snippets', category: 'Patterns', series: 'Engineering Snippets' },
+  academic: { label: 'Academic', category: 'Research', series: 'Academic Notes' },
+};
+
+const buildSearchableText = (entry, metadata, collection) => [
+  entry.meta,
+  entry.title,
+  entry.text,
+  metadata.label,
+  metadata.category,
+  metadata.series,
+  collection,
+  ...(entry.tags || []),
+].join(' ').toLowerCase();
+
 const withCollection = (collection, entries) =>
   entries.map((entry) => ({
     ...entry,
     collection,
+    category: entry.category || collectionMetadata[collection].category,
+    series: entry.series || collectionMetadata[collection].series,
+    searchableText: buildSearchableText(entry, collectionMetadata[collection], collection),
   }));
 
 export const searchEntries = [
@@ -247,6 +270,54 @@ export const searchEntries = [
   ...withCollection('snippets', snippetsEntries),
   ...withCollection('academic', academicEntries),
 ];
+
+const uniqueSorted = (values) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const toFacetOptions = (values) => uniqueSorted(values).map((value) => ({ id: value, label: value }));
+
+export const searchFacets = {
+  collections: [
+    { id: 'all', label: 'All collections' },
+    ...Object.entries(collectionMetadata).map(([id, metadata]) => ({ id, label: metadata.label })),
+  ],
+  categories: toFacetOptions(searchEntries.map((entry) => entry.category)),
+  series: toFacetOptions(searchEntries.map((entry) => entry.series)),
+  tags: toFacetOptions(searchEntries.flatMap((entry) => entry.tags || [])),
+};
+
+export const pagefindIndexConfig = {
+  version: 1,
+  rootSelector: '[data-pagefind-body]',
+  bundlePath: '/pagefind/pagefind.js',
+  filters: ['collection', 'category', 'series', 'tag'],
+  sort: { default: 'title' },
+};
+
+export const searchIndexDocuments = searchEntries.map((entry) => ({
+  id: entry.id,
+  url: entry.href,
+  title: entry.title,
+  excerpt: entry.text,
+  collection: entry.collection,
+  category: entry.category,
+  series: entry.series,
+  tags: entry.tags,
+  content: entry.searchableText,
+  pagefind: {
+    url: entry.href.split('#')[0],
+    meta: {
+      title: entry.title,
+      collection: entry.collection,
+      category: entry.category,
+      series: entry.series,
+    },
+    filters: {
+      collection: entry.collection,
+      category: entry.category,
+      series: entry.series,
+      tag: entry.tags,
+    },
+  },
+}));
 
 export const routeDefinitions = [
   {
@@ -275,6 +346,7 @@ export const routeDefinitions = [
     search: {
       placeholder: 'grep -r logs deployments archive tags',
       emptyText: 'No matching entries in local index.',
+      filters: searchFacets,
     },
   },
   {

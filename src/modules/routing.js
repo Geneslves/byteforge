@@ -3,15 +3,25 @@ import { escapeHtml, getRoutePath, normalizeSearch } from './dom.js';
 const matchesQuery = (entry, query) => {
   if (!query) return true;
 
-  const haystack = [
+  const haystack = entry.searchableText || [
     entry.meta,
     entry.title,
     entry.text,
     entry.collection,
+    entry.category,
+    entry.series,
     ...(entry.tags || []),
   ].join(' ').toLowerCase();
 
   return haystack.includes(query);
+};
+
+const matchesFilters = (entry, filters) => {
+  if (filters.collection && filters.collection !== 'all' && entry.collection !== filters.collection) return false;
+  if (filters.category && entry.category !== filters.category) return false;
+  if (filters.series && entry.series !== filters.series) return false;
+  if (filters.tag && !entry.tags?.includes(filters.tag)) return false;
+  return true;
 };
 
 const renderEntry = (entry) => `
@@ -51,6 +61,55 @@ const renderRouteMeta = (config) => {
       ${topTags.length ? `
         <span class="route-meta-tags">${topTags.map((tag) => `#${escapeHtml(tag)}`).join(' ')}</span>
       ` : ''}
+    </div>
+  `;
+};
+
+const renderFilterButton = (filter, option, isActive = false) => `
+  <button
+    class="route-filter-chip${isActive ? ' is-active' : ''}"
+    type="button"
+    data-filter-button="${escapeHtml(filter)}"
+    data-filter-value="${escapeHtml(option.id)}"
+    aria-pressed="${isActive ? 'true' : 'false'}"
+  >${escapeHtml(option.label)}</button>
+`;
+
+const renderFilterSelect = (filter, label, options) => `
+  <label class="route-filter-select">
+    <span>${escapeHtml(label)}</span>
+    <select data-filter-select="${escapeHtml(filter)}">
+      <option value="">all ${escapeHtml(label)}</option>
+      ${options.map((option) => `<option value="${escapeHtml(option.id)}">${escapeHtml(option.label)}</option>`).join('')}
+    </select>
+  </label>
+`;
+
+const renderSearchControls = (searchConfig) => {
+  const filters = searchConfig.filters;
+  if (!filters) {
+    return `<input class="route-search" data-route-search type="search" placeholder="${escapeHtml(searchConfig.placeholder)}" aria-label="Search ByteForge" />`;
+  }
+
+  return `
+    <div class="route-search-controls" data-search-filters>
+      <input class="route-search" data-route-search type="search" placeholder="${escapeHtml(searchConfig.placeholder)}" aria-label="Search ByteForge" />
+      <div class="route-filter-group" aria-label="collection filter">
+        <span>collection</span>
+        <div class="route-filter-tabs">
+          ${filters.collections.map((option) => renderFilterButton('collection', option, option.id === 'all')).join('')}
+        </div>
+      </div>
+      <div class="route-filter-row">
+        ${renderFilterSelect('category', 'category', filters.categories)}
+        ${renderFilterSelect('series', 'series', filters.series)}
+      </div>
+      <div class="route-filter-group route-tag-filter" aria-label="tag filter">
+        <span>tag</span>
+        <div class="route-filter-tabs">
+          ${filters.tags.map((option) => renderFilterButton('tag', option)).join('')}
+        </div>
+      </div>
     </div>
   `;
 };
@@ -124,9 +183,7 @@ export const initRouting = (hub, routeData, { skipKey }) => {
       ${renderRouteMeta(config)}
       <p class="route-summary">${escapeHtml(config.summary)}</p>
       <p class="route-description">${escapeHtml(config.description)}</p>
-      ${config.search ? `
-        <input class="route-search" data-route-search type="search" placeholder="${escapeHtml(config.search.placeholder)}" aria-label="Search ByteForge" />
-      ` : ''}
+      ${config.search ? renderSearchControls(config.search) : ''}
       ${renderEntries(config.entries, config.search?.emptyText)}
     `;
 
@@ -177,28 +234,84 @@ export const initRouting = (hub, routeData, { skipKey }) => {
     hub._outsideClickHandler = handleOutsideClick;
     hub.addEventListener('click', handleOutsideClick);
 
+    const searchControls = routeView.querySelector('[data-search-filters]');
     const searchInput = routeView.querySelector('[data-route-search]');
     if (searchInput) {
+      const selectControl = (filter) => routeView.querySelector(`[data-filter-select="${filter}"]`);
+      const setActiveButton = (filter, value) => {
+        routeView.querySelectorAll(`[data-filter-button="${filter}"]`).forEach((button) => {
+          const isActive = button.dataset.filterValue === value;
+          button.classList.toggle('is-active', isActive);
+          button.setAttribute('aria-pressed', String(isActive));
+        });
+      };
+      const readFilters = () => {
+        const activeCollection = routeView.querySelector('[data-filter-button="collection"].is-active')?.dataset.filterValue || 'all';
+        const activeTag = routeView.querySelector('[data-filter-button="tag"].is-active')?.dataset.filterValue || '';
+        return {
+          query: normalizeSearch(searchInput.value),
+          collection: activeCollection,
+          category: selectControl('category')?.value || '',
+          series: selectControl('series')?.value || '',
+          tag: activeTag,
+        };
+      };
+      const syncFilterUrl = (filters) => {
+        const nextUrl = new URL(location.href);
+        const rawQuery = searchInput.value.trim();
+        const values = {
+          q: rawQuery,
+          collection: filters.collection === 'all' ? '' : filters.collection,
+          category: filters.category,
+          series: filters.series,
+          tag: filters.tag,
+        };
+
+        for (const [key, value] of Object.entries(values)) {
+          if (value) {
+            nextUrl.searchParams.set(key, value);
+          } else {
+            nextUrl.searchParams.delete(key);
+          }
+        }
+        history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+      };
       const applySearch = (syncUrl = false) => {
-        const query = normalizeSearch(searchInput.value);
-        const filteredEntries = config.entries.filter((entry) => matchesQuery(entry, query));
+        const filters = readFilters();
+        const filteredEntries = config.entries.filter((entry) =>
+          matchesQuery(entry, filters.query) && matchesFilters(entry, filters)
+        );
         const listTarget = routeView.querySelector('[data-route-list], .route-empty');
         if (!listTarget) return;
         listTarget.outerHTML = renderEntries(filteredEntries, config.search.emptyText);
 
-        if (syncUrl) {
-          const nextUrl = new URL(location.href);
-          const rawQuery = searchInput.value.trim();
-          if (rawQuery) {
-            nextUrl.searchParams.set('q', rawQuery);
-          } else {
-            nextUrl.searchParams.delete('q');
-          }
-          history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
-        }
+        if (syncUrl) syncFilterUrl(filters);
       };
 
-      searchInput.value = new URLSearchParams(location.search).get('q') || '';
+      const params = new URLSearchParams(location.search);
+      searchInput.value = params.get('q') || '';
+      if (searchControls) {
+        const collectionValue = params.get('collection') || 'all';
+        setActiveButton('collection', collectionValue);
+        const categorySelect = selectControl('category');
+        const seriesSelect = selectControl('series');
+        if (categorySelect) categorySelect.value = params.get('category') || '';
+        if (seriesSelect) seriesSelect.value = params.get('series') || '';
+        setActiveButton('tag', params.get('tag') || '');
+
+        searchControls.addEventListener('click', (event) => {
+          const targetElement = event.target instanceof Element ? event.target : event.target.parentElement;
+          const button = targetElement?.closest('[data-filter-button]');
+          if (!button) return;
+
+          const filter = button.dataset.filterButton;
+          const value = button.dataset.filterValue || '';
+          const nextValue = filter === 'tag' && button.classList.contains('is-active') ? '' : value;
+          setActiveButton(filter, nextValue);
+          applySearch(true);
+        });
+        searchControls.addEventListener('change', () => applySearch(true));
+      }
       applySearch();
       searchInput.addEventListener('input', () => applySearch(true));
     }

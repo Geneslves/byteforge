@@ -20,7 +20,14 @@ for (const filePath of filesToCheck) {
   });
 }
 
-const { contentCollections, routeData, searchEntries } = await import('../src/data/content.js');
+const {
+  contentCollections,
+  pagefindIndexConfig,
+  routeData,
+  searchEntries,
+  searchFacets,
+  searchIndexDocuments,
+} = await import('../src/data/content.js');
 
 for (const [collection, entries] of Object.entries(contentCollections)) {
   if (!Array.isArray(entries) || entries.length === 0) {
@@ -67,6 +74,46 @@ for (const entry of searchEntries) {
   searchIds.add(entry.id);
   if (typeof entry.collection !== 'string' || !entry.collection.trim()) {
     errors.push(`search entry "${entry.id}" is missing collection`);
+  }
+  for (const field of ['category', 'series', 'searchableText']) {
+    if (typeof entry[field] !== 'string' || !entry[field].trim()) {
+      errors.push(`search entry "${entry.id}" is missing ${field}`);
+    }
+  }
+}
+
+if (!searchFacets || typeof searchFacets !== 'object') {
+  errors.push('searchFacets export is missing');
+} else {
+  for (const facet of ['collections', 'categories', 'series', 'tags']) {
+    if (!Array.isArray(searchFacets[facet]) || searchFacets[facet].length === 0) {
+      errors.push(`searchFacets.${facet} should contain filter values`);
+    }
+  }
+}
+
+if (!Array.isArray(searchIndexDocuments) || searchIndexDocuments.length !== searchEntries.length) {
+  errors.push('searchIndexDocuments should mirror searchEntries');
+} else {
+  for (const document of searchIndexDocuments) {
+    for (const field of ['id', 'url', 'title', 'excerpt', 'collection', 'category', 'series', 'content']) {
+      if (typeof document[field] !== 'string' || !document[field].trim()) {
+        errors.push(`search index document "${document.id || 'unknown'}" is missing ${field}`);
+      }
+    }
+    if (!Array.isArray(document.tags) || document.tags.length === 0) {
+      errors.push(`search index document "${document.id || 'unknown'}" should include tags`);
+    }
+  }
+}
+
+if (!pagefindIndexConfig || typeof pagefindIndexConfig !== 'object') {
+  errors.push('pagefindIndexConfig export is missing');
+} else {
+  for (const filter of ['collection', 'category', 'series', 'tag']) {
+    if (!pagefindIndexConfig.filters?.includes(filter)) {
+      errors.push(`pagefindIndexConfig should declare ${filter} filter`);
+    }
   }
 }
 

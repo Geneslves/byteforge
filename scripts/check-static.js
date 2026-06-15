@@ -54,6 +54,24 @@ requireFile(join(distDir, 'audio', 'ink-wash-terminal.mp3'));
 requireFile(join(distDir, 'og-image.svg'));
 requireFile(join(distDir, 'manifest.json'));
 
+const searchIndexPath = join(distDir, 'search-index.json');
+if (requireFile(searchIndexPath)) {
+  try {
+    const searchIndex = JSON.parse(readFileSync(searchIndexPath, 'utf8'));
+    if (!Array.isArray(searchIndex.documents) || searchIndex.documents.length === 0) {
+      errors.push('search-index.json should include documents');
+    }
+    if (!searchIndex.facets?.tags?.length || !searchIndex.facets?.categories?.length || !searchIndex.facets?.series?.length) {
+      errors.push('search-index.json should include tag, category and series facets');
+    }
+    if (!searchIndex.pagefind?.filters?.includes('tag')) {
+      errors.push('search-index.json should include Pagefind filter metadata');
+    }
+  } catch (error) {
+    errors.push(`search-index.json is not valid JSON: ${error.message}`);
+  }
+}
+
 if (errors.length) {
   for (const error of errors) console.error(`ERROR ${error}`);
   process.exit(1);

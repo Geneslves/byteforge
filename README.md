@@ -26,6 +26,10 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 
 `scripts/build.js` 会读取 `routeData`，并把 `dist/index.html` 复制到每个路由目录下，保证静态托管环境中可以直接刷新访问子路由。
 
+## 搜索索引
+
+搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`searchFacets`、`searchIndexDocuments` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；构建时会生成 `dist/search-index.json`，作为后续接入 Pagefind 的稳定数据出口。
+
 ## 常用命令
 
 ```powershell
@@ -43,7 +47,7 @@ pnpm run clean
 pnpm preview
 ```
 
-`pnpm run check` 会按顺序执行项目结构检查、内容数据检查、生产构建、路由/head 检查、静态构建产物烟测、源码质量检查和浏览器级视觉回归检查。`pnpm run check:content` 会检查用户可见内容是否出现乱码，并验证内容集合、路由数据和搜索索引的基础结构。`pnpm run check:visual` 会用本机 Chrome/Edge 检查构建后的关键路由在桌面和移动视口下是否加载样式、显示内容面板、没有明显空白或横向溢出。`pnpm run audit` 固定使用官方 npm registry 做依赖安全审计，避免本地镜像缺少 audit endpoint。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
+`pnpm run check` 会按顺序执行项目结构检查、内容数据检查、生产构建、路由/head 检查、静态构建产物烟测、源码质量检查和浏览器级视觉回归检查。`pnpm run check:content` 会检查用户可见内容是否出现乱码，并验证内容集合、路由数据、搜索 facets、Pagefind 预备配置和搜索索引文档。`pnpm run check:static` 会检查构建后的 `search-index.json`。`pnpm run check:visual` 会用本机 Chrome/Edge 检查构建后的关键路由在桌面和移动视口下是否加载样式、显示内容面板、没有明显空白或横向溢出，并验证搜索过滤控件和 URL 状态恢复。`pnpm run audit` 固定使用官方 npm registry 做依赖安全审计，避免本地镜像缺少 audit endpoint。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
 
 构建脚本本体：
 
