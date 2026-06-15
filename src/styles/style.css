@@ -834,6 +834,32 @@ body {
     visibility: visible;
   }
 
+  /* 文档详情页全屏样式 */
+  .route-view:has(.document-view) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    transform: none;
+    max-width: none;
+    width: 100%;
+    height: 100vh;
+    padding: 0;
+    border-radius: 0;
+    overflow-y: auto;
+    background: var(--bg);
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .route-view:has(.document-view) .document-view {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 80px 40px 120px;
+    min-height: 100vh;
+  }
+
   .route-view * {
     font-family: var(--font-mono);
     font-feature-settings: normal;
@@ -1212,7 +1238,7 @@ body {
   .document-view {
     display: grid;
     gap: 12px;
-    max-width: 690px;
+    /* max-width removed - now controlled by parent */
   }
 
   .document-kicker {

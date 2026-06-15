@@ -19,6 +19,7 @@ export const initAudioControl = (hub) => {
   audio.preload = 'auto';
   audio.volume = 0.36;
 
+  // 默认启用音频，除非用户之前明确关闭过
   let enabled = localStorage.getItem(AUDIO_KEY) !== '0';
   setButtonState(button, enabled);
 
@@ -40,8 +41,22 @@ export const initAudioControl = (hub) => {
     }
   };
 
+  // 自动播放：在页面加载后立即尝试
   if (enabled) {
-    play();
+    // 尝试立即播放
+    play().catch(() => {
+      // 如果浏览器阻止自动播放，监听用户的第一次交互
+      const autoplayOnInteraction = () => {
+        play();
+        document.removeEventListener('click', autoplayOnInteraction);
+        document.removeEventListener('keydown', autoplayOnInteraction);
+        document.removeEventListener('touchstart', autoplayOnInteraction);
+      };
+
+      document.addEventListener('click', autoplayOnInteraction, { once: true });
+      document.addEventListener('keydown', autoplayOnInteraction, { once: true });
+      document.addEventListener('touchstart', autoplayOnInteraction, { once: true });
+    });
   }
 
   button.addEventListener('click', () => {

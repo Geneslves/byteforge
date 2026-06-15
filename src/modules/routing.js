@@ -78,7 +78,7 @@ const renderDocumentDetail = (document) => {
     <article class="document-view" data-document-view data-pagefind-body>
       <div class="route-kicker">
         <span>>_ ~/documents/${escapeHtml(document.id)}</span>
-        <a href="/" class="route-back">return home</a>
+        <button class="route-back" data-back-button>← 返回上一页</button>
       </div>
       <p class="document-kicker">${escapeHtml(document.collection)} collection</p>
       <h1 class="route-title document-title">${escapeHtml(document.title)}</h1>
@@ -101,8 +101,9 @@ const renderDocumentDetail = (document) => {
         <span>RSS item source</span>
       </div>
       <div class="document-actions">
-        <a class="route-back" href="${escapeHtml(sourcePath)}">source collection</a>
-        <a class="route-back" href="/search/?${escapeHtml(new URLSearchParams({ q: document.title }).toString())}">find related</a>
+        <button class="route-back" data-back-button>← 返回上一页</button>
+        <a class="route-back" href="${escapeHtml(sourcePath)}">查看 ${escapeHtml(document.collection)} 集合</a>
+        <a class="route-back" href="/search/?${escapeHtml(new URLSearchParams({ q: document.title }).toString())}">搜索相关内容</a>
       </div>
     </article>
   `;
@@ -315,6 +316,16 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
       routeView.offsetHeight;
       hub.classList.add('is-content-route', 'is-route-return');
       installOutsideClickHandler();
+
+      // 为"返回上一页"按钮绑定事件
+      const backButtons = routeView.querySelectorAll('[data-back-button]');
+      backButtons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.history.back();
+        });
+      });
+
       return;
     }
 
