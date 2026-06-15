@@ -48,6 +48,27 @@ if (!existsSync(functionsDir)) {
   }
 }
 
+// Check auth functions
+const authDir = 'functions/api/auth';
+const requiredAuthFunctions = ['register.js', 'login.js', 'me.js'];
+
+if (!existsSync(authDir)) {
+  errors.push('missing functions/api/auth directory');
+} else {
+  for (const file of requiredAuthFunctions) {
+    const filePath = join(authDir, file);
+    if (!existsSync(filePath)) {
+      errors.push(`missing auth API function: ${filePath}`);
+    }
+  }
+}
+
+// Check auth library
+const authLib = 'functions/lib/auth.js';
+if (!existsSync(authLib)) {
+  errors.push('missing authentication library: ' + authLib);
+}
+
 // Check wrangler.toml
 const wranglerPath = 'wrangler.toml';
 if (!existsSync(wranglerPath)) {
@@ -70,7 +91,7 @@ if (!existsSync(backendDocsPath)) {
 
 // Check admin API endpoints
 const adminDir = 'functions/api/admin';
-const requiredAdminFunctions = ['feedback.js', 'analytics.js', 'content-stats.js'];
+const requiredAdminFunctions = ['feedback.js', 'analytics.js', 'content-stats.js', 'settings.js', 'users.js'];
 const requiredAdminSubdirs = ['functions/api/admin/feedback'];
 
 if (!existsSync(adminDir)) {
@@ -103,9 +124,17 @@ const adminFiles = [
   'public/admin-v2.js',
   'public/admin-v2.css',
 ];
-for (const file of adminFiles) {
+
+// Check authentication pages
+const authFiles = [
+  'public/login.html',
+  'public/auth.js',
+  'public/auth.css',
+];
+
+for (const file of [...adminFiles, ...authFiles]) {
   if (!existsSync(file)) {
-    errors.push(`missing admin dashboard file: ${file}`);
+    errors.push(`missing file: ${file}`);
   }
 }
 
@@ -114,4 +143,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Backend check passed: 6 API endpoints, 2 database tables, 2 admin dashboards, wrangler.toml configured.');
+console.log('Backend check passed: 12 API endpoints (3 public + 3 auth + 6 admin), 5 database tables, authentication system, 2 admin dashboards, wrangler.toml configured.');

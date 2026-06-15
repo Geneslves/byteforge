@@ -36,6 +36,14 @@
           <span class="icon">🔍</span>
           <span>事件日志</span>
         </button>
+        <button class="nav-item" data-view="users">
+          <span class="icon">👥</span>
+          <span>用户管理</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="icon">⚙️</span>
+          <span>系统设置</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -229,6 +237,79 @@
             <div class="events-list" id="events-list">
               <div class="loading">加载中...</div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户管理视图 -->
+      <div class="view-container" id="view-users" style="display: none;">
+        <div class="toolbar">
+          <div class="search-box">
+            <input type="text" id="users-search" placeholder="搜索用户...">
+            <span class="icon">🔍</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <table class="data-table" id="users-table">
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>邮箱</th>
+                  <th>角色</th>
+                  <th>状态</th>
+                  <th>注册时间</th>
+                  <th>最后登录</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="7" class="loading">加载中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 系统设置视图 -->
+      <div class="view-container" id="view-settings" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>系统设置</h3>
+          </div>
+          <div class="card-body">
+            <form id="settings-form" class="settings-form">
+              <div class="setting-group">
+                <label class="setting-label">
+                  <input type="checkbox" id="setting-registration" name="registration_enabled">
+                  <span>允许用户注册</span>
+                </label>
+                <p class="setting-desc">关闭后，新用户将无法注册账号</p>
+              </div>
+
+              <div class="setting-group">
+                <label class="setting-label">
+                  <input type="checkbox" id="setting-email-verify" name="require_email_verification">
+                  <span>要求邮箱验证</span>
+                </label>
+                <p class="setting-desc">新用户注册后需要验证邮箱才能登录</p>
+              </div>
+
+              <div class="setting-group">
+                <label for="setting-site-name">站点名称</label>
+                <input type="text" id="setting-site-name" name="site_name" class="setting-input">
+                <p class="setting-desc">显示在页面标题和导航栏</p>
+              </div>
+
+              <div class="form-error" id="settings-error"></div>
+
+              <button type="submit" class="btn-primary" id="settings-save-btn">
+                保存设置
+              </button>
+            </form>
           </div>
         </div>
       </div>

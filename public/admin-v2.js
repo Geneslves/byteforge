@@ -53,7 +53,9 @@ function switchView(view) {
     dashboard: '仪表板',
     feedback: '反馈管理',
     content: '内容分析',
-    events: '事件日志'
+    events: '事件日志',
+    users: '用户管理',
+    settings: '系统设置'
   };
   document.querySelector('.page-title').textContent = titles[view] || view;
 
@@ -74,6 +76,12 @@ function refreshCurrentView() {
       break;
     case 'events':
       loadEvents();
+      break;
+    case 'users':
+      loadUsers();
+      break;
+    case 'settings':
+      loadSettings();
       break;
   }
 }
@@ -387,7 +395,225 @@ async function loadEvents() {
   container.innerHTML = '<p class="empty">事件日志功能开发中...</p>';
 }
 
-// ===== 工具函数 =====
+// ===== 用户管理 =====
+let usersData = [];
+
+async function loadUsers() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    showToast('请先登录', 'error');
+    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      usersData = data.users;
+      renderUsersTable(usersData);
+    } else {
+      showToast('加载用户失败: ' + data.error, 'error');
+      if (data.error === 'invalid_token') {
+        setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+      }
+    }
+  } catch (error) {
+    showToast('加载用户失败: ' + error.message, 'error');
+  }
+}
+
+function renderUsersTable(users) {
+  const tbody = document.querySelector('#users-table tbody');
+
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无用户</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map(user => `
+    <tr>
+      <td class="doc-cell">${escapeHtml(user.username)}</td>
+      <td>${escapeHtml(user.email)}</td>
+      <td>
+        <span class="badge badge-${user.role === 'admin' ? 'primary' : 'secondary'}">
+          ${user.role === 'admin' ? '管理员' : '用户'}
+        </span>
+      </td>
+      <td>
+        <span class="badge badge-${user.is_active ? 'success' : 'danger'}">
+          ${user.is_active ? '活跃' : '禁用'}
+        </span>
+      </td>
+      <td class="time-cell">${formatDateTime(user.created_at)}</td>
+      <td class="time-cell">${user.last_login ? formatDateTime(user.last_login) : '-'}</td>
+      <td class="actions-cell">
+        <button class="btn-icon" onclick="toggleUserStatus('${user.id}', ${!user.is_active})"
+                title="${user.is_active ? '禁用' : '激活'}">
+          ${user.is_active ? '🔒' : '🔓'}
+        </button>
+        <button class="btn-icon" onclick="toggleUserRole('${user.id}', '${user.role === 'admin' ? 'user' : 'admin'}')"
+                title="切换角色">
+          ${user.role === 'admin' ? '👤' : '👑'}
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function toggleUserStatus(userId, newStatus) {
+  const token = localStorage.getItem('auth_token');
+  const action = newStatus ? '激活' : '禁用';
+
+  if (!confirm(`确定要${action}此用户吗？`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ userId, isActive: newStatus })
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast(`${action}成功`, 'success');
+      loadUsers();
+    } else {
+      showToast(`${action}失败: ` + data.message, 'error');
+    }
+  } catch (error) {
+    showToast(`${action}失败: ` + error.message, 'error');
+  }
+}
+
+async function toggleUserRole(userId, newRole) {
+  const token = localStorage.getItem('auth_token');
+  const roleName = newRole === 'admin' ? '管理员' : '普通用户';
+
+  if (!confirm(`确定要将此用户设置为${roleName}吗？`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ userId, role: newRole })
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast('角色更新成功', 'success');
+      loadUsers();
+    } else {
+      showToast('角色更新失败: ' + data.message, 'error');
+    }
+  } catch (error) {
+    showToast('角色更新失败: ' + error.message, 'error');
+  }
+}
+
+// ===== 系统设置 =====
+async function loadSettings() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    showToast('请先登录', 'error');
+    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/settings`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      populateSettings(data.settings);
+      initSettingsForm();
+    } else {
+      showToast('加载设置失败: ' + data.error, 'error');
+    }
+  } catch (error) {
+    showToast('加载设置失败: ' + error.message, 'error');
+  }
+}
+
+function populateSettings(settings) {
+  document.getElementById('setting-registration').checked = settings.registration_enabled === true;
+  document.getElementById('setting-email-verify').checked = settings.require_email_verification === true;
+  document.getElementById('setting-site-name').value = settings.site_name || 'ByteForge';
+}
+
+function initSettingsForm() {
+  const form = document.getElementById('settings-form');
+  if (form.dataset.initialized) return;
+
+  form.addEventListener('submit', handleSettingsSave);
+  form.dataset.initialized = 'true';
+}
+
+async function handleSettingsSave(e) {
+  e.preventDefault();
+
+  const token = localStorage.getItem('auth_token');
+  const btn = document.getElementById('settings-save-btn');
+  const errorEl = document.getElementById('settings-error');
+
+  errorEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const settings = {
+    registration_enabled: document.getElementById('setting-registration').checked,
+    require_email_verification: document.getElementById('setting-email-verify').checked,
+    site_name: document.getElementById('setting-site-name').value.trim()
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ settings })
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast('设置保存成功', 'success');
+      btn.textContent = '保存设置';
+      btn.disabled = false;
+    } else {
+      errorEl.textContent = '保存失败: ' + data.message;
+      btn.textContent = '保存设置';
+      btn.disabled = false;
+    }
+  } catch (error) {
+    errorEl.textContent = '保存失败: ' + error.message;
+    btn.textContent = '保存设置';
+    btn.disabled = false;
+  }
+}
+
+// 全局函数（供 HTML onclick 使用）
+window.switchView = switchView;
+window.deleteFeedback = deleteFeedback;
+window.viewContentDetail = viewContentDetail;
+window.closeModal = closeModal;
+window.toggleUserStatus = toggleUserStatus;
+window.toggleUserRole = toggleUserRole;
 function formatTime(isoString) {
   const date = new Date(isoString);
   const now = new Date();
