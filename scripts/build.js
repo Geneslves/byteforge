@@ -8,7 +8,7 @@ import {
   rssItems,
   searchFacets,
   searchIndexDocuments,
-} from '../src/data/content.js';
+} from '../src/data/index.js';
 
 const distDir = 'dist';
 const routeEntries = Object.entries(routeData);

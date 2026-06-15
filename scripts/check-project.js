@@ -2,7 +2,16 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const requiredFiles = [
   'public/audio/ink-wash-terminal.mp3',
-  'src/data/content.js',
+  'src/data/index.js',
+  'src/data/content-model.js',
+  'src/data/routes.js',
+  'src/data/planets.js',
+  'src/data/collections/logs.js',
+  'src/data/collections/deployments.js',
+  'src/data/collections/archive.js',
+  'src/data/collections/dev-ai.js',
+  'src/data/collections/snippets.js',
+  'src/data/collections/academic.js',
   'src/modules/audio.js',
   'src/modules/dom.js',
   'src/modules/effects.js',
@@ -22,6 +31,7 @@ const requiredFiles = [
 const forbiddenFiles = [
   'Ink_Wash_Terminal.mp3',
   'src/content.js',
+  'src/data/content.js',
   'src/effects.css',
   'src/style.css',
   'src/themes.css',

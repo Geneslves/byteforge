@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 
 const filesToCheck = [
   'package.json',
-  'src/data/content.js',
+  'src/data/content-model.js',
+  'src/data/routes.js',
+  'src/data/planets.js',
+  'src/data/collections/logs.js',
+  'src/data/collections/deployments.js',
+  'src/data/collections/archive.js',
   'docs/implementation-plan.md',
 ];
 
@@ -31,7 +36,7 @@ const {
   searchEntries,
   searchFacets,
   searchIndexDocuments,
-} = await import('../src/data/content.js');
+} = await import('../src/data/index.js');
 
 for (const [collection, entries] of Object.entries(contentCollections)) {
   if (!Array.isArray(entries) || entries.length === 0) {

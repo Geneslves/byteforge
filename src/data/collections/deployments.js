@@ -1,0 +1,42 @@
+export const deploymentEntries = [
+  {
+    id: 'byteforge-home-v2',
+    meta: 'WEB',
+    title: 'ByteForge Home v2.0',
+    text: '完整的个人技术站点：流星雨背景、双主题系统、SPA 路由、移动端优化。',
+    href: '/',
+    tags: ['homepage', 'vite', 'visual-system', 'production'],
+  },
+  {
+    id: 'performance-benchmark',
+    meta: 'METRICS',
+    title: 'Performance Benchmark',
+    text: '核心 HTML/CSS/JS 构建产物 gzip 约 20 KB，移动端按 reduced-motion 与低密度动效优化。',
+    href: '/deployments/#performance-benchmark',
+    tags: ['performance', 'lighthouse', 'metrics'],
+  },
+  {
+    id: 'design-baseline',
+    meta: 'DOCS',
+    title: 'Design Baseline',
+    text: '设计规则、禁用回退项和验收标准。',
+    href: '/deployments/#design-baseline',
+    tags: ['docs', 'baseline', 'qa'],
+  },
+  {
+    id: 'tech-stack',
+    meta: 'TECH',
+    title: 'Tech Stack',
+    text: 'Vite 6 + Vanilla JS + CSS Variables，无框架依赖，原生 Web 标准。',
+    href: '/deployments/#tech-stack',
+    tags: ['vite', 'vanilla-js', 'web-standards'],
+  },
+  {
+    id: 'future-modules',
+    meta: 'LAB',
+    title: 'Future Modules',
+    text: '搜索、归档、项目详情和知识库入口。',
+    href: '/deployments/#future-modules',
+    tags: ['search', 'archive', 'projects'],
+  },
+];

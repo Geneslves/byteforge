@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { contentDocuments, routeData } from '../src/data/content.js';
+import { contentDocuments, routeData } from '../src/data/index.js';
 
 const errors = [];
 const distDir = 'dist';

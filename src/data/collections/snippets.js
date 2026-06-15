@@ -1,0 +1,26 @@
+export const snippetsEntries = [
+  {
+    id: 'route-planet-binding',
+    meta: 'PATTERN',
+    title: 'Route and planet binding',
+    text: '新增页面时先配置 routeData，再用 planetRoutes 绑定星球 route、state 和 collection。',
+    href: '/snippets/#route-planet-binding',
+    tags: ['routing', 'planet', 'state'],
+  },
+  {
+    id: 'static-route-check',
+    meta: 'SCRIPT',
+    title: 'Static route consistency check',
+    text: '使用 check:routes 验证路由、星球配置、sitemap 和构建产物是否一致。',
+    href: '/snippets/#static-route-check',
+    tags: ['scripts', 'build', 'qa'],
+  },
+  {
+    id: 'search-query-url',
+    meta: 'UX',
+    title: 'Search query URL',
+    text: '搜索页支持 ?q= 查询参数，便于分享和刷新后保留过滤状态。',
+    href: '/snippets/#search-query-url',
+    tags: ['search', 'url', 'ux'],
+  },
+];

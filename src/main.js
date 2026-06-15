@@ -1,4 +1,4 @@
-import { documentRoutes, routeData, planetRoutes } from './data/content.js';
+import { documentRoutes, routeData, planetRoutes } from './data/index.js';
 import { initAudioControl } from './modules/audio.js';
 import { initEffects, initKeyboardNav } from './modules/effects.js';
 import { initPlanets } from './modules/planets.js';
