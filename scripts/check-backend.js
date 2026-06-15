@@ -68,9 +68,32 @@ if (!existsSync(backendDocsPath)) {
   errors.push('missing backend documentation: docs/backend-design.md');
 }
 
+// Check admin API endpoints
+const adminDir = 'functions/api/admin';
+const requiredAdminFunctions = ['feedback.js', 'analytics.js'];
+
+if (!existsSync(adminDir)) {
+  errors.push('missing functions/api/admin directory');
+} else {
+  for (const file of requiredAdminFunctions) {
+    const filePath = join(adminDir, file);
+    if (!existsSync(filePath)) {
+      errors.push(`missing admin API function: ${filePath}`);
+    }
+  }
+}
+
+// Check admin dashboard files
+const adminFiles = ['public/admin.html', 'public/admin.js', 'public/admin.css'];
+for (const file of adminFiles) {
+  if (!existsSync(file)) {
+    errors.push(`missing admin dashboard file: ${file}`);
+  }
+}
+
 if (errors.length) {
   for (const error of errors) console.error(`ERROR ${error}`);
   process.exit(1);
 }
 
-console.log('Backend check passed: 3 API endpoints, 2 database tables, wrangler.toml configured.');
+console.log('Backend check passed: 5 API endpoints, 2 database tables, admin dashboard, wrangler.toml configured.');
