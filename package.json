@@ -10,7 +10,8 @@
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "clean": "node scripts/clean.js",
     "check": "pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual",
-    "build": "node scripts/build.js",
+    "build": "node scripts/build.js && pnpm run build:pagefind",
+    "build:pagefind": "pagefind --site dist --output-subdir pagefind",
     "check:project": "node scripts/check-project.js",
     "check:routes": "node scripts/check-routes.js",
     "check:content": "node scripts/check-content.js",
@@ -22,6 +23,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "pagefind": "^1.5.2",
     "vite": "^6.3.5"
   },
   "pnpm": {

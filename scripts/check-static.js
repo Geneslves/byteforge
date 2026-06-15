@@ -77,9 +77,24 @@ if (requireFile(searchIndexPath)) {
   }
 }
 
+// Check Pagefind build artifacts
+const pagefindFiles = [
+  'pagefind/pagefind.js',
+  'pagefind/pagefind-entry.json',
+  'pagefind/pagefind-ui.js',
+  'pagefind/pagefind-ui.css',
+];
+
+for (const file of pagefindFiles) {
+  const filePath = join(distDir, file);
+  if (!existsSync(filePath)) {
+    errors.push(`missing pagefind artifact: ${filePath}`);
+  }
+}
+
 if (errors.length) {
   for (const error of errors) console.error(`ERROR ${error}`);
   process.exit(1);
 }
 
-console.log(`Static build check passed: ${Object.keys(routeData).length + contentDocuments.length + 1} HTML entry points.`);
+console.log(`Static build check passed: ${Object.keys(routeData).length + contentDocuments.length + 1} HTML entry points, Pagefind index generated.`);
