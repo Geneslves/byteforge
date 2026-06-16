@@ -9,6 +9,33 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin-v2.css">
+  <script>
+    // 管理后台权限检查 - 必须在页面加载前执行
+    (function() {
+      const authToken = localStorage.getItem('auth_token');
+      const user = localStorage.getItem('user');
+
+      let isAuthorized = false;
+
+      if (authToken && user) {
+        try {
+          const userData = JSON.parse(user);
+          // 检查是否为管理员
+          if (userData.role === 'admin') {
+            isAuthorized = true;
+          }
+        } catch (error) {
+          console.error('用户数据解析失败:', error);
+        }
+      }
+
+      // 如果未授权，立即重定向到登录页
+      if (!isAuthorized) {
+        alert('⚠️ 访问受限\n\n此页面仅限管理员访问。\n请使用管理员账号登录。');
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="admin-layout">

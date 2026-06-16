@@ -48,7 +48,7 @@ const withCollection = (collection, entries) =>
     searchableText: buildSearchableText(entry, collectionMetadata[collection], collection),
   }));
 
-export const searchEntries = [
+export const allContentEntries = [
   ...withCollection('logs', logEntries),
   ...withCollection('deployments', deploymentEntries),
   ...withCollection('archive', archiveEntries),
@@ -56,6 +56,10 @@ export const searchEntries = [
   ...withCollection('snippets', snippetsEntries),
   ...withCollection('academic', academicEntries),
 ];
+
+export const publicContentEntries = allContentEntries.filter((entry) => entry.status === 'published');
+
+export const searchEntries = publicContentEntries;
 
 const getPublishedAt = (entry) => entry.meta.match(/\d{4}-\d{2}-\d{2}/)?.[0] || '2026-06-09';
 
@@ -69,6 +73,8 @@ const buildDocumentBody = (entry) => [
 
 export const contentDocuments = searchEntries.map((entry) => ({
   id: entry.id,
+  status: entry.status,
+  type: entry.type,
   path: toDocumentPath(entry.id),
   url: toDocumentUrl(entry.id),
   sourceHref: entry.sourceHref,
@@ -116,6 +122,8 @@ export const pagefindIndexConfig = {
 
 export const searchIndexDocuments = searchEntries.map((entry) => ({
   id: entry.id,
+  status: entry.status,
+  type: entry.type,
   url: entry.href,
   title: entry.title,
   excerpt: entry.text,
@@ -171,4 +179,3 @@ export const searchEntriesByCollection = Object.fromEntries(Object.keys(contentC
   collection,
   searchEntries.filter((entry) => entry.collection === collection),
 ]));
-

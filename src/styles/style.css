@@ -798,6 +798,64 @@ body {
     margin-right: 8px;
   }
 
+  /* 导航中心按钮特殊样式 */
+  .nav-hub {
+    padding: 6px 12px;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 4px;
+    background: rgba(139, 92, 246, 0.05);
+    color: #8b5cf6 !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .nav-hub .hub-icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 14px;
+    color: #8b5cf6;
+  }
+
+  .nav-hub:hover {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .nav-hub::after {
+    display: none;
+  }
+
+  /* 登录按钮特殊样式 */
+  .nav-auth {
+    padding: 6px 12px;
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    border-radius: 4px;
+    background: rgba(0, 243, 255, 0.05);
+    color: #00f3ff !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .nav-auth .auth-icon {
+    display: inline-block;
+    margin-right: 6px;
+    font-size: 10px;
+    color: #00f3ff;
+  }
+
+  .nav-auth:hover {
+    border-color: #00f3ff;
+    background: rgba(0, 243, 255, 0.15);
+    box-shadow: 0 0 16px rgba(0, 243, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .nav-auth::after {
+    display: none;
+  }
+
   @keyframes glitch-skew {
     0% { transform: skew(0deg); }
     20% { transform: skew(-10deg); text-shadow: -2px 0 var(--red), 2px 0 var(--aqua); }

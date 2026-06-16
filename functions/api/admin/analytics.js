@@ -1,35 +1,23 @@
-// GET /api/admin/analytics
-// 聚合分析数据
+import { requireAuth } from '../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'GET, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
-export async function onRequestGet({ env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
+export async function onRequestGet({ request, env }) {
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
-    // 总统计
+    const auth = await requireAuth(request, env, 'admin');
+    if (!auth.authorized) {
+      return apiError(auth.error, 403, 'Admin access required', request, env, METHODS);
+    }
+
     const stats = await env.DB.prepare(`
       SELECT
         (SELECT COUNT(*) FROM feedback) as total_feedback,
@@ -38,7 +26,6 @@ export async function onRequestGet({ env }) {
         (SELECT COUNT(*) FROM content_events WHERE event_type = 'search') as total_searches
     `).first();
 
-    // 热门文档（按浏览量）
     const topDocuments = await env.DB.prepare(`
       SELECT document_id, COUNT(*) as views
       FROM content_events
@@ -48,11 +35,8 @@ export async function onRequestGet({ env }) {
       LIMIT 10
     `).all();
 
-    // 最近 7 天活动
     const recentActivity = await env.DB.prepare(`
-      SELECT
-        DATE(created_at) as date,
-        COUNT(*) as events
+      SELECT DATE(created_at) as date, COUNT(*) as events
       FROM content_events
       WHERE created_at >= datetime('now', '-7 days')
       GROUP BY DATE(created_at)
@@ -69,12 +53,8 @@ export async function onRequestGet({ env }) {
       },
       topDocuments: topDocuments.results || [],
       recentActivity: recentActivity.results || [],
-    }, { headers: corsHeaders });
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to load analytics', request, env, METHODS);
   }
 }

@@ -1,44 +1,21 @@
-// GET /api/auth/me
-// Get current user info
-
 import { requireAuth } from '../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'GET, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestGet({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
     const auth = await requireAuth(request, env);
-
     if (!auth.authorized) {
-      return json({
-        ok: false,
-        error: auth.error,
-        message: 'Authentication required'
-      }, { status: 401, headers: corsHeaders });
+      return apiError(auth.error, 401, 'Authentication required', request, env, METHODS);
     }
 
     return json({
@@ -47,15 +24,10 @@ export async function onRequestGet({ request, env }) {
         id: auth.user.id,
         username: auth.user.username,
         email: auth.user.email,
-        role: auth.user.role
-      }
-    }, { headers: corsHeaders });
-
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'server_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+        role: auth.user.role,
+      },
+    }, {}, request, env, METHODS);
+  } catch {
+    return apiError('server_error', 500, 'Unable to load user', request, env, METHODS);
   }
 }

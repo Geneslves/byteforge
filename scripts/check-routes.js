@@ -29,6 +29,7 @@ const escapeHtml = (value) =>
 
 const routes = new Set(Object.keys(routeData));
 const contentRoutes = new Set([...routes, ...Object.keys(documentRoutes)]);
+const publicStaticRoutes = new Set(['/login.html', '/nav.html', '/admin.html', '/admin-v2.html']);
 const routeEntries = Object.entries(routeData);
 const planetConfigs = Object.entries(planetRoutes).map(([label, config]) =>
   normalizePlanetConfig(label, config)
@@ -93,7 +94,7 @@ for (const label of planetLabels) {
 }
 
 for (const routePath of navRoutes) {
-  if (routePath && routePath !== '/' && !routes.has(routePath)) {
+  if (routePath && routePath !== '/' && !routes.has(routePath) && !publicStaticRoutes.has(routePath)) {
     errors.push(`CLI nav links to unknown route: ${routePath}`);
   }
 }

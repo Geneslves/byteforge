@@ -1,91 +1,70 @@
-// POST /api/auth/login
-// User login
+import { generateToken, verifyPassword } from '../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
 
-import { verifyPassword, generateToken } from '../../lib/auth.js';
+const METHODS = 'POST, OPTIONS';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
-    const body = await request.json();
-    const { username, password } = body;
+    const body = await request.json().catch(() => null);
+    const { username, password } = body || {};
 
     if (!username || !password) {
-      return json({
-        ok: false,
-        error: 'missing_fields',
-        message: 'Username and password are required'
-      }, { status: 400, headers: corsHeaders });
+      return apiError('missing_fields', 400, 'Username and password are required', request, env, METHODS);
     }
 
-    // Find user by username or email
     const user = await env.DB.prepare(
       'SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? OR email = ?'
     ).bind(username, username).first();
 
     if (!user) {
-      return json({
-        ok: false,
-        error: 'invalid_credentials',
-        message: 'Invalid username or password'
-      }, { status: 401, headers: corsHeaders });
+      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS);
     }
-
-    // Check if user is active
     if (!user.is_active) {
-      return json({
-        ok: false,
-        error: 'user_inactive',
-        message: 'Your account has been deactivated'
-      }, { status: 403, headers: corsHeaders });
+      return apiError('user_inactive', 403, 'Your account has been deactivated', request, env, METHODS);
     }
 
-    // Verify password
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
-      return json({
-        ok: false,
-        error: 'invalid_credentials',
-        message: 'Invalid username or password'
-      }, { status: 401, headers: corsHeaders });
+      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS);
     }
 
-    // Update last login
-    await env.DB.prepare(
-      'UPDATE users SET last_login = ? WHERE id = ?'
-    ).bind(new Date().toISOString(), user.id).run();
+    const now = new Date().toISOString();
+    await env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?')
+      .bind(now, user.id)
+      .run();
 
-    // Generate token
     const token = await generateToken({
       userId: user.id,
       username: user.username,
       email: user.email,
-      role: user.role
-    });
+      role: user.role,
+    }, env);
+
+    // Generate refresh token
+    const refreshTokenValue = crypto.randomUUID();
+
+    // Hash refresh token for storage
+    const encoder = new TextEncoder();
+    const data = encoder.encode(refreshTokenValue);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const refreshTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Store refresh token (30 days expiry)
+    const refreshTokenId = crypto.randomUUID();
+    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    await env.DB.prepare(
+      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)'
+    ).bind(refreshTokenId, user.id, refreshTokenHash, refreshTokenExpiry, now).run();
 
     return json({
       ok: true,
@@ -93,16 +72,12 @@ export async function onRequestPost({ request, env }) {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
       },
-      token
-    }, { headers: corsHeaders });
-
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'server_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+      token,
+      refreshToken: refreshTokenValue,
+    }, {}, request, env, METHODS);
+  } catch {
+    return apiError('server_error', 500, 'Unable to log in', request, env, METHODS);
   }
 }

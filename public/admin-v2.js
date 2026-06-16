@@ -2,6 +2,27 @@
 
 const API_BASE = location.hostname === 'localhost' ? 'http://localhost:8788' : '';
 
+function requireAdminToken() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    showToast('请先登录', 'error');
+    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    throw new Error('missing_auth_token');
+  }
+  return token;
+}
+
+function adminFetch(path, options = {}) {
+  const token = requireAdminToken();
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 let currentView = 'dashboard';
 let autoRefreshInterval = null;
 let feedbackData = [];
@@ -115,9 +136,9 @@ function stopAutoRefresh() {
 async function loadDashboard() {
   try {
     const [analytics, feedback, content] = await Promise.all([
-      fetch(`${API_BASE}/api/admin/analytics`).then(r => r.json()),
-      fetch(`${API_BASE}/api/admin/feedback?limit=5`).then(r => r.json()),
-      fetch(`${API_BASE}/api/admin/content-stats`).then(r => r.json())
+      adminFetch('/api/admin/analytics').then(r => r.json()),
+      adminFetch('/api/admin/feedback?limit=5').then(r => r.json()),
+      adminFetch('/api/admin/content-stats').then(r => r.json())
     ]);
 
     if (analytics.ok) {
@@ -180,7 +201,7 @@ function renderTopContent(data) {
 // ===== 反馈管理 =====
 async function loadFeedback() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/feedback?limit=100`);
+    const res = await adminFetch('/api/admin/feedback?limit=100');
     const data = await res.json();
 
     if (data.ok) {
@@ -244,7 +265,7 @@ async function deleteFeedback(id) {
   if (!confirm('确定要删除这条反馈吗？')) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/feedback/delete/${id}`, {
+    const res = await adminFetch(`/api/admin/feedback/delete/${id}`, {
       method: 'DELETE'
     });
     const data = await res.json();
@@ -263,7 +284,7 @@ async function deleteFeedback(id) {
 // ===== 内容分析 =====
 async function loadContentStats() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/content-stats`);
+    const res = await adminFetch('/api/admin/content-stats');
     const data = await res.json();
 
     if (data.ok) {
@@ -326,7 +347,7 @@ function renderContentTable(data) {
 
 async function viewContentDetail(docId) {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/content-stats?documentId=${encodeURIComponent(docId)}`);
+    const res = await adminFetch(`/api/admin/content-stats?documentId=${encodeURIComponent(docId)}`);
     const data = await res.json();
 
     if (data.ok) {
@@ -407,9 +428,7 @@ async function loadUsers() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/users`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await adminFetch('/api/admin/users');
     const data = await res.json();
 
     if (data.ok) {
@@ -471,11 +490,10 @@ async function toggleUserStatus(userId, newStatus) {
   if (!confirm(`确定要${action}此用户吗？`)) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/users`, {
+    const res = await adminFetch('/api/admin/users', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ userId, isActive: newStatus })
     });
@@ -500,11 +518,10 @@ async function toggleUserRole(userId, newRole) {
   if (!confirm(`确定要将此用户设置为${roleName}吗？`)) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/users`, {
+    const res = await adminFetch('/api/admin/users', {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ userId, role: newRole })
     });
@@ -532,9 +549,7 @@ async function loadSettings() {
   }
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/settings`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await adminFetch('/api/admin/settings');
     const data = await res.json();
 
     if (data.ok) {
@@ -580,11 +595,10 @@ async function handleSettingsSave(e) {
   };
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/settings`, {
+    const res = await adminFetch('/api/admin/settings', {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ settings })
     });
@@ -673,4 +687,3 @@ window.switchView = switchView;
 window.deleteFeedback = deleteFeedback;
 window.viewContentDetail = viewContentDetail;
 window.closeModal = closeModal;
-
