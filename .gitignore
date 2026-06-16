@@ -1,16 +1,20 @@
+# Dependencies
 node_modules/
 dist/
 
+# Build and temporary files
 .superpowers/
 .tmp-chrome-cdp-profile/
 .tmp-chrome-cdp-*/
 .tmp-chrome-cdp.pid
 
+# Logs
 *.log
 dev-server.out.log
 dev-server.err.log
 docs/byteforge-homepage-*.png
 
+# Runtime directories
 runtime/logs/*
 !runtime/logs/.gitkeep
 runtime/tmp/*
@@ -19,9 +23,63 @@ runtime/backups/*
 !runtime/backups/.gitkeep
 backups/
 
+# OS files
 .DS_Store
 Thumbs.db
 
 # Wrangler local development
 .dev.vars
 .wrangler/
+
+# Environment variables and secrets
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!.env.example
+
+# Secrets and credentials
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.secret
+*_secret
+*-secret
+credentials.json
+service-account.json
+firebase-adminsdk-*.json
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+.d1/
+
+# IDE and editor files
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+
+# Local configuration
+config.local.*
+wrangler.local.toml
+
+# Testing
+coverage/
+.nyc_output/
+
+# Backup files
+*.backup
+*.bak
+*.old
