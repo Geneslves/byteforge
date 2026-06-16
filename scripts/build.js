@@ -25,6 +25,25 @@ const escapeAttribute = (value) =>
 
 const escapeXml = escapeAttribute;
 
+const buildPagefindDocument = (documentData) => {
+  if (!documentData) return '';
+
+  const tagFilters = (documentData.tags || [])
+    .map((tag) => `<span data-pagefind-filter="tag">${escapeAttribute(tag)}</span>`)
+    .join('');
+
+  return `
+  <article class="pagefind-static-document" data-pagefind-body aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">
+    <h1>${escapeAttribute(documentData.title)}</h1>
+    <p>${escapeAttribute(documentData.summary)}</p>
+    <span data-pagefind-filter="collection">${escapeAttribute(documentData.collection)}</span>
+    <span data-pagefind-filter="category">${escapeAttribute(documentData.category)}</span>
+    <span data-pagefind-filter="series">${escapeAttribute(documentData.series)}</span>
+    ${tagFilters}
+    ${documentData.body.split(/\n\n+/).map((paragraph) => `<p>${escapeAttribute(paragraph)}</p>`).join('\n    ')}
+  </article>`;
+};
+
 const withRouteHead = (html, routePath, config, documentData = null) => {
   const publicPath = `${routePath}/`;
   const canonicalUrl = `https://byteforge.dev${publicPath}`;
@@ -60,6 +79,7 @@ const withRouteHead = (html, routePath, config, documentData = null) => {
 
     const jsonLdScript = `\n  <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
     result = result.replace('</head>', `${jsonLdScript}\n  </head>`);
+    result = result.replace('</body>', `${buildPagefindDocument(documentData)}\n</body>`);
   }
 
   return result;
@@ -148,4 +168,3 @@ ${sitemapUrls.map(u => `  <url>
 
 await writeFile(join(distDir, 'sitemap.xml'), sitemapXml);
 console.log(`Generated sitemap: ${sitemapUrls.length} URLs`);
-

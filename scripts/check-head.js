@@ -34,6 +34,31 @@ const checkHtml = (filePath, expectJsonLd = false) => {
   if (expectJsonLd && !html.includes('<script type="application/ld+json">')) {
     errors.push(`${relativePath} missing JSON-LD structured data`);
   }
+
+  if (expectJsonLd) {
+    const scripts = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    const articleScript = scripts.find((script) =>
+      script[1].includes('"@type":"Article"') || script[1].includes('"@type": "Article"')
+    );
+    if (articleScript) {
+      try {
+        const structuredData = JSON.parse(articleScript[1]);
+        for (const field of ['@context', '@type', 'headline', 'description', 'datePublished', 'url']) {
+          if (!structuredData[field]) errors.push(`${relativePath} JSON-LD missing ${field}`);
+        }
+      } catch (error) {
+        errors.push(`${relativePath} JSON-LD is not valid JSON: ${error.message}`);
+      }
+    } else {
+      errors.push(`${relativePath} missing Article JSON-LD structured data`);
+    }
+
+    for (const filter of ['collection', 'category', 'series', 'tag']) {
+      if (!html.includes(`data-pagefind-filter="${filter}"`)) {
+        errors.push(`${relativePath} missing Pagefind ${filter} filter source`);
+      }
+    }
+  }
 };
 
 // Check homepage

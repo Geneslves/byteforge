@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>导航中心 | ByteForge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/nav.css">
+</head>
+<body>
+  <!-- 背景效果 -->
+  <canvas id="grid-canvas"></canvas>
+  <div class="scanlines"></div>
+
+  <!-- 主容器 -->
+  <div class="nav-container">
+    <!-- 顶部标题 -->
+    <header class="nav-header">
+      <div class="header-line">
+        <span class="header-bracket">[</span>
+        <h1 class="header-title">NAVIGATION CENTER</h1>
+        <span class="header-bracket">]</span>
+      </div>
+      <p class="header-subtitle">// BYTEFORGE SYSTEM ACCESS POINTS</p>
+      <div class="status-bar">
+        <span class="status-item">
+          <span class="status-dot"></span>
+          SYSTEM ONLINE
+        </span>
+        <span class="status-item">
+          <span class="status-clock" id="status-clock">--:--:--</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- 导航网格 -->
+    <main class="nav-grid">
+      <!-- 主要区域 -->
+      <section class="nav-section">
+        <h2 class="section-title">
+          <span class="section-icon">▸</span>
+          PRIMARY ROUTES
+        </h2>
+        <div class="cards-grid">
+          <a href="/" class="nav-card card-primary">
+            <div class="card-icon">⊙</div>
+            <h3 class="card-title">Home</h3>
+            <p class="card-desc">数字熔炉主页</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/logs/" class="nav-card card-primary">
+            <div class="card-icon">📝</div>
+            <h3 class="card-title">Logs</h3>
+            <p class="card-desc">工程日志与文章</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/dev-ai/" class="nav-card card-primary">
+            <div class="card-icon">🤖</div>
+            <h3 class="card-title">Dev & AI</h3>
+            <p class="card-desc">开发与人工智能</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/search/" class="nav-card card-primary">
+            <div class="card-icon">🔍</div>
+            <h3 class="card-title">Search</h3>
+            <p class="card-desc">全站搜索引擎</p>
+            <div class="card-glow"></div>
+          </a>
+        </div>
+      </section>
+
+      <!-- 内容区域 -->
+      <section class="nav-section">
+        <h2 class="section-title">
+          <span class="section-icon">▸</span>
+          CONTENT ARCHIVES
+        </h2>
+        <div class="cards-grid">
+          <a href="/archive/" class="nav-card">
+            <div class="card-icon">📦</div>
+            <h3 class="card-title">Archive</h3>
+            <p class="card-desc">知识归档地图</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/snippets/" class="nav-card">
+            <div class="card-icon">💾</div>
+            <h3 class="card-title">Snippets</h3>
+            <p class="card-desc">代码片段库</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/academic/" class="nav-card">
+            <div class="card-icon">🎓</div>
+            <h3 class="card-title">Academic</h3>
+            <p class="card-desc">学术研究资料</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/deployments/" class="nav-card">
+            <div class="card-icon">🚀</div>
+            <h3 class="card-title">Deployments</h3>
+            <p class="card-desc">部署与发布记录</p>
+            <div class="card-glow"></div>
+          </a>
+        </div>
+      </section>
+
+      <!-- 系统管理 -->
+      <section class="nav-section">
+        <h2 class="section-title">
+          <span class="section-icon">▸</span>
+          SYSTEM ADMIN
+        </h2>
+        <div class="cards-grid cards-grid-compact">
+          <a href="/login.html" class="nav-card card-accent">
+            <div class="card-icon">🔐</div>
+            <h3 class="card-title">Login</h3>
+            <p class="card-desc">身份验证</p>
+            <div class="card-glow"></div>
+          </a>
+
+          <a href="/admin-v2.html" class="nav-card card-accent">
+            <div class="card-icon">⚙️</div>
+            <h3 class="card-title">Admin</h3>
+            <p class="card-desc">管理后台</p>
+            <div class="card-glow"></div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- 底部导航 -->
+    <footer class="nav-footer">
+      <div class="footer-stats">
+        <span class="stat-item">
+          <span class="stat-label">TOTAL ROUTES:</span>
+          <span class="stat-value">12</span>
+        </span>
+        <span class="stat-item">
+          <span class="stat-label">UPTIME:</span>
+          <span class="stat-value">99.9%</span>
+        </span>
+      </div>
+      <a href="/" class="back-home">
+        <span class="back-icon">←</span>
+        RETURN TO HOME
+      </a>
+    </footer>
+  </div>
+
+  <script src="/nav.js"></script>
+</body>
+</html>

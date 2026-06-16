@@ -1,39 +1,27 @@
-// GET /api/admin/feedback
-// 查询反馈列表，支持分页和过滤
+import { requireAuth } from '../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'GET, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestGet({ request, env }) {
-  const url = new URL(request.url);
-  const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-  const offset = parseInt(url.searchParams.get('offset') || '0');
-  const documentId = url.searchParams.get('documentId');
-
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
+    const auth = await requireAuth(request, env, 'admin');
+    if (!auth.authorized) {
+      return apiError(auth.error, 403, 'Admin access required', request, env, METHODS);
+    }
+
+    const url = new URL(request.url);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 100);
+    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10), 0);
+    const documentId = url.searchParams.get('documentId');
     let query = 'SELECT * FROM feedback';
     const params = [];
 
@@ -51,12 +39,8 @@ export async function onRequestGet({ request, env }) {
       ok: true,
       data: results || [],
       pagination: { limit, offset, count: results ? results.length : 0 },
-    }, { headers: corsHeaders });
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to load feedback', request, env, METHODS);
   }
 }

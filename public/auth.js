@@ -101,8 +101,9 @@ async function handleLogin(e) {
     const data = await res.json();
 
     if (data.ok) {
-      // Save token
+      // Save tokens
       localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('refresh_token', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Show success
@@ -158,8 +159,9 @@ async function handleRegister(e) {
     const data = await res.json();
 
     if (data.ok) {
-      // Save token
+      // Save tokens
       localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('refresh_token', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Show success
@@ -195,7 +197,7 @@ function getErrorMessage(error, defaultMsg) {
     'user_exists': '用户名或邮箱已被使用',
     'invalid_username': '用户名格式不正确（3-20 个字符，仅限字母、数字和下划线）',
     'invalid_email': '邮箱格式不正确',
-    'invalid_password': '密码至少需要 8 个字符',
+    'invalid_password': '密码至少需要 12 个字符',
     'registration_disabled': '注册功能已关闭',
     'missing_fields': '请填写所有必填字段'
   };

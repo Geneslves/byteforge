@@ -1,44 +1,29 @@
-// GET /api/admin/content-stats
-// 获取每个内容的详细统计
+import { requireAuth } from '../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'GET, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestGet({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
-  const url = new URL(request.url);
-  const documentId = url.searchParams.get('documentId');
-
   try {
+    const auth = await requireAuth(request, env, 'admin');
+    if (!auth.authorized) {
+      return apiError(auth.error, 403, 'Admin access required', request, env, METHODS);
+    }
+
+    const url = new URL(request.url);
+    const documentId = url.searchParams.get('documentId');
+
     if (documentId) {
-      // 获取单个文档的详细统计
       const stats = await env.DB.prepare(`
-        SELECT
-          event_type,
-          COUNT(*) as count,
-          DATE(created_at) as date
+        SELECT event_type, COUNT(*) as count, DATE(created_at) as date
         FROM content_events
         WHERE document_id = ?
         GROUP BY event_type, DATE(created_at)
@@ -56,10 +41,9 @@ export async function onRequestGet({ request, env }) {
         documentId,
         events: stats.results || [],
         feedbackCount: feedbackCount?.count || 0,
-      }, { headers: corsHeaders });
+      }, {}, request, env, METHODS);
     }
 
-    // 获取所有文档的统计概览
     const allStats = await env.DB.prepare(`
       SELECT
         document_id,
@@ -74,7 +58,6 @@ export async function onRequestGet({ request, env }) {
       ORDER BY views DESC
     `).all();
 
-    // 获取每个文档的反馈数量
     const feedbackCounts = await env.DB.prepare(`
       SELECT document_id, COUNT(*) as count
       FROM feedback
@@ -82,25 +65,18 @@ export async function onRequestGet({ request, env }) {
       GROUP BY document_id
     `).all();
 
-    const feedbackMap = {};
-    (feedbackCounts.results || []).forEach(item => {
-      feedbackMap[item.document_id] = item.count;
-    });
+    const feedbackMap = Object.fromEntries((feedbackCounts.results || []).map((item) => [
+      item.document_id,
+      item.count,
+    ]));
 
-    const enriched = (allStats.results || []).map(stat => ({
+    const enriched = (allStats.results || []).map((stat) => ({
       ...stat,
       feedback_count: feedbackMap[stat.document_id] || 0,
     }));
 
-    return json({
-      ok: true,
-      stats: enriched,
-    }, { headers: corsHeaders });
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    return json({ ok: true, stats: enriched }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to load content statistics', request, env, METHODS);
   }
 }

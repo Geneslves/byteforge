@@ -11,5 +11,17 @@ dev-server.out.log
 dev-server.err.log
 docs/byteforge-homepage-*.png
 
+runtime/logs/*
+!runtime/logs/.gitkeep
+runtime/tmp/*
+!runtime/tmp/.gitkeep
+runtime/backups/*
+!runtime/backups/.gitkeep
+backups/
+
 .DS_Store
 Thumbs.db
+
+# Wrangler local development
+.dev.vars
+.wrangler/

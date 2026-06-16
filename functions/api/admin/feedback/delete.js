@@ -1,68 +1,37 @@
-// DELETE /api/admin/feedback/:id
-// 删除指定的反馈
+import { requireAuth } from '../../../lib/auth.js';
+import { apiError, json, optionsResponse, requireDatabase } from '../../../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'DELETE, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestDelete({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
-  }
-
-  // 从 URL 中提取 ID
-  const url = new URL(request.url);
-  const id = url.pathname.split('/').pop();
-
-  if (!id || id === 'delete') {
-    return json({
-      ok: false,
-      error: 'missing_id',
-      message: 'Feedback ID is required'
-    }, { status: 400, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
-    const result = await env.DB.prepare(
-      'DELETE FROM feedback WHERE id = ?'
-    ).bind(id).run();
-
-    if (result.meta.changes === 0) {
-      return json({
-        ok: false,
-        error: 'not_found',
-        message: 'Feedback not found'
-      }, { status: 404, headers: corsHeaders });
+    const auth = await requireAuth(request, env, 'admin');
+    if (!auth.authorized) {
+      return apiError(auth.error, 403, 'Admin access required', request, env, METHODS);
     }
 
-    return json({
-      ok: true,
-      id,
-      deleted: true,
-    }, { headers: corsHeaders });
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').pop();
+
+    if (!id || id === 'delete') {
+      return apiError('missing_id', 400, 'Feedback ID is required', request, env, METHODS);
+    }
+
+    const result = await env.DB.prepare('DELETE FROM feedback WHERE id = ?').bind(id).run();
+    if (result.meta.changes === 0) {
+      return apiError('not_found', 404, 'Feedback not found', request, env, METHODS);
+    }
+
+    return json({ ok: true, id, deleted: true }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to delete feedback', request, env, METHODS);
   }
 }

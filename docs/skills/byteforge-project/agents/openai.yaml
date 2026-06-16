@@ -1,0 +1,4 @@
+interface:
+  display_name: "ByteForge Project"
+  short_description: "ByteForge repo workflow, auth, docs, and verification guide"
+  default_prompt: "Use $byteforge-project to inspect, modify, verify, and document the ByteForge project."

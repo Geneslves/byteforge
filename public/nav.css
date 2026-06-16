@@ -1,0 +1,452 @@
+/* ByteForge Navigation Center - Futuristic Grid Style */
+
+/* ===== 基础样式 ===== */
+:root {
+  /* 配色 */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-card: rgba(26, 26, 26, 0.8);
+
+  /* 霓虹色 */
+  --neon-cyan: #00f3ff;
+  --neon-purple: #8b5cf6;
+  --neon-pink: #ff006e;
+  --neon-green: #10b981;
+  --neon-orange: #f59e0b;
+
+  /* 文字 */
+  --text-primary: #e0e7ff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* 效果 */
+  --glow-cyan: 0 0 20px rgba(0, 243, 255, 0.5);
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Rajdhani', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ===== 网格背景 ===== */
+#grid-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.4;
+}
+
+/* ===== 扫描线 ===== */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 243, 255, 0.02) 2px,
+    rgba(0, 243, 255, 0.02) 4px
+  );
+  animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(20px); }
+}
+
+/* ===== 主容器 ===== */
+.nav-container {
+  position: relative;
+  z-index: 10;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  min-height: 100vh;
+}
+
+/* ===== 顶部标题 ===== */
+.nav-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.header-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.header-bracket {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--neon-cyan);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.header-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 4px;
+}
+
+.header-subtitle {
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+/* 状态栏 */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 12px 24px;
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 20px;
+  display: inline-flex;
+  margin: 0 auto;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neon-green);
+  letter-spacing: 1px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--neon-green);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--neon-green);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.status-clock {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--neon-cyan);
+}
+
+/* ===== 导航网格 ===== */
+.nav-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+/* 区块标题 */
+.nav-section {
+  animation: fadeSlideIn 0.6s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 2px;
+}
+
+.section-icon {
+  color: var(--neon-cyan);
+  font-size: 16px;
+}
+
+/* 卡片网格 */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.cards-grid-compact {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+/* 导航卡片 */
+.nav-card {
+  position: relative;
+  padding: 32px 24px;
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-purple), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.nav-card:hover::before {
+  opacity: 1;
+}
+
+.nav-card:hover {
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+  transform: translateY(-4px);
+}
+
+/* 主要卡片 */
+.card-primary {
+  border-color: rgba(0, 243, 255, 0.3);
+}
+
+.card-primary:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+}
+
+.card-primary::before {
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+}
+
+/* 强调卡片 */
+.card-accent {
+  border-color: rgba(255, 0, 110, 0.3);
+}
+
+.card-accent:hover {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 30px rgba(255, 0, 110, 0.4);
+}
+
+.card-accent::before {
+  background: linear-gradient(90deg, transparent, var(--neon-pink), transparent);
+}
+
+/* 卡片内容 */
+.card-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  filter: grayscale(0.3);
+  transition: all 0.3s;
+}
+
+.nav-card:hover .card-icon {
+  filter: grayscale(0);
+  transform: scale(1.1);
+}
+
+.card-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.card-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.card-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-purple), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.nav-card:hover .card-glow {
+  opacity: 0.6;
+}
+
+/* ===== 底部导航 ===== */
+.nav-footer {
+  margin-top: 80px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.footer-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.stat-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--neon-cyan);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.back-home {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  color: var(--neon-purple);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.back-home:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  transform: translateX(-4px);
+}
+
+.back-icon {
+  font-size: 18px;
+  transition: transform 0.3s;
+}
+
+.back-home:hover .back-icon {
+  transform: translateX(-4px);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 40px 20px;
+  }
+
+  .header-title {
+    font-size: 28px;
+  }
+
+  .header-bracket {
+    font-size: 24px;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+/* ===== 锁定状态样式 ===== */
+.lock-icon {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 16px;
+  opacity: 0.7;
+  filter: grayscale(1);
+}
+
+/* ===== 加载动画 ===== */
+.nav-section:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.nav-section:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.nav-section:nth-child(3) {
+  animation-delay: 0.3s;
+}

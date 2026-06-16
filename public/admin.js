@@ -2,9 +2,29 @@ const API_BASE = location.hostname === 'localhost'
   ? 'http://localhost:8788'
   : '';
 
+function requireAdminToken() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname);
+    throw new Error('missing_auth_token');
+  }
+  return token;
+}
+
+function adminFetch(path, options = {}) {
+  const token = requireAdminToken();
+  return fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 async function loadAnalytics() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/analytics`);
+    const res = await adminFetch('/api/admin/analytics');
     const data = await res.json();
 
     if (data.ok) {
@@ -31,7 +51,7 @@ async function loadAnalytics() {
 
 async function loadFeedback() {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/feedback?limit=20`);
+    const res = await adminFetch('/api/admin/feedback?limit=20');
     const data = await res.json();
 
     if (data.ok) {

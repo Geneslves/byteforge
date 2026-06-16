@@ -1,55 +1,25 @@
-// User feedback endpoint
-// POST /api/feedback
+import { apiError, json, optionsResponse, requireDatabase } from '../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'POST, OPTIONS';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestPost({ request, env }) {
-  // Parse request body
   const body = await request.json().catch(() => null);
 
   if (!body || typeof body.routePath !== 'string' || typeof body.message !== 'string') {
-    return json({
-      ok: false,
-      error: 'invalid_payload',
-      message: 'Missing required fields: routePath, message'
-    }, { status: 400, headers: corsHeaders });
+    return apiError('invalid_payload', 400, 'Missing required fields: routePath, message', request, env, METHODS);
   }
 
   const message = body.message.trim();
-
-  // Validate message length
   if (message.length < 2 || message.length > 1000) {
-    return json({
-      ok: false,
-      error: 'invalid_message_length',
-      message: 'Message must be between 2 and 1000 characters'
-    }, { status: 400, headers: corsHeaders });
+    return apiError('invalid_message_length', 400, 'Message must be between 2 and 1000 characters', request, env, METHODS);
   }
 
-  // Check if DB binding exists
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured',
-      message: 'Database binding not configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
@@ -68,17 +38,8 @@ export async function onRequestPost({ request, env }) {
       userAgent
     ).run();
 
-    return json({
-      ok: true,
-      id,
-      created_at: createdAt
-    }, { headers: corsHeaders });
-  } catch (error) {
-    console.error('Feedback error:', error);
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    return json({ ok: true, id, created_at: createdAt }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to store feedback', request, env, METHODS);
   }
 }

@@ -1,18 +1,14 @@
-// Health check endpoint
-// GET /api/health
+import { apiError, json } from '../lib/http.js';
 
-export async function onRequestGet() {
+export async function onRequestGet({ request, env }) {
   try {
-    return Response.json({
+    return json({
       ok: true,
       service: 'byteforge-api',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return Response.json({
-      ok: false,
-      error: error.message,
-    }, { status: 500 });
+    }, {}, request, env, 'GET, OPTIONS');
+  } catch {
+    return apiError('server_error', 500, 'Health check failed', request, env, 'GET, OPTIONS');
   }
 }

@@ -1,52 +1,25 @@
-// Content events endpoint
-// POST /api/content-events
+import { apiError, json, optionsResponse, requireDatabase } from '../lib/http.js';
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'POST, OPTIONS';
+const VALID_EVENT_TYPES = ['view', 'click', 'search', 'share'];
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
+export async function onRequestOptions({ request, env }) {
+  return optionsResponse(request, env, METHODS);
 }
 
 export async function onRequestPost({ request, env }) {
   const body = await request.json().catch(() => null);
 
   if (!body || typeof body.routePath !== 'string' || typeof body.eventType !== 'string') {
-    return json({
-      ok: false,
-      error: 'invalid_payload',
-      message: 'Missing required fields: routePath, eventType'
-    }, { status: 400, headers: corsHeaders });
+    return apiError('invalid_payload', 400, 'Missing required fields: routePath, eventType', request, env, METHODS);
   }
 
-  // Validate event type
-  const validEventTypes = ['view', 'click', 'search', 'share'];
-  if (!validEventTypes.includes(body.eventType)) {
-    return json({
-      ok: false,
-      error: 'invalid_event_type',
-      message: `Event type must be one of: ${validEventTypes.join(', ')}`
-    }, { status: 400, headers: corsHeaders });
+  if (!VALID_EVENT_TYPES.includes(body.eventType)) {
+    return apiError('invalid_event_type', 400, `Event type must be one of: ${VALID_EVENT_TYPES.join(', ')}`, request, env, METHODS);
   }
 
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured',
-      message: 'Database binding not configured'
-    }, { status: 503, headers: corsHeaders });
+  if (!requireDatabase(env)) {
+    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
   }
 
   try {
@@ -65,17 +38,8 @@ export async function onRequestPost({ request, env }) {
       userAgent
     ).run();
 
-    return json({
-      ok: true,
-      id,
-      created_at: createdAt
-    }, { headers: corsHeaders });
-  } catch (error) {
-    console.error('Content event error:', error);
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    return json({ ok: true, id, created_at: createdAt }, {}, request, env, METHODS);
+  } catch {
+    return apiError('database_error', 500, 'Unable to store content event', request, env, METHODS);
   }
 }

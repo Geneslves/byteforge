@@ -27,16 +27,37 @@ for (const filePath of filesToCheck) {
 
 const {
   archiveIndex,
+  allContentEntries,
   contentDocuments,
   contentCollections,
   documentRoutes,
   pagefindIndexConfig,
+  publicContentEntries,
   routeData,
   rssItems,
   searchEntries,
   searchFacets,
   searchIndexDocuments,
 } = await import('../src/data/index.js');
+
+if (!Array.isArray(allContentEntries) || allContentEntries.length === 0) {
+  errors.push('allContentEntries export should include every source entry before publication filtering');
+}
+
+if (!Array.isArray(publicContentEntries) || publicContentEntries.length === 0) {
+  errors.push('publicContentEntries export should include only published entries');
+}
+
+const publicIds = new Set((publicContentEntries || []).map((entry) => entry.id));
+const nonPublishedIds = new Set((allContentEntries || [])
+  .filter((entry) => entry.status !== 'published')
+  .map((entry) => entry.id));
+
+for (const entry of publicContentEntries || []) {
+  if (entry.status !== 'published') {
+    errors.push(`publicContentEntries should only include published entries; found ${entry.id} with ${entry.status}`);
+  }
+}
 
 for (const [collection, entries] of Object.entries(contentCollections)) {
   if (!Array.isArray(entries) || entries.length === 0) {
@@ -55,7 +76,7 @@ for (const [collection, entries] of Object.entries(contentCollections)) {
     }
 
     // Validate status field
-    if (!['draft', 'preview', 'published', 'archived'].includes(entry.status)) {
+    if (!['draft', 'published', 'archived'].includes(entry.status)) {
       errors.push(`content entry "${collection}.${entry.id || 'unknown'}" has invalid status: ${entry.status}`);
     }
 
@@ -103,6 +124,12 @@ if (!archiveIndex || typeof archiveIndex !== 'object') {
 
 const searchIds = new Set();
 for (const entry of searchEntries) {
+  if (!publicIds.has(entry.id)) {
+    errors.push(`search entry "${entry.id}" should come from publicContentEntries`);
+  }
+  if (nonPublishedIds.has(entry.id)) {
+    errors.push(`non-published entry "${entry.id}" leaked into searchEntries`);
+  }
   if (searchIds.has(entry.id)) errors.push(`duplicate search entry id: ${entry.id}`);
   searchIds.add(entry.id);
   if (typeof entry.collection !== 'string' || !entry.collection.trim()) {
@@ -178,6 +205,9 @@ if (!Array.isArray(searchIndexDocuments) || searchIndexDocuments.length !== sear
     }
     if (!document.url.startsWith('/documents/')) {
       errors.push(`search index document "${document.id}" should point to its document route`);
+    }
+    if (nonPublishedIds.has(document.id)) {
+      errors.push(`non-published entry "${document.id}" leaked into searchIndexDocuments`);
     }
   }
 }
