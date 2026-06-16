@@ -1,5 +1,48 @@
 // ByteForge Navigation Center - Interactive Grid Background
 
+// ===== 粒子系统 =====
+class Particle {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.reset();
+  }
+
+  reset() {
+    this.x = Math.random() * this.canvas.width;
+    this.y = Math.random() * this.canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.size = Math.random() * 2 + 1;
+    this.opacity = Math.random() * 0.5 + 0.2;
+
+    // 随机颜色（青色、紫色、粉色）
+    const colors = [
+      { r: 0, g: 243, b: 255 },     // 青色
+      { r: 139, g: 92, b: 246 },    // 紫色
+      { r: 255, g: 0, b: 110 }      // 粉色
+    ];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // 边界检测
+    if (this.x < 0 || this.x > this.canvas.width ||
+        this.y < 0 || this.y > this.canvas.height) {
+      this.reset();
+    }
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = `rgba(${this.color.r}, ${this.color.g}, ${this.color.b}, ${this.opacity})`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 // ===== 网格背景动画 =====
 class GridBackground {
   constructor(canvas) {
@@ -8,6 +51,13 @@ class GridBackground {
     this.gridSize = 40;
     this.offset = { x: 0, y: 0 };
     this.mouse = { x: null, y: null };
+
+    // 创建粒子
+    this.particles = [];
+    this.particleCount = 50;
+    for (let i = 0; i < this.particleCount; i++) {
+      this.particles.push(new Particle(canvas));
+    }
 
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -26,6 +76,9 @@ class GridBackground {
   resize() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
+
+    // 重置粒子位置
+    this.particles.forEach(p => p.reset());
   }
 
   draw() {
@@ -75,7 +128,41 @@ class GridBackground {
       }
     }
 
+    // 更新和绘制粒子
+    this.particles.forEach(particle => {
+      particle.update();
+      particle.draw(this.ctx);
+    });
+
+    // 绘制粒子连线
+    this.drawParticleConnections();
+
     requestAnimationFrame(() => this.draw());
+  }
+
+  drawParticleConnections() {
+    const maxDistance = 100;
+
+    for (let i = 0; i < this.particles.length; i++) {
+      for (let j = i + 1; j < this.particles.length; j++) {
+        const p1 = this.particles[i];
+        const p2 = this.particles[j];
+
+        const dx = p1.x - p2.x;
+        const dy = p1.y - p2.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < maxDistance) {
+          const opacity = (1 - distance / maxDistance) * 0.2;
+          this.ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+          this.ctx.lineWidth = 0.5;
+          this.ctx.beginPath();
+          this.ctx.moveTo(p1.x, p1.y);
+          this.ctx.lineTo(p2.x, p2.y);
+          this.ctx.stroke();
+        }
+      }
+    }
   }
 }
 
