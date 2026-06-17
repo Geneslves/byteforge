@@ -9,6 +9,7 @@
     "dev": "vite",
     "dev:api": "wrangler pages dev dist --persist-to .wrangler/state --port 8788",
     "dev:local": "wrangler pages dev dist --persist-to .wrangler/state",
+    "dev:nodejs": "node server/index.js",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "clean": "node scripts/clean.js",
     "api:test:local": "node scripts/api/integration-local.js",
@@ -45,12 +46,24 @@
     "db:users": "node scripts/db/view-db.js --users",
     "db:admins": "node scripts/db/view-db.js --admins",
     "db:feedback": "node scripts/db/view-db.js --feedback",
-    "db:stats": "node scripts/db/view-db.js --stats"
+    "db:stats": "node scripts/db/view-db.js --stats",
+    "postgres:migrate": "node scripts/migrate-postgres.js",
+    "postgres:init": "node scripts/migrate-postgres.js",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f app",
+    "docker:restart": "docker compose restart app",
+    "docker:clean": "docker compose down -v"
   },
   "devDependencies": {
     "pagefind": "^1.5.2",
     "vite": "^6.3.5",
     "wrangler": "^4.100.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
   },
   "pnpm": {
     "overrides": {
