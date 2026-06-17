@@ -51,9 +51,12 @@ export function createHandler(options = {}) {
       if (auth) {
         const authResult = await requireAuth(request, env, auth)
         if (!authResult.authorized) {
+          // 401 for authentication failure (no token or invalid token)
+          // 403 for authorization failure (valid token but insufficient permissions)
+          const statusCode = authResult.error === 'insufficient_permissions' ? 403 : 401
           return apiError(
             authResult.error || 'unauthorized',
-            403,
+            statusCode,
             'Unauthorized',
             request,
             env,
