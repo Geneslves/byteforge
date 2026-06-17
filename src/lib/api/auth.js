@@ -109,7 +109,7 @@ export function getStoredUser() {
   try {
     return JSON.parse(userStr)
   } catch (error) {
-    console.error('Failed to parse user data:', error)
+    // Invalid user data in localStorage
     return null
   }
 }

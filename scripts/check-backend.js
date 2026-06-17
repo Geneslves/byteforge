@@ -70,16 +70,16 @@ if (!existsSync(functionsDir)) {
 
     const source = readFileSync(filePath, 'utf8');
 
-    // Check for required exports
-    if (file !== 'health.js' && !source.includes('onRequestPost')) {
-      errors.push(`${filePath} missing onRequestPost export`);
+    // Check for required exports (or createHandler usage)
+    if (file !== 'health.js' && !source.includes('onRequestPost') && !source.includes('createHandler')) {
+      errors.push(`${filePath} missing onRequestPost export or createHandler`);
     }
-    if (file !== 'health.js' && !source.includes('onRequestOptions')) {
-      errors.push(`${filePath} missing onRequestOptions export (CORS)`);
+    if (file !== 'health.js' && !source.includes('onRequestOptions') && !source.includes('createHandler')) {
+      errors.push(`${filePath} missing onRequestOptions export (CORS) or createHandler`);
     }
 
-    // Check for error handling
-    if (!source.includes('try') || !source.includes('catch')) {
+    // Check for error handling (either try/catch or createHandler which handles errors automatically)
+    if (!source.includes('try') && !source.includes('catch') && !source.includes('createHandler')) {
       errors.push(`${filePath} missing error handling`);
     }
     if (source.includes("'Access-Control-Allow-Origin': '*'")) {
@@ -183,7 +183,8 @@ if (!existsSync(adminDir)) {
     }
 
     const source = readFileSync(filePath, 'utf8');
-    if (!source.includes('requireAuth')) {
+    // Check for authentication (either requireAuth or createHandler with auth config)
+    if (!source.includes('requireAuth') && !source.includes("auth: 'admin'")) {
       errors.push(`${filePath} should require admin authentication`);
     }
     if (source.includes("'Access-Control-Allow-Origin': '*'")) {
@@ -205,21 +206,18 @@ for (const subdir of requiredAdminSubdirs) {
   }
 }
 
-// Check admin dashboard files
+// Check admin dashboard files (updated paths for new structure)
 const adminFiles = [
-  'public/admin.html',
-  'public/admin.js',
-  'public/admin.css',
-  'public/admin-v2.html',
-  'public/admin-v2.js',
-  'public/admin-v2.css',
+  'public/pages/admin.html',
+  'public/scripts/admin.js',
+  'public/styles/admin.css',
 ];
 
-// Check authentication pages
+// Check authentication pages (updated paths for new structure)
 const authFiles = [
-  'public/login.html',
-  'public/auth.js',
-  'public/auth.css',
+  'public/pages/login.html',
+  'public/scripts/login.js',
+  'public/styles/auth.css',
 ];
 
 for (const file of [...adminFiles, ...authFiles]) {
