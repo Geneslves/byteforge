@@ -83,3 +83,6 @@ coverage/
 *.backup
 *.bak
 *.old
+
+# Backup files from API migration
+*.old.js

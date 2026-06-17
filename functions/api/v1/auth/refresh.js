@@ -1,83 +1,69 @@
-import { generateToken, verifyToken } from '../../../lib/auth.js';
-import { apiError, json, optionsResponse, requireDatabase } from '../../../lib/http.js';
-
-const METHODS = 'POST, OPTIONS';
-const REFRESH_TOKEN_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-
 /**
- * Refresh Token API
- * POST /api/v1/auth/refresh
- *
- * Request body:
- * {
- *   "refreshToken": "string"
- * }
- *
- * Response:
- * {
- *   "ok": true,
- *   "token": "new-access-token"
- * }
+ * Refresh Token API - 使用抽象层重写
+ * 刷新访问令牌
  */
 
-export async function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env, METHODS);
-}
+import { generateToken } from '../../../lib/auth.js'
+import { createHandler } from '../../../lib/platform/adapter.js'
+import { json, optionsResponse, apiError } from '../../../lib/http.js'
 
-export async function onRequestPost({ request, env }) {
-  if (!requireDatabase(env)) {
-    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
-  }
+const METHODS = 'POST, OPTIONS'
 
-  try {
-    const body = await request.json().catch(() => null);
-    const { refreshToken } = body || {};
+/**
+ * POST /api/v1/auth/refresh
+ * 使用刷新令牌获取新的访问令牌
+ */
+export const onRequestPost = createHandler({
+  methods: METHODS,
+  auth: null, // 刷新端点不需要访问令牌认证
+  schema: {
+    refreshToken: 'string'
+  },
+  handler: async ({ request, env, db, body }) => {
+    // 哈希刷新令牌用于查找
+    const encoder = new TextEncoder()
+    const data = encoder.encode(body.refreshToken)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const tokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
-    if (!refreshToken || typeof refreshToken !== 'string') {
-      return apiError('missing_refresh_token', 400, 'Refresh token is required', request, env, METHODS);
-    }
-
-    // Hash the refresh token for lookup
-    const encoder = new TextEncoder();
-    const data = encoder.encode(refreshToken);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const tokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // Find refresh token in database
-    const tokenRecord = await env.DB.prepare(
-      'SELECT * FROM refresh_tokens WHERE token_hash = ? AND expires_at > ? AND revoked = 0'
-    ).bind(tokenHash, new Date().toISOString()).first();
+    // 在数据库中查找刷新令牌
+    const tokenRecord = await db.first(
+      'SELECT * FROM refresh_tokens WHERE token_hash = ? AND expires_at > ? AND revoked = 0',
+      [tokenHash, new Date().toISOString()]
+    )
 
     if (!tokenRecord) {
-      return apiError('invalid_refresh_token', 401, 'Invalid or expired refresh token', request, env, METHODS);
+      return apiError('invalid_refresh_token', 401, 'Invalid or expired refresh token', request, env, METHODS)
     }
 
-    // Get user information
-    const user = await env.DB.prepare(
-      'SELECT id, username, email, role, is_active FROM users WHERE id = ?'
-    ).bind(tokenRecord.user_id).first();
+    // 获取用户信息
+    const user = await db.first(
+      'SELECT id, username, email, role, is_active FROM users WHERE id = ?',
+      [tokenRecord.user_id]
+    )
 
     if (!user) {
-      return apiError('user_not_found', 401, 'User not found', request, env, METHODS);
+      return apiError('user_not_found', 401, 'User not found', request, env, METHODS)
     }
 
     if (!user.is_active) {
-      return apiError('user_inactive', 403, 'Your account has been deactivated', request, env, METHODS);
+      return apiError('user_inactive', 403, 'Your account has been deactivated', request, env, METHODS)
     }
 
-    // Generate new access token
+    // 生成新的访问令牌
     const newAccessToken = await generateToken({
       userId: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
-    }, env);
+      role: user.role
+    }, env)
 
-    // Update last login
-    await env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?')
-      .bind(new Date().toISOString(), user.id)
-      .run();
+    // 更新最后登录时间
+    await db.run('UPDATE users SET last_login = ? WHERE id = ?', [
+      new Date().toISOString(),
+      user.id
+    ])
 
     return json({
       ok: true,
@@ -86,10 +72,19 @@ export async function onRequestPost({ request, env }) {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
-      },
-    }, {}, request, env, METHODS);
-  } catch (error) {
-    return apiError('server_error', 500, 'Unable to refresh token', request, env, METHODS);
+        role: user.role
+      }
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/v1/auth/refresh
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

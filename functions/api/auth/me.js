@@ -1,33 +1,42 @@
-import { requireAuth } from '../../lib/auth.js';
-import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
+/**
+ * Auth Me API - 使用抽象层重写
+ * 获取当前登录用户信息
+ */
 
-const METHODS = 'GET, OPTIONS';
+import { createHandler } from '../../lib/platform/adapter.js'
+import { json, optionsResponse } from '../../lib/http.js'
 
-export async function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env, METHODS);
-}
+const METHODS = 'GET, OPTIONS'
 
-export async function onRequestGet({ request, env }) {
-  if (!requireDatabase(env)) {
-    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
-  }
-
-  try {
-    const auth = await requireAuth(request, env);
-    if (!auth.authorized) {
-      return apiError(auth.error, 401, 'Authentication required', request, env, METHODS);
-    }
-
+/**
+ * GET /api/auth/me
+ * 获取当前用户信息（需要认证）
+ */
+export const onRequestGet = createHandler({
+  methods: METHODS,
+  auth: 'user', // 需要用户认证（任何登录用户）
+  schema: null, // GET 请求无需验证 body
+  handler: async ({ request, env, user }) => {
+    // user 对象由 createHandler 自动提供
     return json({
       ok: true,
       user: {
-        id: auth.user.id,
-        username: auth.user.username,
-        email: auth.user.email,
-        role: auth.user.role,
-      },
-    }, {}, request, env, METHODS);
-  } catch {
-    return apiError('server_error', 500, 'Unable to load user', request, env, METHODS);
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/auth/me
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

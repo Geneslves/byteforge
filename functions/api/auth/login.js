@@ -1,83 +1,101 @@
-import { generateToken, verifyPassword } from '../../lib/auth.js';
-import { apiError, json, optionsResponse, requireDatabase } from '../../lib/http.js';
+/**
+ * Login API - 使用抽象层重写
+ * 用户登录端点
+ */
 
-const METHODS = 'POST, OPTIONS';
+import { generateToken, verifyPassword } from '../../lib/auth.js'
+import { createHandler } from '../../lib/platform/adapter.js'
+import { json, optionsResponse, apiError } from '../../lib/http.js'
 
-export async function onRequestOptions({ request, env }) {
-  return optionsResponse(request, env, METHODS);
-}
+const METHODS = 'POST, OPTIONS'
 
-export async function onRequestPost({ request, env }) {
-  if (!requireDatabase(env)) {
-    return apiError('database_not_configured', 503, 'Database binding not configured', request, env, METHODS);
-  }
+/**
+ * POST /api/auth/login
+ * 用户登录
+ */
+export const onRequestPost = createHandler({
+  methods: METHODS,
+  auth: null, // 登录端点不需要认证
+  schema: {
+    username: 'string',
+    password: 'string'
+  },
+  handler: async ({ request, env, db, body }) => {
+    // 查找用户（支持用户名或邮箱登录）
+    const user = await db.first(
+      'SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? OR email = ?',
+      [body.username, body.username]
+    )
 
-  try {
-    const body = await request.json().catch(() => null);
-    const { username, password } = body || {};
-
-    if (!username || !password) {
-      return apiError('missing_fields', 400, 'Username and password are required', request, env, METHODS);
-    }
-
-    const user = await env.DB.prepare(
-      'SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? OR email = ?'
-    ).bind(username, username).first();
-
+    // 用户不存在
     if (!user) {
-      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS);
+      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS)
     }
+
+    // 账户已被禁用
     if (!user.is_active) {
-      return apiError('user_inactive', 403, 'Your account has been deactivated', request, env, METHODS);
+      return apiError('user_inactive', 403, 'Your account has been deactivated', request, env, METHODS)
     }
 
-    const isValid = await verifyPassword(password, user.password_hash);
+    // 验证密码
+    const isValid = await verifyPassword(body.password, user.password_hash)
     if (!isValid) {
-      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS);
+      return apiError('invalid_credentials', 401, 'Invalid username or password', request, env, METHODS)
     }
 
-    const now = new Date().toISOString();
-    await env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?')
-      .bind(now, user.id)
-      .run();
+    // 更新最后登录时间
+    const now = new Date().toISOString()
+    await db.run('UPDATE users SET last_login = ? WHERE id = ?', [now, user.id])
 
+    // 生成访问令牌
     const token = await generateToken({
       userId: user.id,
       username: user.username,
       email: user.email,
-      role: user.role,
-    }, env);
+      role: user.role
+    }, env)
 
-    // Generate refresh token
-    const refreshTokenValue = crypto.randomUUID();
+    // 生成刷新令牌
+    const refreshTokenValue = crypto.randomUUID()
 
-    // Hash refresh token for storage
-    const encoder = new TextEncoder();
-    const data = encoder.encode(refreshTokenValue);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const refreshTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // 哈希刷新令牌用于存储
+    const encoder = new TextEncoder()
+    const data = encoder.encode(refreshTokenValue)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const refreshTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 
-    // Store refresh token (30 days expiry)
-    const refreshTokenId = crypto.randomUUID();
-    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    // 存储刷新令牌（30 天过期）
+    const refreshTokenId = crypto.randomUUID()
+    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    await env.DB.prepare(
-      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)'
-    ).bind(refreshTokenId, user.id, refreshTokenHash, refreshTokenExpiry, now).run();
+    await db.run(
+      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)',
+      [refreshTokenId, user.id, refreshTokenHash, refreshTokenExpiry, now]
+    )
 
+    // 返回用户信息和令牌
     return json({
       ok: true,
       user: {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: user.role
       },
       token,
-      refreshToken: refreshTokenValue,
-    }, {}, request, env, METHODS);
-  } catch {
-    return apiError('server_error', 500, 'Unable to log in', request, env, METHODS);
+      refreshToken: refreshTokenValue
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/auth/login
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})
