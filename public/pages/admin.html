@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/admin-v2.css">
+  <link rel="stylesheet" href="/src/styles/base/variables.css">
+  <link rel="stylesheet" href="/src/styles/pages/admin.css">
   <script>
     // 管理后台权限检查 - 必须在页面加载前执行
     (function() {
@@ -32,7 +33,7 @@
       // 如果未授权，立即重定向到登录页
       if (!isAuthorized) {
         alert('⚠️ 访问受限\n\n此页面仅限管理员访问。\n请使用管理员账号登录。');
-        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        window.location.href = '/pages/login.html?redirect=' + encodeURIComponent(window.location.pathname);
       }
     })();
   </script>
@@ -354,6 +355,6 @@
     </div>
   </div>
 
-  <script src="/admin-v2.js"></script>
+  <script type="module" src="/src/pages/admin/admin.js"></script>
 </body>
 </html>
