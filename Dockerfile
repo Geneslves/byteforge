@@ -15,8 +15,9 @@ COPY package.json pnpm-lock.yaml ./
 # Install pnpm
 RUN npm install -g pnpm
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install all dependencies (including devDependencies for build)
+ENV NODE_ENV=development
+RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm approve-builds esbuild sharp workerd && pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .

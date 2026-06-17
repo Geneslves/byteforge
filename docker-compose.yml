@@ -1,8 +1,6 @@
 # Docker Compose Configuration for ByteForge
 # Provides complete local development and production environment
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:

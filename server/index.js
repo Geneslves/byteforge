@@ -37,9 +37,6 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// 静态文件服务
-app.use(express.static(join(__dirname, '../dist')))
-
 // CORS 支持
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
@@ -179,26 +176,29 @@ async function setupRoutes() {
   }
 }
 
-// SPA 路由支持 - 所有非 API 路由返回 index.html
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, '../dist/index.html'))
-})
-
-// 错误处理
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err)
-  res.status(500).json({
-    ok: false,
-    error: 'server_error',
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
-  })
-})
-
 // 启动服务器
 async function start() {
   try {
-    // 设置路由
+    // 设置 API 路由（优先级最高）
     await setupRoutes()
+
+    // 静态文件服务（API 路由之后）
+    app.use(express.static(join(__dirname, '../dist')))
+
+    // SPA 路由支持 - 所有非 API 路由返回 index.html
+    app.get('*', (req, res) => {
+      res.sendFile(join(__dirname, '../dist/index.html'))
+    })
+
+    // 错误处理
+    app.use((err, req, res, next) => {
+      console.error('Unhandled error:', err)
+      res.status(500).json({
+        ok: false,
+        error: 'server_error',
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+      })
+    })
 
     // 启动服务器
     const PORT = process.env.PORT || 3000
