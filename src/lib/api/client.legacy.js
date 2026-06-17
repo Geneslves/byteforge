@@ -20,7 +20,6 @@ async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refresh_token');
 
   if (!refreshToken) {
-    console.log('No refresh token found');
     return null;
   }
 
@@ -36,14 +35,11 @@ async function refreshAccessToken() {
     if (data.ok && data.token) {
       // Save new access token
       localStorage.setItem('auth_token', data.token);
-      console.log('Access token refreshed successfully');
       return data.token;
     } else {
-      console.error('Failed to refresh token:', data.error);
       return null;
     }
   } catch (error) {
-    console.error('Error refreshing token:', error);
     return null;
   }
 }
@@ -92,8 +88,6 @@ async function apiRequest(url, options = {}) {
 
   // If 401 (Unauthorized), try to refresh token and retry
   if (response.status === 401 && token) {
-    console.log('Access token expired, attempting refresh...');
-
     const newToken = await refreshAccessToken();
 
     if (newToken) {
@@ -103,11 +97,8 @@ async function apiRequest(url, options = {}) {
         ...options,
         headers,
       });
-
-      console.log('Request retried with new token');
     } else {
       // Refresh failed, logout user
-      console.log('Refresh token expired, logging out...');
       logout();
       throw new Error('Session expired');
     }
