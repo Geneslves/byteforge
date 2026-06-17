@@ -1,84 +1,62 @@
-// User feedback endpoint
-// POST /api/feedback
+/**
+ * Feedback API - 使用抽象层重写
+ * 用户反馈收集端点
+ */
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
+import { createHandler } from '../lib/platform/adapter.js'
+import { json, optionsResponse } from '../lib/http.js'
+
+const METHODS = 'POST, OPTIONS'
+
+/**
+ * POST /api/feedback
+ * 提交用户反馈
+ */
+export const onRequestPost = createHandler({
+  methods: METHODS,
+  auth: null, // 公开端点，不需要认证
+  schema: {
+    routePath: 'string',
+    message: { type: 'string', min: 2, max: 1000 },
+    documentId: { type: 'string', required: false },
+    userAgent: { type: 'string', required: false }
   },
-  ...init,
-});
+  handler: async ({ request, env, db, body }) => {
+    // 生成反馈 ID
+    const id = crypto.randomUUID()
+    const createdAt = new Date().toISOString()
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+    // 获取 User-Agent（如果 body 中没有提供）
+    const userAgent = body.userAgent || request.headers.get('user-agent') || ''
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-export async function onRequestPost({ request, env }) {
-  // Parse request body
-  const body = await request.json().catch(() => null);
-
-  if (!body || typeof body.routePath !== 'string' || typeof body.message !== 'string') {
-    return json({
-      ok: false,
-      error: 'invalid_payload',
-      message: 'Missing required fields: routePath, message'
-    }, { status: 400, headers: corsHeaders });
-  }
-
-  const message = body.message.trim();
-
-  // Validate message length
-  if (message.length < 2 || message.length > 1000) {
-    return json({
-      ok: false,
-      error: 'invalid_message_length',
-      message: 'Message must be between 2 and 1000 characters'
-    }, { status: 400, headers: corsHeaders });
-  }
-
-  // Check if DB binding exists
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured',
-      message: 'Database binding not configured'
-    }, { status: 503, headers: corsHeaders });
-  }
-
-  try {
-    const id = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
-    const userAgent = request.headers.get('user-agent') || '';
-
-    await env.DB.prepare(
-      'INSERT INTO feedback (id, document_id, route_path, message, created_at, user_agent) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(
-      id,
-      body.documentId || null,
-      body.routePath,
-      message,
-      createdAt,
-      userAgent
-    ).run();
+    // 插入反馈记录
+    await db.run(
+      'INSERT INTO feedback (id, document_id, route_path, message, created_at, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        id,
+        body.documentId || null,
+        body.routePath,
+        body.message.trim(),
+        createdAt,
+        userAgent
+      ]
+    )
 
     return json({
       ok: true,
       id,
       created_at: createdAt
-    }, { headers: corsHeaders });
-  } catch (error) {
-    console.error('Feedback error:', error);
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/feedback
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

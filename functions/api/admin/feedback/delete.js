@@ -1,68 +1,54 @@
-// DELETE /api/admin/feedback/:id
-// 删除指定的反馈
+/**
+ * Admin Feedback Delete API - 使用抽象层重写
+ * 删除反馈端点
+ */
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+import { createHandler } from '../../../lib/platform/adapter.js'
+import { json, optionsResponse, apiError } from '../../../lib/http.js'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const METHODS = 'DELETE, OPTIONS'
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
-}
+/**
+ * DELETE /api/admin/feedback/[id]
+ * 删除指定反馈（仅管理员）
+ */
+export const onRequestDelete = createHandler({
+  methods: METHODS,
+  auth: 'admin', // 需要管理员权限
+  schema: null,
+  handler: async ({ request, env, db }) => {
+    // 从 URL 路径中提取反馈 ID
+    const url = new URL(request.url)
+    const id = url.pathname.split('/').pop()
 
-export async function onRequestDelete({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
-  }
+    // 验证 ID
+    if (!id || id === 'delete') {
+      return apiError('missing_id', 400, 'Feedback ID is required', request, env, METHODS)
+    }
 
-  // 从 URL 中提取 ID
-  const url = new URL(request.url);
-  const id = url.pathname.split('/').pop();
+    // 删除反馈
+    const result = await db.run('DELETE FROM feedback WHERE id = ?', [id])
 
-  if (!id || id === 'delete') {
-    return json({
-      ok: false,
-      error: 'missing_id',
-      message: 'Feedback ID is required'
-    }, { status: 400, headers: corsHeaders });
-  }
-
-  try {
-    const result = await env.DB.prepare(
-      'DELETE FROM feedback WHERE id = ?'
-    ).bind(id).run();
-
-    if (result.meta.changes === 0) {
-      return json({
-        ok: false,
-        error: 'not_found',
-        message: 'Feedback not found'
-      }, { status: 404, headers: corsHeaders });
+    // 检查是否删除成功
+    if (result.changes === 0) {
+      return apiError('not_found', 404, 'Feedback not found', request, env, METHODS)
     }
 
     return json({
       ok: true,
       id,
-      deleted: true,
-    }, { headers: corsHeaders });
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+      deleted: true
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/admin/feedback/[id]
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

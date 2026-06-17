@@ -1,144 +1,97 @@
-// GET /api/admin/users
-// List and manage users (admin only)
+/**
+ * Admin Users API - 使用抽象层重写
+ * 用户管理端点
+ */
 
-import { requireAuth } from '../../lib/auth.js';
+import { createHandler } from '../../lib/platform/adapter.js'
+import { json, optionsResponse, apiError } from '../../lib/http.js'
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
-  },
-  ...init,
-});
+const METHODS = 'GET, PATCH, OPTIONS'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-// List all users
-export async function onRequestGet({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
-  }
-
-  try {
-    const auth = await requireAuth(request, env, 'admin');
-
-    if (!auth.authorized) {
-      return json({
-        ok: false,
-        error: auth.error,
-        message: 'Admin access required'
-      }, { status: 403, headers: corsHeaders });
-    }
-
-    const users = await env.DB.prepare(`
+/**
+ * GET /api/admin/users
+ * 获取用户列表（仅管理员）
+ */
+export const onRequestGet = createHandler({
+  methods: METHODS,
+  auth: 'admin', // 需要管理员权限
+  schema: null,
+  handler: async ({ request, env, db }) => {
+    // 获取所有用户（不包括密码哈希）
+    const users = await db.query(`
       SELECT id, username, email, role, is_active, created_at, last_login
       FROM users
       ORDER BY created_at DESC
-    `).all();
+    `)
 
     return json({
       ok: true,
-      users: users.results || []
-    }, { headers: corsHeaders });
-
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'server_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+      users: users || []
+    }, {}, request, env, METHODS)
   }
-}
+})
 
-// Update user (activate/deactivate, change role)
-export async function onRequestPatch({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
-  }
+/**
+ * PATCH /api/admin/users
+ * 更新用户信息（仅管理员）
+ */
+export const onRequestPatch = createHandler({
+  methods: METHODS,
+  auth: 'admin', // 需要管理员权限
+  schema: {
+    userId: 'string',
+    isActive: { type: 'boolean', required: false },
+    role: {
+      type: 'string',
+      enum: ['user', 'admin'],
+      required: false
+    }
+  },
+  handler: async ({ request, env, db, body, user }) => {
+    const { userId, isActive, role } = body
 
-  try {
-    const auth = await requireAuth(request, env, 'admin');
-
-    if (!auth.authorized) {
-      return json({
-        ok: false,
-        error: auth.error,
-        message: 'Admin access required'
-      }, { status: 403, headers: corsHeaders });
+    // 防止管理员禁用自己的账户
+    if (userId === user.id && isActive === false) {
+      return apiError('cannot_deactivate_self', 400, 'Cannot deactivate your own account', request, env, METHODS)
     }
 
-    const body = await request.json();
-    const { userId, isActive, role } = body;
-
-    if (!userId) {
-      return json({
-        ok: false,
-        error: 'missing_user_id',
-        message: 'User ID required'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    // Prevent admin from deactivating themselves
-    if (userId === auth.user.id && isActive === false) {
-      return json({
-        ok: false,
-        error: 'cannot_deactivate_self',
-        message: 'Cannot deactivate your own account'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    const updates = [];
-    const params = [];
+    // 构建更新语句
+    const updates = []
+    const params = []
 
     if (typeof isActive === 'boolean') {
-      updates.push('is_active = ?');
-      params.push(isActive ? 1 : 0);
+      updates.push('is_active = ?')
+      params.push(isActive ? 1 : 0)
     }
 
-    if (role && ['user', 'admin'].includes(role)) {
-      updates.push('role = ?');
-      params.push(role);
+    if (role) {
+      updates.push('role = ?')
+      params.push(role)
     }
 
+    // 检查是否有有效的更新
     if (updates.length === 0) {
-      return json({
-        ok: false,
-        error: 'no_updates',
-        message: 'No valid updates provided'
-      }, { status: 400, headers: corsHeaders });
+      return apiError('no_updates', 400, 'No valid updates provided', request, env, METHODS)
     }
 
-    params.push(userId);
-
-    await env.DB.prepare(`
-      UPDATE users SET ${updates.join(', ')} WHERE id = ?
-    `).bind(...params).run();
+    // 执行更新
+    params.push(userId)
+    await db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params)
 
     return json({
       ok: true,
       message: 'User updated successfully'
-    }, { headers: corsHeaders });
-
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'server_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/admin/users
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

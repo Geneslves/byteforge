@@ -1,0 +1,46 @@
+
+═══════════════════════════════════════════
+  ✅ ByteForge 项目启动成功！
+═══════════════════════════════════════════
+
+🚀 服务状态: 运行中
+📍 服务地址: http://localhost:8788
+
+═══════════════════════════════════════════
+  📝 快速开始指南
+═══════════════════════════════════════════
+
+1️⃣  注册新用户
+   → 访问: http://localhost:8788/login.html
+   → 点击 "注册" 标签
+   → 填写信息:
+      • 用户名: admin
+      • 邮箱: admin@byteforge.dev
+      • 密码: Admin123456789 (至少12位)
+   → 点击提交
+
+2️⃣  提升为管理员
+   运行命令:
+   pnpm exec wrangler d1 execute byteforge --local --command "UPDATE users SET role='admin' WHERE username='admin'"
+
+3️⃣  验证用户
+   pnpm exec wrangler d1 execute byteforge --local --command "SELECT username, email, role FROM users"
+
+4️⃣  登录并测试
+   → 使用注册的账号登录
+   → 访问导航中心: http://localhost:8788/nav.html
+   → Admin 卡片应该可以点击
+   → 进入管理后台: http://localhost:8788/admin-v2.html
+
+═══════════════════════════════════════════
+  🎯 重要提示
+═══════════════════════════════════════════
+
+✓ 数据库已完全重置
+✓ 所有表结构已创建
+✓ 前端资源已构建
+✓ API 服务正常运行
+
+现在可以通过浏览器正常注册和登录了！
+
+═══════════════════════════════════════════

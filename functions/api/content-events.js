@@ -1,81 +1,66 @@
-// Content events endpoint
-// POST /api/content-events
+/**
+ * Content Events API - 使用抽象层重写
+ * 内容事件追踪端点（浏览、点击、搜索等）
+ */
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
+import { createHandler } from '../lib/platform/adapter.js'
+import { json, optionsResponse } from '../lib/http.js'
+
+const METHODS = 'POST, OPTIONS'
+const VALID_EVENT_TYPES = ['view', 'click', 'search', 'share']
+
+/**
+ * POST /api/content-events
+ * 记录内容事件
+ */
+export const onRequestPost = createHandler({
+  methods: METHODS,
+  auth: null, // 公开端点
+  schema: {
+    routePath: 'string',
+    eventType: {
+      type: 'string',
+      enum: VALID_EVENT_TYPES
+    },
+    documentId: { type: 'string', required: false },
+    userAgent: { type: 'string', required: false }
   },
-  ...init,
-});
+  handler: async ({ request, env, db, body }) => {
+    // 生成事件 ID
+    const id = crypto.randomUUID()
+    const createdAt = new Date().toISOString()
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+    // 获取 User-Agent
+    const userAgent = body.userAgent || request.headers.get('user-agent') || ''
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-export async function onRequestPost({ request, env }) {
-  const body = await request.json().catch(() => null);
-
-  if (!body || typeof body.routePath !== 'string' || typeof body.eventType !== 'string') {
-    return json({
-      ok: false,
-      error: 'invalid_payload',
-      message: 'Missing required fields: routePath, eventType'
-    }, { status: 400, headers: corsHeaders });
-  }
-
-  // Validate event type
-  const validEventTypes = ['view', 'click', 'search', 'share'];
-  if (!validEventTypes.includes(body.eventType)) {
-    return json({
-      ok: false,
-      error: 'invalid_event_type',
-      message: `Event type must be one of: ${validEventTypes.join(', ')}`
-    }, { status: 400, headers: corsHeaders });
-  }
-
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured',
-      message: 'Database binding not configured'
-    }, { status: 503, headers: corsHeaders });
-  }
-
-  try {
-    const id = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
-    const userAgent = request.headers.get('user-agent') || '';
-
-    await env.DB.prepare(
-      'INSERT INTO content_events (id, document_id, route_path, event_type, created_at, user_agent) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(
-      id,
-      body.documentId || null,
-      body.routePath,
-      body.eventType,
-      createdAt,
-      userAgent
-    ).run();
+    // 插入事件记录
+    await db.run(
+      'INSERT INTO content_events (id, document_id, route_path, event_type, created_at, user_agent) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        id,
+        body.documentId || null,
+        body.routePath,
+        body.eventType,
+        createdAt,
+        userAgent
+      ]
+    )
 
     return json({
       ok: true,
       id,
       created_at: createdAt
-    }, { headers: corsHeaders });
-  } catch (error) {
-    console.error('Content event error:', error);
-    return json({
-      ok: false,
-      error: 'database_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/content-events
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

@@ -1,14 +1,23 @@
 name = "byteforge"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-06-15"
 pages_build_output_dir = "dist"
+
+[vars]
+SITE_ORIGIN = "https://byteforge.dev"
+ALLOWED_ORIGINS = "https://byteforge.dev"
+
+[observability]
+enabled = true
+head_sampling_rate = 1.0
 
 # D1 Database binding
 # To set up:
 # 1. wrangler d1 create byteforge
 # 2. Copy the database_id from the output
 # 3. wrangler d1 execute byteforge --file=./schema/d1.sql
+# 4. wrangler secret put JWT_SECRET
 
 [[d1_databases]]
 binding = "DB"
 database_name = "byteforge"
-database_id = "YOUR_D1_DATABASE_ID_HERE"
+database_id = "YOUR_D1_DATABASE_ID_HERE"  # Run: wrangler d1 create byteforge

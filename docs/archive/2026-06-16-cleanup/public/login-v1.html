@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 | ByteForge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>ByteForge</h1>
+        <p class="subtitle">数字熔炉</p>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="login-form" class="auth-form">
+        <h2>登录</h2>
+
+        <div class="form-group">
+          <label for="login-username">用户名或邮箱</label>
+          <input type="text" id="login-username" name="username" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">密码</label>
+          <input type="password" id="login-password" name="password" required autocomplete="current-password">
+        </div>
+
+        <div class="form-error" id="login-error"></div>
+
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span>登录</span>
+        </button>
+
+        <div class="form-footer">
+          <p>还没有账号？ <a href="#" id="show-register">注册</a></p>
+          <a href="/" class="back-link">← 返回首页</a>
+        </div>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="register-form" class="auth-form" style="display: none;">
+        <h2>注册</h2>
+
+        <div class="form-group">
+          <label for="register-username">用户名</label>
+          <input type="text" id="register-username" name="username" required autocomplete="username"
+                 pattern="[a-zA-Z0-9_]{3,20}"
+                 title="3-20 个字符，仅限字母、数字和下划线">
+          <small>3-20 个字符，仅限字母、数字和下划线</small>
+        </div>
+
+        <div class="form-group">
+          <label for="register-email">邮箱</label>
+          <input type="email" id="register-email" name="email" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="register-password">密码</label>
+          <input type="password" id="register-password" name="password" required
+                 autocomplete="new-password" minlength="12">
+          <small>至少 12 个字符</small>
+        </div>
+
+        <div class="form-group">
+          <label for="register-password-confirm">确认密码</label>
+          <input type="password" id="register-password-confirm" name="password_confirm" required
+                 autocomplete="new-password">
+        </div>
+
+        <div class="form-error" id="register-error"></div>
+
+        <button type="submit" class="btn-primary" id="register-btn">
+          <span>注册</span>
+        </button>
+
+        <div class="form-footer">
+          <p>已有账号？ <a href="#" id="show-login">登录</a></p>
+          <a href="/" class="back-link">← 返回首页</a>
+        </div>
+      </form>
+
+      <!-- 注册已关闭提示 -->
+      <div id="registration-disabled" class="registration-disabled" style="display: none;">
+        <div class="icon">🔒</div>
+        <h3>注册功能已关闭</h3>
+        <p>管理员已暂时关闭新用户注册。</p>
+        <p>如需账号，请联系管理员。</p>
+        <div class="form-footer">
+          <a href="#" id="show-login-from-disabled">返回登录</a>
+          <a href="/" class="back-link">← 返回首页</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-background">
+      <div class="grid"></div>
+    </div>
+  </div>
+
+  <script src="/auth.js"></script>
+</body>
+</html>

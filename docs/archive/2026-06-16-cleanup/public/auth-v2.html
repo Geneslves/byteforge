@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>身份验证 | ByteForge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/auth-v2.css">
+</head>
+<body>
+  <!-- 粒子背景画布 -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- 扫描线效果 -->
+  <div class="scanlines"></div>
+
+  <!-- 主容器 -->
+  <div class="auth-container">
+    <!-- 左侧装饰面板 -->
+    <div class="decorative-panel">
+      <div class="holo-logo">
+        <div class="logo-ring"></div>
+        <div class="logo-ring"></div>
+        <div class="logo-ring"></div>
+        <div class="logo-core">
+          <span class="logo-text">BF</span>
+        </div>
+      </div>
+      <h1 class="brand-title">ByteForge</h1>
+      <p class="brand-subtitle">// 数字熔炉<br>// 锻造未来</p>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="stat-users">---</div>
+          <div class="stat-label">ACTIVE USERS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-sessions">---</div>
+          <div class="stat-label">SESSIONS</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="stat-uptime">---</div>
+          <div class="stat-label">UPTIME</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧认证面板 -->
+    <div class="auth-panel">
+      <div class="panel-header">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">SYSTEM READY</span>
+        </div>
+      </div>
+
+      <!-- 登录表单 -->
+      <div id="login-container" class="form-container active">
+        <div class="form-header">
+          <h2 class="form-title">
+            <span class="title-bracket">[</span>
+            <span class="title-text">登录系统</span>
+            <span class="title-bracket">]</span>
+          </h2>
+          <p class="form-subtitle">// ACCESS AUTHENTICATION REQUIRED</p>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <div class="input-group">
+            <label for="login-username" class="input-label">
+              <span class="label-icon">▸</span> USERNAME / EMAIL
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="login-username"
+                name="username"
+                required
+                autocomplete="username"
+                placeholder="输入用户名或邮箱"
+              >
+              <div class="input-glow"></div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="login-password" class="input-label">
+              <span class="label-icon">▸</span> PASSWORD
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                required
+                autocomplete="current-password"
+                placeholder="输入密码"
+              >
+              <div class="input-glow"></div>
+              <button type="button" class="toggle-password" data-target="login-password">
+                <span class="eye-icon">👁</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-error" id="login-error"></div>
+
+          <button type="submit" class="btn-primary" id="login-btn">
+            <span class="btn-bg"></span>
+            <span class="btn-text">
+              <span class="btn-icon">◆</span>
+              <span>登录</span>
+            </span>
+          </button>
+
+          <div class="form-footer">
+            <div class="divider">
+              <span class="divider-text">OR</span>
+            </div>
+            <p class="footer-text">
+              没有账号？
+              <a href="#" class="link-primary" id="show-register">创建新账号</a>
+            </p>
+            <a href="/" class="link-back">
+              <span class="link-icon">←</span> 返回主页
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- 注册表单 -->
+      <div id="register-container" class="form-container">
+        <div class="form-header">
+          <h2 class="form-title">
+            <span class="title-bracket">[</span>
+            <span class="title-text">注册账号</span>
+            <span class="title-bracket">]</span>
+          </h2>
+          <p class="form-subtitle">// CREATE NEW IDENTITY</p>
+        </div>
+
+        <form id="register-form" class="auth-form">
+          <div class="input-group">
+            <label for="register-username" class="input-label">
+              <span class="label-icon">▸</span> USERNAME
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="register-username"
+                name="username"
+                required
+                autocomplete="username"
+                pattern="[a-zA-Z0-9_]{3,20}"
+                placeholder="3-20 个字符"
+              >
+              <div class="input-glow"></div>
+            </div>
+            <small class="input-hint">字母、数字和下划线</small>
+          </div>
+
+          <div class="input-group">
+            <label for="register-email" class="input-label">
+              <span class="label-icon">▸</span> EMAIL
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="email"
+                id="register-email"
+                name="email"
+                required
+                autocomplete="email"
+                placeholder="your@email.com"
+              >
+              <div class="input-glow"></div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="register-password" class="input-label">
+              <span class="label-icon">▸</span> PASSWORD
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="register-password"
+                name="password"
+                required
+                autocomplete="new-password"
+                minlength="12"
+                placeholder="至少 12 个字符"
+              >
+              <div class="input-glow"></div>
+              <button type="button" class="toggle-password" data-target="register-password">
+                <span class="eye-icon">👁</span>
+              </button>
+            </div>
+            <small class="input-hint">至少 12 个字符</small>
+          </div>
+
+          <div class="input-group">
+            <label for="register-password-confirm" class="input-label">
+              <span class="label-icon">▸</span> CONFIRM PASSWORD
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="register-password-confirm"
+                name="password_confirm"
+                required
+                autocomplete="new-password"
+                placeholder="再次输入密码"
+              >
+              <div class="input-glow"></div>
+              <button type="button" class="toggle-password" data-target="register-password-confirm">
+                <span class="eye-icon">👁</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-error" id="register-error"></div>
+
+          <button type="submit" class="btn-primary" id="register-btn">
+            <span class="btn-bg"></span>
+            <span class="btn-text">
+              <span class="btn-icon">◆</span>
+              <span>创建账号</span>
+            </span>
+          </button>
+
+          <div class="form-footer">
+            <div class="divider">
+              <span class="divider-text">OR</span>
+            </div>
+            <p class="footer-text">
+              已有账号？
+              <a href="#" class="link-primary" id="show-login">立即登录</a>
+            </p>
+            <a href="/" class="link-back">
+              <span class="link-icon">←</span> 返回主页
+            </a>
+          </div>
+        </form>
+      </div>
+
+      <!-- 注册已关闭提示 -->
+      <div id="registration-disabled" class="form-container">
+        <div class="disabled-notice">
+          <div class="notice-icon">
+            <span class="icon-lock">🔒</span>
+          </div>
+          <h3 class="notice-title">
+            <span class="title-bracket">[</span>
+            注册功能已关闭
+            <span class="title-bracket">]</span>
+          </h3>
+          <p class="notice-text">
+            管理员已暂时关闭新用户注册。<br>
+            如需账号，请联系管理员。
+          </p>
+          <div class="notice-actions">
+            <a href="#" class="link-primary" id="show-login-from-disabled">返回登录</a>
+            <a href="/" class="link-back">
+              <span class="link-icon">←</span> 返回主页
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/auth-v2.js"></script>
+</body>
+</html>

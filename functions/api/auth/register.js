@@ -1,137 +1,126 @@
-// POST /api/auth/register
-// User registration
+/**
+ * Register API - 使用抽象层重写
+ * 用户注册端点
+ */
 
-import { hashPassword, validateEmail, validateUsername, validatePassword, generateToken } from '../../lib/auth.js';
+import {
+  generateToken,
+  hashPassword,
+  validateEmail,
+  validatePassword,
+  validateUsername
+} from '../../lib/auth.js'
+import { createHandler } from '../../lib/platform/adapter.js'
+import { json, optionsResponse, apiError } from '../../lib/http.js'
 
-const json = (body, init = {}) => Response.json(body, {
-  headers: {
-    'cache-control': 'no-store',
-    'content-type': 'application/json',
-    ...init.headers
+const METHODS = 'POST, OPTIONS'
+
+/**
+ * POST /api/auth/register
+ * 用户注册
+ */
+export const onRequestPost = createHandler({
+  methods: METHODS,
+  auth: null, // 注册端点不需要认证
+  schema: {
+    username: {
+      type: 'string',
+      validator: validateUsername
+    },
+    email: {
+      type: 'string',
+      validator: validateEmail
+    },
+    password: {
+      type: 'string',
+      validator: validatePassword
+    }
   },
-  ...init,
-});
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export async function onRequestOptions() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-export async function onRequestPost({ request, env }) {
-  if (!env.DB) {
-    return json({
-      ok: false,
-      error: 'database_not_configured'
-    }, { status: 503, headers: corsHeaders });
-  }
-
-  try {
-    const body = await request.json();
-    const { username, email, password } = body;
-
-    // Validate input
-    if (!username || !email || !password) {
-      return json({
-        ok: false,
-        error: 'missing_fields',
-        message: 'Username, email, and password are required'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    if (!validateUsername(username)) {
-      return json({
-        ok: false,
-        error: 'invalid_username',
-        message: 'Username must be 3-20 characters, alphanumeric and underscore only'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    if (!validateEmail(email)) {
-      return json({
-        ok: false,
-        error: 'invalid_email',
-        message: 'Invalid email format'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    if (!validatePassword(password)) {
-      return json({
-        ok: false,
-        error: 'invalid_password',
-        message: 'Password must be at least 8 characters'
-      }, { status: 400, headers: corsHeaders });
-    }
-
-    // Check if registration is enabled
-    const setting = await env.DB.prepare(
+  handler: async ({ request, env, db, body }) => {
+    // 检查是否允许注册
+    const setting = await db.first(
       "SELECT value FROM settings WHERE key = 'registration_enabled'"
-    ).first();
+    )
 
-    if (setting && setting.value === 'false') {
-      return json({
-        ok: false,
-        error: 'registration_disabled',
-        message: 'Registration is currently disabled'
-      }, { status: 403, headers: corsHeaders });
+    if (setting?.value === 'false') {
+      return apiError('registration_disabled', 403, 'Registration is currently disabled', request, env, METHODS)
     }
 
-    // Check if username or email already exists
-    const existing = await env.DB.prepare(
-      'SELECT id FROM users WHERE username = ? OR email = ?'
-    ).bind(username, email).first();
+    // 检查用户名或邮箱是否已存在
+    const existing = await db.first(
+      'SELECT id FROM users WHERE username = ? OR email = ?',
+      [body.username, body.email]
+    )
 
     if (existing) {
-      return json({
-        ok: false,
-        error: 'user_exists',
-        message: 'Username or email already exists'
-      }, { status: 409, headers: corsHeaders });
+      return apiError('user_exists', 409, 'Username or email already exists', request, env, METHODS)
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(password);
+    // 哈希密码
+    const passwordHash = await hashPassword(body.password)
 
-    // Create user (first user becomes admin)
-    const userCount = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first();
-    const role = userCount.count === 0 ? 'admin' : 'user';
+    // 如果是第一个用户，设为管理员
+    const userCount = await db.first('SELECT COUNT(*) as count FROM users')
+    const role = userCount.count === 0 ? 'admin' : 'user'
 
-    const userId = crypto.randomUUID();
-    const now = new Date().toISOString();
+    // 创建用户
+    const userId = crypto.randomUUID()
+    const now = new Date().toISOString()
 
-    await env.DB.prepare(`
-      INSERT INTO users (id, username, email, password_hash, role, is_active, created_at)
-      VALUES (?, ?, ?, ?, ?, 1, ?)
-    `).bind(userId, username, email, passwordHash, role, now).run();
+    await db.run(
+      'INSERT INTO users (id, username, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
+      [userId, body.username, body.email, passwordHash, role, now]
+    )
 
-    // Generate token
+    // 生成访问令牌
     const token = await generateToken({
       userId,
-      username,
-      email,
+      username: body.username,
+      email: body.email,
       role
-    });
+    }, env)
 
+    // 生成刷新令牌
+    const refreshTokenValue = crypto.randomUUID()
+
+    // 哈希刷新令牌用于存储
+    const encoder = new TextEncoder()
+    const data = encoder.encode(refreshTokenValue)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const refreshTokenHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+    // 存储刷新令牌（30 天过期）
+    const refreshTokenId = crypto.randomUUID()
+    const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+    await db.run(
+      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)',
+      [refreshTokenId, userId, refreshTokenHash, refreshTokenExpiry, now]
+    )
+
+    // 返回用户信息和令牌
     return json({
       ok: true,
       user: {
         id: userId,
-        username,
-        email,
+        username: body.username,
+        email: body.email,
         role
       },
-      token
-    }, { headers: corsHeaders });
-
-  } catch (error) {
-    return json({
-      ok: false,
-      error: 'server_error',
-      message: error.message
-    }, { status: 500, headers: corsHeaders });
+      token,
+      refreshToken: refreshTokenValue
+    }, {}, request, env, METHODS)
   }
-}
+})
+
+/**
+ * OPTIONS /api/auth/register
+ * CORS 预检请求
+ */
+export const onRequestOptions = createHandler({
+  methods: METHODS,
+  handler: async ({ request, env }) => {
+    return optionsResponse(request, env, METHODS)
+  }
+})

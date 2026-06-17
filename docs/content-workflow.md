@@ -2,32 +2,43 @@
 
 ## Content States
 
-- `draft`: 本地开发中，不包含在搜索索引或 RSS
-- `preview`: 在本地预览构建中可见，不包含在 RSS
-- `published`: 包含在文档路由、搜索索引、sitemap 和 RSS
-- `archived`: 通过直接 URL 可见，但不包含在 RSS
+- `draft`: source-only work in progress. It must not appear in document routes, RSS, search, Pagefind, or sitemap.
+- `published`: public content. It appears in document routes, RSS, search, Pagefind, and sitemap.
+- `archived`: retained source content. It must not appear in RSS, search, Pagefind, or sitemap unless it is promoted back to `published`.
 
 ## Required Fields
 
 Every content entry must have:
-- `status`: 'draft' | 'preview' | 'published' | 'archived'
-- `type`: 'log' | 'deployment' | 'archive' | 'dev-ai' | 'snippet' | 'academic'
+
+- `status`: `draft` | `published` | `archived`
+- `type`: `log` | `deployment` | `archive` | `dev-ai` | `snippet` | `academic`
 
 ## Filtering Logic
 
-### Search Entries
-Only entries with `status: 'published'` or `status: 'archived'` are included in search indexes.
+`src/data/content-model.js` exports both source and public views:
 
-### RSS Feed
-Only entries with `status: 'published'` are included in the RSS feed.
+- `allContentEntries`: every source entry before visibility filtering.
+- `publicContentEntries`: only entries with `status: 'published'`.
 
-### Sitemap
-All published and archived content appears in the sitemap.
+Public build outputs must derive from `publicContentEntries`:
 
-## Implementation Notes
+- `searchEntries`
+- `contentDocuments`
+- `rssItems`
+- `searchIndexDocuments`
+- `archiveIndex`
+- `sitemap.xml`
 
-The `status` field controls visibility across the platform:
-- Draft content exists only in source files
-- Preview content can be built locally but won't appear in production feeds
-- Published content is fully visible and indexed
-- Archived content remains accessible by direct URL but is excluded from feeds
+`scripts/check-content.js` guards this contract.
+
+## Search And Discovery
+
+Document detail pages receive static off-screen Pagefind source content during `scripts/build.js`. That source includes:
+
+- `data-pagefind-body`
+- `data-pagefind-filter="collection"`
+- `data-pagefind-filter="category"`
+- `data-pagefind-filter="series"`
+- `data-pagefind-filter="tag"`
+
+`scripts/check-head.js` validates JSON-LD and Pagefind filter metadata after build.

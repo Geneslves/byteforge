@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 
 const requiredFiles = [
+  'runtime/logs/.gitkeep',
+  'runtime/tmp/.gitkeep',
+  'runtime/backups/.gitkeep',
   'public/audio/ink-wash-terminal.mp3',
   'src/data/index.js',
   'src/data/content-model.js',
@@ -19,6 +22,9 @@ const requiredFiles = [
   'src/modules/routing.js',
   'src/modules/theme.js',
   'scripts/clean.js',
+  'scripts/api/integration-local.js',
+  'scripts/db/reset-local.js',
+  'scripts/db/seed-local.js',
   'scripts/check-source.js',
   'scripts/check-static.js',
   'scripts/check-visual.js',
@@ -28,6 +34,7 @@ const requiredFiles = [
   'src/styles/style.css',
   'src/styles/themes.css',
   'schema/d1.sql',
+  'functions/_middleware.js',
   'functions/api/health.js',
   'functions/api/feedback.js',
   'functions/api/content-events.js',
@@ -36,11 +43,19 @@ const requiredFiles = [
 
 const forbiddenFiles = [
   'Ink_Wash_Terminal.mp3',
+  '.vite-dev.err.log',
+  '.vite-dev.out.log',
+  'dev-server.err.log',
+  'dev-server.out.log',
+  'preview-server.err.log',
+  'preview-server.out.log',
   'src/content.js',
   'src/data/content.js',
   'src/effects.css',
   'src/style.css',
   'src/themes.css',
+  'functions/api/_middleware.js',
+  'functions/api/__middleware.js',
 ];
 
 const errors = [];
@@ -110,12 +125,16 @@ if (!ecosystemConfig.includes('cwd: __dirname')) {
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const requiredScripts = {
   clean: 'node scripts/clean.js',
-  check: 'pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:backend',
+  check: 'pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend',
+  'api:test:local': 'node scripts/api/integration-local.js',
+  'db:reset:local': 'node scripts/db/reset-local.js',
+  'db:seed:local': 'node scripts/db/seed-local.js',
   'check:content': 'node scripts/check-content.js',
   'check:source': 'node scripts/check-source.js',
   'check:static': 'node scripts/check-static.js',
   'check:head': 'node scripts/check-head.js',
   'check:visual': 'node scripts/check-visual.js',
+  'check:auth': 'node scripts/check-auth.js',
   'check:backend': 'node scripts/check-backend.js',
   audit: 'pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate',
 };
