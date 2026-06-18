@@ -113,18 +113,8 @@ export function createHandler(options = {}) {
  * @returns {Object} Normalized context
  */
 function normalizeContext(context) {
-  // Cloudflare Pages Functions
-  if (context.request && context.env) {
-    return {
-      request: context.request,
-      env: context.env,
-      platform: 'cloudflare',
-      next: context.next,
-      waitUntil: context.waitUntil
-    }
-  }
-
-  // Express (Node.js)
+  // Express (Node.js). Check this first because the Express adapter also
+  // provides request/env for the Cloudflare-compatible handlers.
   if (context.req && context.res) {
     return {
       request: adaptExpressRequest(context.req),
@@ -135,6 +125,17 @@ function normalizeContext(context) {
       platform: 'nodejs',
       res: context.res,
       req: context.req
+    }
+  }
+
+  // Cloudflare Pages Functions
+  if (context.request && context.env) {
+    return {
+      request: context.request,
+      env: context.env,
+      platform: 'cloudflare',
+      next: context.next,
+      waitUntil: context.waitUntil
     }
   }
 

@@ -65,6 +65,11 @@ expectIncludes(
   'is-boot-complete',
   'boot overlay should be removed after its exit animation'
 );
+expectIncludes(
+  effectsModule,
+  "classList.remove('is-performance-lite')",
+  'performance-lite mode should end after boot so ambient animations resume'
+);
 
 const styleSheet = readFileSync('src/styles/style.css', 'utf8');
 expectIncludes(
