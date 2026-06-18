@@ -1,3 +1,5 @@
+import { createDatabase } from './db/index.js';
+
 const TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const PBKDF2_ITERATIONS = 210000;
 const SALT_BYTES = 16;
@@ -151,9 +153,11 @@ export async function requireAuth(request, env, requiredRole = null) {
   const payload = await verifyToken(token, env);
   if (!payload) return { authorized: false, error: 'invalid_token' };
 
-  const user = await env.DB.prepare(
-    'SELECT id, username, email, role, is_active FROM users WHERE id = ?'
-  ).bind(payload.userId).first();
+  const db = createDatabase(env);
+  const user = await db.first(
+    'SELECT id, username, email, role, is_active FROM users WHERE id = ?',
+    [payload.userId]
+  );
 
   if (!user) return { authorized: false, error: 'user_not_found' };
   if (!user.is_active) return { authorized: false, error: 'user_inactive' };

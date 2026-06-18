@@ -121,6 +121,12 @@ if (!existsSync(authLib)) {
   errors.push('missing authentication library: ' + authLib);
 } else {
   const authSource = readFileSync(authLib, 'utf8');
+  if (!authSource.includes("import { createDatabase } from './db/index.js'")) {
+    errors.push('functions/lib/auth.js should use the shared database adapter for auth lookups');
+  }
+  if (authSource.includes('env.DB.prepare')) {
+    errors.push('functions/lib/auth.js should not hardcode D1-only env.DB.prepare lookups');
+  }
   if (authSource.includes('your-secret-key-change-in-production') || /const\s+JWT_SECRET\s*=/.test(authSource)) {
     errors.push('functions/lib/auth.js should read JWT_SECRET from env, not hardcode it');
   }
@@ -129,6 +135,18 @@ if (!existsSync(authLib)) {
   }
   if (!authSource.includes('PBKDF2')) {
     errors.push('functions/lib/auth.js missing PBKDF2 password hashing');
+  }
+}
+
+const platformAdapterPath = 'functions/lib/platform/adapter.js';
+if (!existsSync(platformAdapterPath)) {
+  errors.push('missing platform adapter: ' + platformAdapterPath);
+} else {
+  const adapterSource = readFileSync(platformAdapterPath, 'utf8');
+  const expressIndex = adapterSource.indexOf('if (context.req && context.res)');
+  const cloudflareIndex = adapterSource.indexOf('if (context.request && context.env)');
+  if (expressIndex === -1 || cloudflareIndex === -1 || expressIndex > cloudflareIndex) {
+    errors.push('platform adapter should detect Express before Cloudflare-compatible request/env contexts');
   }
 }
 

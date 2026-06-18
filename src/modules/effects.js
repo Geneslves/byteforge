@@ -145,7 +145,10 @@ const markBootComplete = (hub) => {
   const boot = hub.querySelector('.boot-sequence');
   if (!boot) return;
 
-  const complete = () => hub.classList.add('is-boot-complete');
+  const complete = () => {
+    hub.classList.add('is-boot-complete');
+    hub.classList.remove('is-performance-lite');
+  };
   boot.addEventListener('animationend', (event) => {
     if (event.animationName === 'boot-away') complete();
   }, { once: true });
