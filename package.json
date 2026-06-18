@@ -13,7 +13,7 @@
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "clean": "node scripts/clean.js",
     "api:test:local": "node scripts/api/integration-local.js",
-    "check": "pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend",
+    "check": "pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend && pnpm run check:performance",
     "build": "node scripts/build.js && pnpm run build:pagefind",
     "build:pagefind": "pagefind --site dist --output-subdir pagefind",
     "check:project": "node scripts/check-project.js",
@@ -25,6 +25,7 @@
     "check:visual": "node scripts/check-visual.js",
     "check:auth": "node scripts/check-auth.js",
     "check:backend": "node scripts/check-backend.js",
+    "check:performance": "node scripts/check-performance.js",
     "audit": "pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate",
     "preview": "vite preview",
     "db:init": "wrangler d1 execute byteforge --local --file=./schema/d1.sql",
@@ -67,7 +68,8 @@
   },
   "pnpm": {
     "overrides": {
-      "esbuild": "0.28.1"
+      "esbuild": "0.28.1",
+      "ws": "8.21.0"
     }
   }
 }

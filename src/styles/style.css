@@ -1812,6 +1812,86 @@ body {
     animation: hotspot-breathe 1.45s ease-in-out infinite alternate;
   }
 
+  .hub-v2.is-performance-lite .boot-sequence {
+    animation-duration: 1.05s;
+  }
+
+  .hub-v2.is-boot-complete .boot-sequence {
+    display: none;
+  }
+
+  .hub-v2.is-performance-lite .boot-sequence::after,
+  .hub-v2.is-performance-lite .boot-log {
+    animation-duration: 1.05s;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .datafield {
+    animation-delay: .28s;
+    animation-duration: .7s;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .starfield {
+    animation-delay: .36s;
+    animation-duration: .78s;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .lightfield {
+    animation:
+      reveal-light .9s .38s cubic-bezier(.19,1,.22,1) both,
+      light-breathe 4.6s 1.4s cubic-bezier(.37,0,.24,1) infinite alternate;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .stage {
+    animation-delay: .58s;
+    animation-duration: .52s;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .orbit-layer {
+    animation-delay: .68s;
+    animation-duration: .58s;
+  }
+
+  .hub-v2.is-performance-lite:not(.is-route-return) .left-panel-container,
+  .hub-v2.is-performance-lite:not(.is-route-return) .choreo-strip,
+  .hub-v2.is-performance-lite:not(.is-route-return) .cli-nav {
+    animation-delay: .76s;
+    animation-duration: .52s;
+  }
+
+  .hub-v2.is-performance-lite .stream-track,
+  .hub-v2.is-performance-lite .star-glint,
+  .hub-v2.is-performance-lite .edge-particle,
+  .hub-v2.is-performance-lite .impact-bloom,
+  .hub-v2.is-performance-lite .lightfield,
+  .hub-v2.is-performance-lite .hotspot {
+    animation: none;
+  }
+
+  .hub-v2.is-performance-lite .stream-line {
+    opacity: calc(var(--o) * .48);
+  }
+
+  .hub-v2.is-performance-lite .star-glint {
+    opacity: calc(var(--o) * .45);
+    transform: translate(-50%, -50%) scale(.72) rotate(var(--r));
+  }
+
+  .hub-v2.is-performance-lite .lightfield {
+    opacity: .42;
+    transform: translate3d(var(--parallax-light-x), var(--parallax-light-y), 0) scale(1);
+  }
+
+  .hub-v2.is-performance-lite .hotspot {
+    opacity: .92;
+    transform: translate(calc(-50% + var(--parallax-core-x)), calc(-50% + var(--parallax-core-y))) scale(.95);
+  }
+
+  .hub-v2.is-performance-lite .star-glint.is-faint,
+  .hub-v2.is-performance-lite .edge-particle:nth-of-type(n + 6),
+  .hub-v2.is-performance-lite .impact-bloom:nth-of-type(n + 11) {
+    display: none;
+  }
+
   /* 性能优化：减少重绘和回流 */
   .planet,
   .meteor,

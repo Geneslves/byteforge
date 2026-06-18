@@ -52,7 +52,9 @@ app.use((req, res, next) => {
 
 // 请求日志
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.path}`)
+  if (req.path !== '/api/health') {
+    console.log(`${new Date().toISOString()} ${req.method} ${req.path}`)
+  }
   next()
 })
 
@@ -179,15 +181,31 @@ async function setupRoutes() {
 // 启动服务器
 async function start() {
   try {
+    const staticRoot = join(__dirname, '../dist')
+    const immutableStaticOptions = {
+      maxAge: '1y',
+      immutable: true,
+    }
+
     // 设置 API 路由（优先级最高）
     await setupRoutes()
 
     // 静态文件服务（API 路由之后）
-    app.use(express.static(join(__dirname, '../dist')))
+    app.use('/assets', express.static(join(staticRoot, 'assets'), immutableStaticOptions))
+    app.use('/pagefind', express.static(join(staticRoot, 'pagefind'), immutableStaticOptions))
+    app.use('/audio', express.static(join(staticRoot, 'audio'), {
+      maxAge: '30d',
+      immutable: true,
+    }))
+    app.use(express.static(staticRoot, {
+      maxAge: '0',
+      etag: true,
+    }))
 
     // SPA 路由支持 - 所有非 API 路由返回 index.html
     app.get('*', (req, res) => {
-      res.sendFile(join(__dirname, '../dist/index.html'))
+      res.setHeader('Cache-Control', 'no-cache')
+      res.sendFile(join(staticRoot, 'index.html'))
     })
 
     // 错误处理

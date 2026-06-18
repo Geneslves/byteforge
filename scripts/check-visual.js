@@ -18,7 +18,7 @@ const routes = [
   '/search/?q=vite&collection=logs&category=Engineering&series=Build%20Journal&tag=vite',
   '/academic/',
 ];
-const cliNavRoutes = new Set(['/logs/', '/deployments/', '/archive/', '/search/']);
+const cliNavRoutes = new Set(['/logs/']);
 const viewports = [
   { name: 'desktop', width: 1365, height: 768, deviceScaleFactor: 1, mobile: false },
   { name: 'mobile', width: 390, height: 844, deviceScaleFactor: 2, mobile: true },
@@ -62,6 +62,13 @@ if (errors.length) {
 const serveStatic = () => new Promise((resolveServer) => {
   const server = createServer((request, response) => {
     const url = new URL(request.url || '/', 'http://127.0.0.1');
+
+    if (url.pathname.startsWith('/api/')) {
+      response.writeHead(204, { 'content-type': 'application/json; charset=utf-8' });
+      response.end();
+      return;
+    }
+
     let filePath = join(distDir, decodeURIComponent(url.pathname));
 
     if (url.pathname.endsWith('/')) filePath = join(filePath, 'index.html');

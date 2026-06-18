@@ -30,6 +30,7 @@ const requiredFiles = [
   'scripts/check-visual.js',
   'scripts/check-content.js',
   'scripts/check-backend.js',
+  'scripts/check-performance.js',
   'src/styles/effects.css',
   'src/styles/style.css',
   'src/styles/themes.css',
@@ -92,17 +93,19 @@ if (appScriptIndex !== -1 && lastStyleIndex !== -1 && lastStyleIndex > appScript
 if (!html.includes('data-audio-toggle')) {
   errors.push('index.html is missing the audio toggle control');
 }
-if (!html.includes('aria-pressed="true"')) {
-  errors.push('audio toggle should declare aria-pressed="true" by default');
+if (!html.includes('aria-pressed="false"')) {
+  errors.push('audio toggle should declare aria-pressed="false" by default');
 }
 
 const audioModule = readFileSync('src/modules/audio.js', 'utf8');
 for (const requiredSnippet of [
   "const AUDIO_SRC = '/audio/ink-wash-terminal.mp3'",
   "const AUDIO_KEY = 'byteforge:audio-enabled'",
-  "localStorage.getItem(AUDIO_KEY) !== '0'",
+  "localStorage.getItem(AUDIO_KEY) === '1'",
+  'const ensureAudio',
+  "audio.preload = 'none'",
   'audio.loop = true',
-  'audio.play()',
+  'player.play()',
   'aria-pressed',
 ]) {
   if (!audioModule.includes(requiredSnippet)) {
@@ -125,7 +128,7 @@ if (!ecosystemConfig.includes('cwd: __dirname')) {
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const requiredScripts = {
   clean: 'node scripts/clean.js',
-  check: 'pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend',
+  check: 'pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend && pnpm run check:performance',
   'api:test:local': 'node scripts/api/integration-local.js',
   'db:reset:local': 'node scripts/db/reset-local.js',
   'db:seed:local': 'node scripts/db/seed-local.js',
@@ -136,6 +139,7 @@ const requiredScripts = {
   'check:visual': 'node scripts/check-visual.js',
   'check:auth': 'node scripts/check-auth.js',
   'check:backend': 'node scripts/check-backend.js',
+  'check:performance': 'node scripts/check-performance.js',
   audit: 'pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate',
 };
 
