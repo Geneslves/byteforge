@@ -132,8 +132,30 @@ const initParallax = (hub) => {
   });
 };
 
+const scheduleIdle = (callback, { timeout = 1800 } = {}) => {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(callback, { timeout });
+    return;
+  }
+
+  window.setTimeout(callback, timeout);
+};
+
+const markBootComplete = (hub) => {
+  const boot = hub.querySelector('.boot-sequence');
+  if (!boot) return;
+
+  const complete = () => hub.classList.add('is-boot-complete');
+  boot.addEventListener('animationend', (event) => {
+    if (event.animationName === 'boot-away') complete();
+  }, { once: true });
+  window.setTimeout(complete, 1300);
+};
+
 export const initEffects = (hub) => {
-  initMeteorShower(hub);
+  hub.classList.add('is-performance-lite');
+  markBootComplete(hub);
+  scheduleIdle(() => initMeteorShower(hub), { timeout: 2200 });
   initParallax(hub);
 
   window.addEventListener('pageshow', (event) => {
