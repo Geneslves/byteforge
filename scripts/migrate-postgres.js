@@ -7,6 +7,7 @@ import pg from 'pg'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { createPostgresConfig, describePostgresConfig } from '../server/postgres-config.js'
 
 const { Pool } = pg
 
@@ -35,25 +36,25 @@ async function migrate() {
   log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n', 'cyan')
 
   // 获取数据库连接字符串
-  const DATABASE_URL = process.env.DATABASE_URL
+  const poolConfig = createPostgresConfig(process.env, {
+    max: 1,
+    connectionTimeoutMillis: 5000,
+  })
 
-  if (!DATABASE_URL) {
-    log('❌ Error: DATABASE_URL environment variable is not set', 'red')
+  if (!poolConfig.connectionString && !poolConfig.host) {
+    log('❌ Error: PostgreSQL connection settings are not configured', 'red')
     log('\nUsage:', 'yellow')
     log('  DATABASE_URL=postgresql://user:pass@localhost:5432/byteforge node scripts/migrate-postgres.js', 'yellow')
+    log('  PGHOST=localhost PGUSER=user PGPASSWORD=pass PGDATABASE=byteforge node scripts/migrate-postgres.js', 'yellow')
     log('\nExample:', 'yellow')
     log('  DATABASE_URL=postgresql://postgres:password@localhost:5432/byteforge node scripts/migrate-postgres.js', 'yellow')
     process.exit(1)
   }
 
   log('📡 Connecting to database...', 'blue')
-  log(`   ${DATABASE_URL.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@')}\n`, 'blue')
+  log(`   ${describePostgresConfig(poolConfig)}\n`, 'blue')
 
-  const pool = new Pool({
-    connectionString: DATABASE_URL,
-    max: 1,
-    connectionTimeoutMillis: 5000,
-  })
+  const pool = new Pool(poolConfig)
 
   let client
 

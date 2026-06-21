@@ -7,6 +7,7 @@ import express from 'express'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import pg from 'pg'
+import { createPostgresConfig } from './postgres-config.js'
 
 const { Pool } = pg
 
@@ -15,12 +16,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 // 数据库连接池
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/byteforge',
+const pool = new Pool(createPostgresConfig(process.env, {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
-})
+}))
 
 // 测试数据库连接
 pool.on('connect', () => {
@@ -226,7 +226,7 @@ async function start() {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       console.log(`📡 Server:    http://localhost:${PORT}`)
       console.log(`🔗 API:       http://localhost:${PORT}/api`)
-      console.log(`💾 Database:  ${process.env.DATABASE_URL ? 'PostgreSQL' : 'Not configured'}`)
+      console.log(`💾 Database:  ${process.env.DATABASE_URL || process.env.PGHOST || process.env.POSTGRES_HOST ? 'PostgreSQL' : 'Not configured'}`)
       console.log(`🌍 Platform:  Node.js/Express`)
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       console.log('')

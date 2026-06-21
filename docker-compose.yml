@@ -37,6 +37,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       DATABASE_URL: postgresql://${POSTGRES_USER:-byteforge}:${POSTGRES_PASSWORD:-byteforge_password}@db:5432/${POSTGRES_DB:-byteforge}
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-byteforge}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-byteforge_password}
+      PGDATABASE: ${POSTGRES_DB:-byteforge}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
     depends_on:
       db:

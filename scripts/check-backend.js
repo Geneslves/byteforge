@@ -150,6 +150,34 @@ if (!existsSync(platformAdapterPath)) {
   }
 }
 
+const postgresConfigPath = 'server/postgres-config.js';
+if (!existsSync(postgresConfigPath)) {
+  errors.push('missing PostgreSQL config helper: ' + postgresConfigPath);
+} else {
+  const postgresConfigSource = readFileSync(postgresConfigPath, 'utf8');
+  if (!postgresConfigSource.includes('PGPASSWORD') || !postgresConfigSource.includes('connectionString')) {
+    errors.push('server/postgres-config.js should support both split PG env vars and DATABASE_URL fallback');
+  }
+}
+
+const serverIndexPath = 'server/index.js';
+if (existsSync(serverIndexPath)) {
+  const serverIndexSource = readFileSync(serverIndexPath, 'utf8');
+  if (!serverIndexSource.includes('createPostgresConfig(process.env')) {
+    errors.push('server/index.js should use createPostgresConfig instead of raw DATABASE_URL parsing');
+  }
+}
+
+const composePath = 'docker-compose.yml';
+if (existsSync(composePath)) {
+  const composeSource = readFileSync(composePath, 'utf8');
+  for (const requiredEnv of ['PGHOST: db', 'PGUSER:', 'PGPASSWORD:', 'PGDATABASE:']) {
+    if (!composeSource.includes(requiredEnv)) {
+      errors.push(`docker-compose.yml app service should set ${requiredEnv}`);
+    }
+  }
+}
+
 // Check wrangler.toml
 const wranglerPath = 'wrangler.toml';
 if (!existsSync(wranglerPath)) {
