@@ -70,8 +70,8 @@ export const onRequestPost = createHandler({
     const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     await db.run(
-      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)',
-      [refreshTokenId, user.id, refreshTokenHash, refreshTokenExpiry, now]
+      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, ?)',
+      [refreshTokenId, user.id, refreshTokenHash, refreshTokenExpiry, now, false]
     )
 
     // 返回用户信息和令牌

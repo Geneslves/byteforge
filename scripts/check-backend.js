@@ -88,6 +88,15 @@ if (!existsSync(functionsDir)) {
     if (/message:\s*error\.message/.test(source) || /error:\s*error\.message/.test(source)) {
       errors.push(`${filePath} should not return raw error.message in API responses`);
     }
+    if (/is_active,\s*created_at\)\s*VALUES\s*\([^)]*,\s*1\s*,/s.test(source)) {
+      errors.push(`${filePath} should bind boolean true for is_active instead of inserting integer 1`);
+    }
+    if (/refresh_tokens[\s\S]*revoked\)\s*VALUES\s*\([^)]*,\s*0\s*\)/.test(source)) {
+      errors.push(`${filePath} should bind boolean false for revoked instead of inserting integer 0`);
+    }
+    if (/revoked\s*=\s*0/.test(source)) {
+      errors.push(`${filePath} should compare revoked with a boolean parameter instead of integer 0`);
+    }
   }
 }
 
@@ -111,6 +120,15 @@ if (!existsSync(authDir)) {
     }
     if (/message:\s*error\.message/.test(source) || /error:\s*error\.message/.test(source)) {
       errors.push(`${filePath} should not return raw error.message in API responses`);
+    }
+    if (/is_active,\s*created_at\)\s*VALUES\s*\([^)]*,\s*1\s*,/s.test(source)) {
+      errors.push(`${filePath} should bind boolean true for is_active instead of inserting integer 1`);
+    }
+    if (/refresh_tokens[\s\S]*revoked\)\s*VALUES\s*\([^)]*,\s*0\s*\)/.test(source)) {
+      errors.push(`${filePath} should bind boolean false for revoked instead of inserting integer 0`);
+    }
+    if (/revoked\s*=\s*0/.test(source)) {
+      errors.push(`${filePath} should compare revoked with a boolean parameter instead of integer 0`);
     }
   }
 }
@@ -171,6 +189,9 @@ if (existsSync(serverIndexPath)) {
 const composePath = 'docker-compose.yml';
 if (existsSync(composePath)) {
   const composeSource = readFileSync(composePath, 'utf8');
+  if (composeSource.includes('DATABASE_URL: postgresql://')) {
+    errors.push('docker-compose.yml should not inject a composed DATABASE_URL; use split PG* env vars to support special characters in passwords');
+  }
   for (const requiredEnv of ['PGHOST: db', 'PGUSER:', 'PGPASSWORD:', 'PGDATABASE:']) {
     if (!composeSource.includes(requiredEnv)) {
       errors.push(`docker-compose.yml app service should set ${requiredEnv}`);

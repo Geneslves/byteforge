@@ -61,15 +61,15 @@ export const onRequestPost = createHandler({
 
     // 如果是第一个用户，设为管理员
     const userCount = await db.first('SELECT COUNT(*) as count FROM users')
-    const role = userCount.count === 0 ? 'admin' : 'user'
+    const role = Number(userCount.count) === 0 ? 'admin' : 'user'
 
     // 创建用户
     const userId = crypto.randomUUID()
     const now = new Date().toISOString()
 
     await db.run(
-      'INSERT INTO users (id, username, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
-      [userId, body.username, body.email, passwordHash, role, now]
+      'INSERT INTO users (id, username, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, body.username, body.email, passwordHash, role, true, now]
     )
 
     // 生成访问令牌
@@ -95,8 +95,8 @@ export const onRequestPost = createHandler({
     const refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
     await db.run(
-      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, 0)',
-      [refreshTokenId, userId, refreshTokenHash, refreshTokenExpiry, now]
+      'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked) VALUES (?, ?, ?, ?, ?, ?)',
+      [refreshTokenId, userId, refreshTokenHash, refreshTokenExpiry, now, false]
     )
 
     // 返回用户信息和令牌

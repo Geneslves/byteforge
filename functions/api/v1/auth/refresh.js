@@ -29,8 +29,8 @@ export const onRequestPost = createHandler({
 
     // 在数据库中查找刷新令牌
     const tokenRecord = await db.first(
-      'SELECT * FROM refresh_tokens WHERE token_hash = ? AND expires_at > ? AND revoked = 0',
-      [tokenHash, new Date().toISOString()]
+      'SELECT * FROM refresh_tokens WHERE token_hash = ? AND expires_at > ? AND revoked = ?',
+      [tokenHash, new Date().toISOString(), false]
     )
 
     if (!tokenRecord) {

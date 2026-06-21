@@ -107,6 +107,16 @@ expectIncludes(
   '.hub-v2.is-performance-lite .lightfield',
   'performance-lite mode should freeze continuous lightfield animation'
 );
+expectIncludes(
+  styleSheet,
+  '.hub-v2.is-boot-complete:not(.is-route-return) .lightfield',
+  'boot-complete mode should keep the center lightfield from replaying its reveal animation'
+);
+expectIncludes(
+  styleSheet,
+  '.hub-v2.is-boot-complete:not(.is-route-return) .hotspot',
+  'boot-complete mode should keep the center hotspot from replaying its ignition animation'
+);
 
 if (errors.length) {
   for (const error of errors) console.error(`ERROR ${error}`);

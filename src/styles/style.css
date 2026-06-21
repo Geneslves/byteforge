@@ -1886,6 +1886,14 @@ body {
     transform: translate(calc(-50% + var(--parallax-core-x)), calc(-50% + var(--parallax-core-y))) scale(.95);
   }
 
+  .hub-v2.is-boot-complete:not(.is-route-return) .lightfield {
+    animation: light-breathe 3.4s cubic-bezier(.37,0,.24,1) infinite alternate;
+  }
+
+  .hub-v2.is-boot-complete:not(.is-route-return) .hotspot {
+    animation: hotspot-breathe 2.4s cubic-bezier(.37,0,.24,1) infinite alternate;
+  }
+
   .hub-v2.is-performance-lite .star-glint.is-faint,
   .hub-v2.is-performance-lite .edge-particle:nth-of-type(n + 6),
   .hub-v2.is-performance-lite .impact-bloom:nth-of-type(n + 11) {
