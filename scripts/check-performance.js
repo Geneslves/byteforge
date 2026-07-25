@@ -50,8 +50,18 @@ expectIncludes(
 );
 expectIncludes(
   serverModule,
-  "req.path !== '/api/health'",
+  "!req.path.startsWith('/api/health')",
   'healthcheck requests should be skipped in regular request logs'
+);
+expectIncludes(
+  serverModule,
+  "app.get('/api/health/ready', ready)",
+  'readiness requests should use an explicit API route before the SPA fallback'
+);
+expectIncludes(
+  serverModule,
+  'res.status(503).json({',
+  'failed readiness checks should return a JSON 503 response'
 );
 
 const effectsModule = readFileSync('src/modules/effects.js', 'utf8');
@@ -69,6 +79,16 @@ expectIncludes(
   effectsModule,
   "classList.remove('is-performance-lite')",
   'performance-lite mode should end after boot so ambient animations resume'
+);
+expectIncludes(
+  effectsModule,
+  "layer.style.setProperty(\n      `--parallax-${name}`",
+  'parallax variables should update only their consuming layer'
+);
+expectNotIncludes(
+  effectsModule,
+  "hub.style.setProperty(\n      `--parallax-${name}`",
+  'parallax updates should not invalidate the full homepage subtree'
 );
 
 const styleSheet = readFileSync('src/styles/style.css', 'utf8');
@@ -116,6 +136,16 @@ expectIncludes(
   styleSheet,
   '.hub-v2.is-boot-complete:not(.is-route-return) .hotspot',
   'boot-complete mode should keep the center hotspot from replaying its ignition animation'
+);
+expectIncludes(
+  styleSheet,
+  '--planet-hit-size: 44px;',
+  'planet controls should expose a stable 44px hit target'
+);
+expectIncludes(
+  styleSheet,
+  'animation-play-state: paused;',
+  'planet orbits should pause immediately while hovered or focused'
 );
 
 if (errors.length) {

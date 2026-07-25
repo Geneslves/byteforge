@@ -21,6 +21,7 @@ export async function onRequest(context) {
   // Skip rate limiting for health checks
   const skipPaths = [
     '/api/health',
+    '/api/health/ready',
     '/api/v1/public/health',
   ];
 

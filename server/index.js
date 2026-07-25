@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 
 // 请求日志
 app.use((req, res, next) => {
-  if (req.path !== '/api/health') {
+  if (!req.path.startsWith('/api/health')) {
     console.log(`${new Date().toISOString()} ${req.method} ${req.path}`)
   }
   next()
@@ -127,6 +127,30 @@ async function setupRoutes() {
     // 健康检查
     const { onRequestGet: healthGet } = await import('../functions/api/health.js')
     app.get('/api/health', adaptToExpress(healthGet))
+
+    const ready = async (req, res) => {
+      res.setHeader('Cache-Control', 'no-store')
+      try {
+        await pool.query('SELECT 1')
+        res.json({
+          ok: true,
+          status: 'ready',
+          service: 'byteforge-api',
+          database: 'postgresql',
+          timestamp: new Date().toISOString(),
+        })
+      } catch {
+        res.status(503).json({
+          ok: false,
+          status: 'not_ready',
+          service: 'byteforge-api',
+          database: 'unavailable',
+          timestamp: new Date().toISOString(),
+        })
+      }
+    }
+
+    app.get('/api/health/ready', ready)
 
     // 反馈
     const { onRequestPost: feedbackPost } = await import('../functions/api/feedback.js')

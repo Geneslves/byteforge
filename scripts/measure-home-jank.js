@@ -40,9 +40,8 @@ const stopBrowser = (browserProcess) => new Promise((resolve) => {
 
 const startBrowser = async () => {
   const userDataDir = mkdtempSync(join(tmpdir(), 'byteforge-jank-'));
-  const browserProcess = spawn(chromePath, [
+  const browserArgs = [
     '--headless=new',
-    '--disable-gpu',
     '--disable-dev-shm-usage',
     '--mute-audio',
     '--no-default-browser-check',
@@ -50,7 +49,9 @@ const startBrowser = async () => {
     '--remote-debugging-port=0',
     `--user-data-dir=${userDataDir}`,
     'about:blank',
-  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  ];
+  if (process.env.BYTEFORGE_DISABLE_GPU === '1') browserArgs.splice(1, 0, '--disable-gpu');
+  const browserProcess = spawn(chromePath, browserArgs, { stdio: ['ignore', 'ignore', 'pipe'] });
 
   const wsUrl = await new Promise((resolveUrl, rejectUrl) => {
     const timer = setTimeout(() => rejectUrl(new Error('Timed out waiting for DevTools endpoint')), 15000);
@@ -181,14 +182,24 @@ try {
           window.requestIdleCallback = () => 0;
           window.cancelIdleCallback = () => {};
         }
-        if (scenario === 'disable-ambient') {
-          const style = document.createElement('style');
-          style.textContent = [
+        const scenarioStyles = {
+          'disable-ambient': [
             '.star-glint,.stream-track,.edge-particle,.impact-bloom,.lightfield,.hotspot,.planet{animation:none!important;transition:none!important}',
             '.starfield,.datafield,.stage,.orbit-layer,.lightfield{transform:none!important}',
             '.boot-sequence{display:none!important}'
-          ].join('\\n');
-          document.documentElement.appendChild(style);
+          ],
+          'disable-particles': ['.edge-particle,.edge-particle::after,.impact-bloom,.meteor{animation:none!important}'],
+          'disable-streams': ['.star-glint,.stream-track{animation:none!important}'],
+          'disable-light': ['.lightfield,.hotspot{animation:none!important}'],
+          'disable-planets': ['.planet,.planet::before{animation:none!important}'],
+          'disable-will-change': ['.hub-v2 *{will-change:auto!important}']
+        };
+        if (scenarioStyles[scenario]) {
+          const style = document.createElement('style');
+          style.textContent = scenarioStyles[scenario].join('\\n');
+          const installStyle = () => (document.head || document.documentElement).appendChild(style);
+          if (document.documentElement) installStyle();
+          else document.addEventListener('DOMContentLoaded', installStyle, { once: true });
         }
         window.__byteforgeFrames = [];
         window.__byteforgeLongTasks = [];
@@ -225,7 +236,50 @@ try {
   for (let elapsed = 0; elapsed < 10000 && !loaded; elapsed += 100) {
     await wait(100);
   }
-  await wait(waitMs);
+  if (scenario === 'pointer-sweep') {
+    const startedAt = Date.now();
+    let step = 0;
+    while (Date.now() - startedAt < waitMs) {
+      const progress = (step % 180) / 179;
+      await client.send('Input.dispatchMouseEvent', {
+        type: 'mouseMoved',
+        x: Math.round(80 + progress * 1200),
+        y: Math.round(160 + Math.sin(progress * Math.PI * 4) * 120 + 240),
+      });
+      step += 1;
+      await wait(16);
+    }
+  } else if (scenario === 'hover-probe') {
+    await wait(1600);
+    const targetResult = await client.send('Runtime.evaluate', {
+      returnByValue: true,
+      expression: `(() => {
+        const planet = document.querySelector('.planet[data-state="ready"]');
+        if (!planet) return null;
+        const rect = planet.getBoundingClientRect();
+        window.__byteforgeHoverProbe = { armedAt: performance.now(), enteredAt: null };
+        planet.addEventListener('pointerenter', () => {
+          window.__byteforgeHoverProbe.enteredAt = performance.now();
+        }, { once: true });
+        return {
+          label: planet.getAttribute('aria-label'),
+          x: rect.left + rect.width / 2 + 18,
+          y: rect.top + rect.height / 2,
+        };
+      })()`,
+    });
+    const target = targetResult.result.value;
+    if (!target) throw new Error('No interactive planet found for hover probe');
+    await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 1, y: 1 });
+    await client.send('Input.dispatchMouseEvent', {
+      type: 'mouseMoved',
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+    });
+    await wait(Math.max(160, waitMs - 1600));
+  } else {
+    await wait(waitMs);
+  }
 
   const result = await client.send('Runtime.evaluate', {
     returnByValue: true,
@@ -233,12 +287,35 @@ try {
       const hub = document.querySelector('[data-boot-scope="byteforge-home"]');
       const boot = document.querySelector('.boot-sequence');
       const meteorCount = document.querySelectorAll('.meteor').length;
+      const planet = document.querySelector('.planet[data-state="ready"]');
+      const planetRect = planet?.getBoundingClientRect();
+      const planetCenter = planetRect ? {
+        x: planetRect.left + planetRect.width / 2,
+        y: planetRect.top + planetRect.height / 2,
+      } : null;
+      const hitSamples = planetCenter
+        ? [0, 6, 12, 18, 22, 26, 30].map((delta) => ({
+            delta,
+            hit: document.elementFromPoint(planetCenter.x + delta, planetCenter.y)?.closest('.planet') === planet,
+          }))
+        : [];
+      const orbitAnimation = planet?.getAnimations().find((animation) =>
+        animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
+      );
       return {
         readyState: document.readyState,
         hubClass: hub?.className || '',
         bootDisplay: boot ? getComputedStyle(boot).display : '',
         bootVisibility: boot ? getComputedStyle(boot).visibility : '',
         meteorCount,
+        planetProbe: planet ? {
+          label: planet.getAttribute('aria-label'),
+          cssWidth: getComputedStyle(planet).width,
+          hovered: planet.matches(':hover'),
+          orbitPlayState: orbitAnimation?.playState || '',
+          hitSamples,
+          ...window.__byteforgeHoverProbe,
+        } : null,
         frames: window.__byteforgeFrames || [],
         longTasks: window.__byteforgeLongTasks || [],
       };
@@ -272,6 +349,7 @@ try {
     bootDisplay: value.bootDisplay,
     bootVisibility: value.bootVisibility,
     meteorCount: value.meteorCount,
+    planetProbe: value.planetProbe,
     windows,
     worstFrames,
     longTasks,

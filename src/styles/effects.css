@@ -158,16 +158,20 @@
 .planet::before {
   content: '';
   position: absolute;
-  inset: -20px;
+  top: 50%;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
   border-radius: 50%;
-  background: radial-gradient(circle,
-    color-mix(in srgb, var(--color), transparent 88%) 0%,
-    color-mix(in srgb, var(--color), transparent 96%) 42%,
-    transparent 70%);
-  opacity: .22;
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  background: var(--color);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--color), transparent 52%),
+    0 0 20px color-mix(in srgb, var(--color), transparent 86%);
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
 .planet::after {
@@ -176,26 +180,28 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
+  width: var(--size);
+  height: var(--size);
   border-radius: 50%;
   border: 2px solid color-mix(in srgb, var(--color), transparent 100%);
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transition: opacity 0.16s ease, transform 0.16s ease, border-color 0.16s ease;
   pointer-events: none;
 }
 
 .planet:hover::before {
-  opacity: .72;
-  transform: scale(1.08);
-  animation: pulse-glow 2s ease-in-out infinite;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.16);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--color), transparent 16%),
+    0 0 38px color-mix(in srgb, var(--color), transparent 62%);
 }
 
 .planet[data-state="ready"]::before,
 .planet[data-state="beta"]::before {
-  background: radial-gradient(circle,
-    color-mix(in srgb, var(--color), transparent 82%) 0%,
-    color-mix(in srgb, var(--color), transparent 94%) 42%,
-    transparent 72%);
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--color), transparent 42%),
+    0 0 26px color-mix(in srgb, var(--color), transparent 84%);
 }
 
 .planet[data-state="ready"]:hover,
@@ -206,7 +212,7 @@
 .planet:hover::after {
   border-color: color-mix(in srgb, var(--color), transparent 64%);
   transform: translate(-50%, -50%) scale(1.4);
-  animation: ripple-wave 1.5s ease-out infinite;
+  opacity: .62;
 }
 
 .planet[data-state="ready"]:hover::after,
@@ -377,6 +383,7 @@
   border-color: color-mix(in srgb, var(--color), transparent 20%);
   transform: translate(-50%, -50%) scale(1.5);
   box-shadow: 0 0 20px color-mix(in srgb, var(--color), transparent 50%);
+  opacity: 1;
 }
 
 /* 焦点指示器 */

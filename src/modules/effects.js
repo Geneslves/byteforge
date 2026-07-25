@@ -88,12 +88,25 @@ const initParallax = (hub) => {
 
   const current = { x: 0, y: 0 };
   const target = { x: 0, y: 0 };
+  const layers = {
+    back: hub.querySelector('.datafield'),
+    star: hub.querySelector('.starfield'),
+    stage: hub.querySelector('.stage'),
+    orbit: hub.querySelector('.orbit-layer'),
+    light: hub.querySelector('.lightfield'),
+    core: hub.querySelector('.hotspot'),
+  };
+  let bounds = null;
   let rafId = 0;
 
   const clamp = (value) => Math.max(-1, Math.min(1, value));
   const setLayerOffset = (name, x, y) => {
-    hub.style.setProperty(`--parallax-${name}-x`, `${x.toFixed(2)}px`);
-    hub.style.setProperty(`--parallax-${name}-y`, `${y.toFixed(2)}px`);
+    const layer = layers[name];
+    if (!layer) return;
+    layer.style.setProperty(
+      `--parallax-${name}`,
+      `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`,
+    );
   };
 
   const updateParallax = () => {
@@ -118,18 +131,26 @@ const initParallax = (hub) => {
     if (!rafId) rafId = requestAnimationFrame(updateParallax);
   };
 
+  hub.addEventListener('pointerenter', () => {
+    bounds = hub.getBoundingClientRect();
+  }, { passive: true });
+
   hub.addEventListener('pointermove', (event) => {
-    const rect = hub.getBoundingClientRect();
+    const rect = bounds || hub.getBoundingClientRect();
     target.x = clamp(((event.clientX - rect.left) / rect.width - 0.5) * 2);
     target.y = clamp(((event.clientY - rect.top) / rect.height - 0.5) * 2);
     requestParallaxFrame();
-  });
+  }, { passive: true });
 
   hub.addEventListener('pointerleave', () => {
     target.x = 0;
     target.y = 0;
     requestParallaxFrame();
   });
+
+  window.addEventListener('resize', () => {
+    bounds = null;
+  }, { passive: true });
 };
 
 const scheduleIdle = (callback, { timeout = 1800 } = {}) => {

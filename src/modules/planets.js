@@ -24,17 +24,6 @@ export const initPlanets = (hub, planetRoutes, renderRoute, { skipKey }) => {
       planet.dataset.kind = 'future';
     }
 
-    const getOrbitAnimation = () =>
-      planet.getAnimations().find((animation) => animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift') ||
-      planet.getAnimations()[0];
-
-    const setOrbitRate = (rate) => {
-      const animation = getOrbitAnimation();
-      if (!animation) return;
-      animation.updatePlaybackRate?.(rate);
-      animation.playbackRate = rate;
-    };
-
     planet.addEventListener('click', (event) => {
       if (planet.dataset.kind === 'future' || planet.dataset.state === 'disabled') return;
 
@@ -53,9 +42,7 @@ export const initPlanets = (hub, planetRoutes, renderRoute, { skipKey }) => {
       planet.classList.toggle('is-locked');
     });
 
-    planet.addEventListener('pointerenter', () => setOrbitRate(0.08));
     planet.addEventListener('pointerleave', () => {
-      setOrbitRate(1);
       planet.classList.remove('is-locked');
     });
   });
