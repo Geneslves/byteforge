@@ -174,9 +174,12 @@ const drawBloom = (context, bloom, width, height, time, pointer) => {
 
 const createMeteor = (width, height, bornAt) => {
   const fromTop = Math.random() < 0.72;
-  const x = fromTop ? Math.random() * width * 0.88 : -180;
-  const y = fromTop ? -180 : Math.random() * height * 0.46;
-  const travel = Math.max(width - x, height - y) + 220;
+  const angle = 0.68 + Math.random() * 0.18;
+  const directionX = Math.cos(angle);
+  const directionY = Math.sin(angle);
+  const x = fromTop ? Math.random() * width * 0.45 - width * 0.2 : -70;
+  const y = fromTop ? -70 : Math.random() * height * 0.35 - height * 0.05;
+  const travel = Math.max(480, Math.min((width - x) / directionX, (height - y) / directionY) + 260);
 
   return {
     bornAt,
@@ -184,7 +187,10 @@ const createMeteor = (width, height, bornAt) => {
     x,
     y,
     travel,
-    length: 120 + Math.random() * 90,
+    directionX,
+    directionY,
+    length: 170 + Math.random() * 130,
+    thickness: 1.4 + Math.random() * 0.8,
     color: Math.random() > 0.28 ? '#fabd2f' : '#8ec07c',
   };
 };
@@ -193,24 +199,59 @@ const drawMeteor = (context, meteor, time) => {
   const progress = (time - meteor.bornAt) / meteor.duration;
   if (progress < 0 || progress > 1) return false;
 
-  const eased = progress * (2 - progress);
-  const x = meteor.x + meteor.travel * eased;
-  const y = meteor.y + meteor.travel * eased;
+  const eased = progress;
+  const x = meteor.x + meteor.travel * eased * meteor.directionX;
+  const y = meteor.y + meteor.travel * eased * meteor.directionY;
   const alpha = Math.sin(progress * Math.PI) * 0.9;
   const trail = meteor.length * (0.55 + alpha * 0.45);
+  const trailX = trail * meteor.directionX;
+  const trailY = trail * meteor.directionY;
+  const outerTrail = context.createLinearGradient(x - trailX, y - trailY, x, y);
+  outerTrail.addColorStop(0, 'rgba(130, 200, 238, 0)');
+  outerTrail.addColorStop(0.22, 'rgba(130, 200, 238, 0.12)');
+  outerTrail.addColorStop(0.52, 'rgba(170, 220, 245, 0.38)');
+  outerTrail.addColorStop(0.8, 'rgba(232, 246, 255, 0.78)');
+  outerTrail.addColorStop(1, 'rgba(255, 255, 255, 0.98)');
+  const coreTrail = context.createLinearGradient(x - trailX, y - trailY, x, y);
+  coreTrail.addColorStop(0, 'rgba(125, 198, 240, 0)');
+  coreTrail.addColorStop(0.68, meteor.color);
+  coreTrail.addColorStop(1, '#ffffff');
+  context.lineCap = 'round';
 
-  context.strokeStyle = meteor.color;
-  context.globalAlpha = alpha * 0.76;
-  context.lineWidth = 1.2;
+  context.strokeStyle = outerTrail;
+  context.globalAlpha = alpha * 0.84;
+  context.lineWidth = meteor.thickness * 4.2;
   context.beginPath();
-  context.moveTo(x - trail, y - trail);
+  context.moveTo(x - trailX, y - trailY);
   context.lineTo(x, y);
   context.stroke();
+
+  context.strokeStyle = coreTrail;
+  context.globalAlpha = alpha * 0.9;
+  context.lineWidth = meteor.thickness * 1.2;
+  context.beginPath();
+  context.moveTo(x - trailX, y - trailY);
+  context.lineTo(x, y);
+  context.stroke();
+
+  context.strokeStyle = '#fdf4cb';
+  context.globalAlpha = alpha * 0.82;
+  context.lineWidth = 0.7;
+  context.beginPath();
+  context.moveTo(x - trailX * 0.34, y - trailY * 0.34);
+  context.lineTo(x, y);
+  context.stroke();
+
+  context.fillStyle = meteor.color;
+  context.globalAlpha = alpha * 0.38;
+  context.beginPath();
+  context.arc(x, y, meteor.thickness * 4.4, 0, TAU);
+  context.fill();
 
   context.fillStyle = '#fdf4cb';
   context.globalAlpha = alpha;
   context.beginPath();
-  context.arc(x, y, 1.8, 0, TAU);
+  context.arc(x, y, meteor.thickness * 1.45, 0, TAU);
   context.fill();
   return true;
 };
@@ -228,9 +269,11 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   const layout = { left: 0, top: 0, width: 1, height: 1, pixelRatio: 1, stage: { x: 0, y: 0, width: 1, height: 1 } };
   const stats = { frames: 0, drawTime: 0, maxDrawTime: 0, measuredAt: performance.now(), measuredFrames: 0, fps: 0 };
   const meteors = [];
-  let targetFrameMs = 1000 / (constrained ? 30 : mobile ? 45 : 60);
-  let nextMeteorAt = 1.6;
-  let nextBurstAt = 9 + Math.random() * 6;
+  const cadence = { lastRafAt: 0, rafIntervals: [], rafFrames: 0, refreshFps: 60, renderStride: constrained ? 2 : 1, lastDrawAt: 0, intervalTotal: 0, intervalSquared: 0, intervalSamples: 0, maxInterval: 0 };
+  let meteorEvents = 0;
+  let targetFrameMs = 0;
+  let nextMeteorAt = 2.4 + Math.random() * 0.5;
+  let nextBurstAt = 6 + Math.random() * 4;
   let lastFrameAt = 0;
   let animationFrame = 0;
   let running = false;
@@ -292,18 +335,24 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
 
     window.__byteforgeAmbientStats = {
       mode: 'canvas',
-      targetFps: Math.round(1000 / targetFrameMs),
+      targetFps: targetFrameMs ? Math.round(1000 / targetFrameMs) : Math.round(cadence.refreshFps / cadence.renderStride),
       fps: stats.fps,
       frames: stats.frames,
       averageDrawMs: Number((stats.drawTime / Math.max(1, stats.frames)).toFixed(3)),
       lastDrawMs: Number(lastDrawTime.toFixed(3)),
       maxDrawMs: Number(stats.maxDrawTime.toFixed(3)),
+      averageFrameMs: Number((cadence.intervalTotal / Math.max(1, cadence.intervalSamples)).toFixed(3)),
+      frameJitterMs: Number(Math.sqrt(Math.max(0, cadence.intervalSquared / Math.max(1, cadence.intervalSamples) - (cadence.intervalTotal / Math.max(1, cadence.intervalSamples)) ** 2)).toFixed(3)),
+      maxFrameMs: Number(cadence.maxInterval.toFixed(3)),
+      refreshFps: Math.round(cadence.refreshFps),
+      renderStride: cadence.renderStride,
       pixelRatio: layout.pixelRatio,
       stars: scene.stars.length,
       streams: scene.streams.length,
       particles: scene.particles.length,
       blooms: scene.blooms.length,
       meteors: meteors.length,
+      meteorEvents,
     };
   };
 
@@ -311,6 +360,16 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
     const drawStartedAt = performance.now();
     const time = timeMs / 1000;
     const lightTheme = hub.dataset.theme === 'light';
+    if (cadence.lastDrawAt) {
+      const interval = timeMs - cadence.lastDrawAt;
+      if (interval > 0 && interval < 250) {
+        cadence.intervalTotal += interval;
+        cadence.intervalSquared += interval * interval;
+        cadence.intervalSamples += 1;
+        cadence.maxInterval = Math.max(cadence.maxInterval, interval);
+      }
+    }
+    cadence.lastDrawAt = timeMs;
     pointer.x += (pointer.targetX - pointer.x) * 0.075;
     pointer.y += (pointer.targetY - pointer.y) * 0.075;
 
@@ -322,15 +381,20 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
 
     if (!reducedMotion) {
       if (time >= nextMeteorAt) {
-        meteors.push(createMeteor(layout.width, layout.height, time));
-        nextMeteorAt = time + (mobile ? 4.8 + Math.random() * 3.2 : 2.6 + Math.random() * 2.8);
+        if (meteors.length < 3) {
+          meteors.push(createMeteor(layout.width, layout.height, time));
+          meteorEvents += 1;
+        }
+        nextMeteorAt = time + (mobile ? 2.8 + Math.random() * 2.4 : 1.7 + Math.random() * 2.2);
       }
       if (time >= nextBurstAt) {
         const burstCount = mobile ? 1 : 2;
         for (let index = 0; index < burstCount; index += 1) {
+          if (meteors.length >= 3) break;
           meteors.push(createMeteor(layout.width, layout.height, time + index * 0.22));
+          meteorEvents += 1;
         }
-        nextBurstAt = time + 12 + Math.random() * 9;
+        nextBurstAt = time + 8 + Math.random() * 8;
       }
     }
 
@@ -357,8 +421,23 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   const tick = (now) => {
     if (!running) return;
     animationFrame = requestAnimationFrame(tick);
-    if (now - lastFrameAt < targetFrameMs) return;
-    lastFrameAt = now - modulo(now - lastFrameAt, targetFrameMs);
+    if (cadence.lastRafAt) {
+      const interval = now - cadence.lastRafAt;
+      if (interval > 2 && interval < 40 && cadence.rafIntervals.length < 24) {
+        cadence.rafIntervals.push(interval);
+        if (cadence.rafIntervals.length === 24) {
+          const ordered = [...cadence.rafIntervals].sort((a, b) => a - b);
+          const median = ordered[Math.floor(ordered.length / 2)];
+          cadence.refreshFps = clamp(1000 / median, 30, 360);
+          cadence.renderStride = Math.max(1, Math.round(cadence.refreshFps / (constrained ? 30 : 75)));
+        }
+      }
+    }
+    cadence.lastRafAt = now;
+    cadence.rafFrames += 1;
+    if (!targetFrameMs && cadence.rafFrames % cadence.renderStride !== 0) return;
+    if (targetFrameMs && now - lastFrameAt < targetFrameMs - 0.75) return;
+    lastFrameAt = targetFrameMs ? now - modulo(now - lastFrameAt, targetFrameMs) : now;
     draw(now);
   };
 
@@ -366,6 +445,10 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
     if (running || reducedMotion) return;
     running = true;
     lastFrameAt = 0;
+    cadence.lastRafAt = 0;
+    cadence.rafFrames = 0;
+    cadence.rafIntervals = [];
+    cadence.lastDrawAt = 0;
     animationFrame = requestAnimationFrame(tick);
   };
 

@@ -112,6 +112,21 @@ expectIncludes(
   'ambient canvas should stop when the page is hidden'
 );
 expectIncludes(
+  ambientCanvasModule,
+  'cadence.renderStride',
+  'ambient canvas should use refresh-synchronized frame strides'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'meteorEvents',
+  'ambient canvas should expose recurring meteor diagnostics'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'meteor.thickness * 4.2',
+  'meteors should render a visible outer trail'
+);
+expectIncludes(
   effectsModule,
   "classList.remove('is-performance-lite')",
   'performance-lite mode should end after boot so ambient animations resume'

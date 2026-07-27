@@ -59,6 +59,8 @@ requireFile(join(distDir, 'og-image.svg'));
 requireFile(join(distDir, 'manifest.json'));
 requireFile(join(distDir, 'rss.xml'));
 requireFile(join(distDir, 'images', 'relay-station.svg'));
+requireFile(join(distDir, 'images', 'sub2api-logo.svg'));
+requireFile(join(distDir, 'images', 'cpa-logo.svg'));
 
 const navPagePath = join(distDir, 'pages', 'nav.html');
 if (requireFile(navPagePath)) {
@@ -66,7 +68,9 @@ if (requireFile(navPagePath)) {
   for (const relayOrigin of ['https://sub2api.thebyte.tech', 'https://cpa.thebyte.tech']) {
     if (!navHtml.includes(`href="${relayOrigin}"`)) errors.push(`${navPagePath} is missing relay entry: ${relayOrigin}`);
   }
-  if (!navHtml.includes('/images/relay-station.svg')) errors.push(`${navPagePath} is missing the relay station logo`);
+  for (const logoPath of ['/images/sub2api-logo.svg', '/images/cpa-logo.svg']) {
+    if (!navHtml.includes(logoPath)) errors.push(`${navPagePath} is missing relay logo: ${logoPath}`);
+  }
   if ((navHtml.match(/rel="noopener noreferrer"/g) || []).length < 2) {
     errors.push(`${navPagePath} relay entries should isolate their external browsing contexts`);
   }

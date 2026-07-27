@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-labelledby="sub2api-title sub2api-desc">
+  <title id="sub2api-title">Sub2API</title>
+  <desc id="sub2api-desc">Two input routes converge through a numbered API gateway.</desc>
+  <path d="M36 5 61 19v34L36 67 11 53V19Z" fill="#061114" stroke="#164e63" stroke-width="2"/>
+  <path d="M17 22h9l8 8M17 50h9l8-8" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="14" cy="22" r="4" fill="#071419" stroke="#67e8f9" stroke-width="2.5"/>
+  <circle cx="14" cy="50" r="4" fill="#071419" stroke="#67e8f9" stroke-width="2.5"/>
+  <path d="M28 30c0-5 3-8 8-8s8 3 8 7c0 3-2 5-5 7l-8 6h13" fill="none" stroke="#facc15" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M47 29h7l6 7-6 7h-7" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="61" cy="36" r="3.5" fill="#fef3c7" stroke="#facc15" stroke-width="2"/>
+  <path d="M21 13A27 27 0 0 1 51 12M51 60a27 27 0 0 1-30-1" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+</svg>

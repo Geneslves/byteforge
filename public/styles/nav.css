@@ -447,6 +447,42 @@ body::after {
   box-shadow: 0 0 30px rgba(45, 212, 191, 0.28);
 }
 
+.relay-card-sub2api {
+  border-color: rgba(34, 211, 238, 0.42);
+  background:
+    linear-gradient(120deg, rgba(34, 211, 238, 0.1), transparent 48%),
+    var(--bg-card);
+}
+
+.relay-card-sub2api::before {
+  background: linear-gradient(90deg, transparent, #22d3ee, #facc15, transparent);
+}
+
+.relay-card-sub2api:hover {
+  border-color: #22d3ee;
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+}
+
+.relay-card-cpa {
+  border-color: rgba(244, 114, 182, 0.42);
+  background:
+    linear-gradient(120deg, rgba(244, 114, 182, 0.1), transparent 48%),
+    var(--bg-card);
+}
+
+.relay-card-cpa::before {
+  background: linear-gradient(90deg, transparent, #f472b6, #67e8f9, transparent);
+}
+
+.relay-card-cpa::after {
+  background: radial-gradient(circle, rgba(244, 114, 182, 0.24) 0%, transparent 70%);
+}
+
+.relay-card-cpa:hover {
+  border-color: #f472b6;
+  box-shadow: 0 0 30px rgba(244, 114, 182, 0.28);
+}
+
 .relay-logo {
   position: relative;
   z-index: 1;
@@ -460,6 +496,14 @@ body::after {
 .relay-card:hover .relay-logo {
   transform: rotate(4deg) scale(1.05);
   filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.34));
+}
+
+.relay-logo-sub2api {
+  filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.3));
+}
+
+.relay-logo-cpa {
+  filter: drop-shadow(0 0 14px rgba(244, 114, 182, 0.3));
 }
 
 .relay-content {

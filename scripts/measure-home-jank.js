@@ -7,6 +7,9 @@ import { spawn } from 'node:child_process';
 const targetUrl = process.argv[2] || 'http://localhost:3000/';
 const waitMs = Number(process.argv[3] || 5200);
 const scenario = process.argv[4] || 'baseline';
+const viewportWidth = Number(process.env.BYTEFORGE_VIEWPORT_WIDTH || 1365);
+const viewportHeight = Number(process.env.BYTEFORGE_VIEWPORT_HEIGHT || 768);
+const deviceScaleFactor = Number(process.env.BYTEFORGE_DEVICE_SCALE_FACTOR || 1);
 
 const chromeCandidates = [
   process.env.CHROME_PATH,
@@ -180,9 +183,9 @@ try {
   await client.send('Runtime.enable');
   await client.send('Performance.enable');
   await client.send('Emulation.setDeviceMetricsOverride', {
-    width: 1365,
-    height: 768,
-    deviceScaleFactor: 1,
+    width: viewportWidth,
+    height: viewportHeight,
+    deviceScaleFactor,
     mobile: false,
   });
   await client.send('Page.addScriptToEvaluateOnNewDocument', {
