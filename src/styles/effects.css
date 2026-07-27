@@ -206,7 +206,7 @@
 
 .planet[data-state="ready"]:hover,
 .planet[data-state="beta"]:hover {
-  filter: saturate(1.42) brightness(1.15);
+  z-index: 2;
 }
 
 .planet:hover::after {
@@ -429,7 +429,8 @@
   }
 
   .planet::before {
-    inset: -16px;
+    top: 50%;
+    left: 50%;
   }
 
   .skeleton-card {

@@ -53,8 +53,8 @@ const initMeteorShower = (hub) => {
 
   const meteorBurst = () => {
     const burstCount = isMobile
-      ? Math.floor(Math.random() * 2) + 1
-      : Math.floor(Math.random() * 3) + 2;
+      ? 1
+      : Math.floor(Math.random() * 2) + 1;
     for (let i = 0; i < burstCount; i += 1) {
       setTimeout(spawnMeteor, Math.random() * 1200);
     }
@@ -63,23 +63,22 @@ const initMeteorShower = (hub) => {
   const continuousMeteors = () => {
     spawnMeteor();
     const delay = isMobile
-      ? Math.random() * 3500 + 3000
-      : Math.random() * 2500 + 2000;
+      ? Math.random() * 8000 + 12000
+      : Math.random() * 6000 + 9000;
     setTimeout(continuousMeteors, delay);
   };
 
   const scheduleBurst = () => {
     const delay = isMobile
-      ? Math.random() * 15000 + 12000
-      : Math.random() * 10000 + 8000;
+      ? Math.random() * 18000 + 30000
+      : Math.random() * 18000 + 24000;
     setTimeout(() => {
       meteorBurst();
       scheduleBurst();
     }, delay);
   };
 
-  continuousMeteors();
-  setTimeout(meteorBurst, 2000);
+  setTimeout(continuousMeteors, 6500);
   scheduleBurst();
 };
 
@@ -162,6 +161,28 @@ const scheduleIdle = (callback, { timeout = 1800 } = {}) => {
   window.setTimeout(callback, timeout);
 };
 
+const initMotionBudget = (hub) => {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const constrainedDevice =
+    window.matchMedia('(prefers-reduced-motion: reduce), (update: slow)').matches ||
+    connection?.saveData === true ||
+    (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 4) ||
+    (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 4);
+
+  hub.classList.add('is-ambient-lite');
+  hub.classList.toggle('is-motion-reduced', constrainedDevice);
+
+  const syncVisibility = () => {
+    hub.classList.toggle('is-page-hidden', document.hidden);
+  };
+  syncVisibility();
+  document.addEventListener('visibilitychange', syncVisibility, { passive: true });
+
+  return {
+    allowMeteors: !constrainedDevice && window.matchMedia('(min-width: 900px)').matches,
+  };
+};
+
 const markBootComplete = (hub) => {
   const boot = hub.querySelector('.boot-sequence');
   if (!boot) return;
@@ -178,9 +199,9 @@ const markBootComplete = (hub) => {
 
 export const initEffects = (hub) => {
   hub.classList.add('is-performance-lite');
+  const { allowMeteors } = initMotionBudget(hub);
   markBootComplete(hub);
-  scheduleIdle(() => initMeteorShower(hub), { timeout: 2200 });
-  initParallax(hub);
+  if (allowMeteors) scheduleIdle(() => initMeteorShower(hub), { timeout: 3200 });
 
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) hub.classList.add('is-route-return');

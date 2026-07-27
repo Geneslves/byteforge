@@ -77,6 +77,21 @@ expectIncludes(
 );
 expectIncludes(
   effectsModule,
+  'initMotionBudget',
+  'homepage effects should apply a bounded ambient motion profile'
+);
+expectIncludes(
+  effectsModule,
+  "document.addEventListener('visibilitychange'",
+  'homepage animations should pause while the page is hidden'
+);
+expectNotIncludes(
+  effectsModule,
+  'initParallax(hub);',
+  'pointer movement should not continuously transform full-page layers'
+);
+expectIncludes(
+  effectsModule,
   "classList.remove('is-performance-lite')",
   'performance-lite mode should end after boot so ambient animations resume'
 );
@@ -139,13 +154,33 @@ expectIncludes(
 );
 expectIncludes(
   styleSheet,
-  '--planet-hit-size: 44px;',
-  'planet controls should expose a stable 44px hit target'
+  '--planet-hit-size: 52px;',
+  'planet controls should expose a stable 52px hit target'
 );
 expectIncludes(
   styleSheet,
   'animation-play-state: paused;',
   'planet orbits should pause immediately while hovered or focused'
+);
+expectIncludes(
+  styleSheet,
+  '.hub-v2.is-boot-complete.is-ambient-lite .star-glint:nth-child(6n + 1)',
+  'ambient mode should animate only a bounded subset of star glints'
+);
+expectIncludes(
+  styleSheet,
+  '.hub-v2.is-ambient-lite .edge-particle::after',
+  'ambient mode should freeze particle trail pseudo-elements'
+);
+expectIncludes(
+  styleSheet,
+  '.hub-v2.is-page-hidden *',
+  'hidden pages should pause CSS animations'
+);
+expectNotIncludes(
+  styleSheet,
+  'backdrop-filter: blur(8px);',
+  'moving planet labels should not allocate backdrop-filter surfaces'
 );
 
 if (errors.length) {

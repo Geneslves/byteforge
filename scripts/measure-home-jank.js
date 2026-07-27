@@ -302,12 +302,20 @@ try {
       const orbitAnimation = planet?.getAnimations().find((animation) =>
         animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
       );
+      const activeAnimations = document.getAnimations().filter((animation) => animation.playState === 'running');
+      const animationCounts = activeAnimations.reduce((counts, animation) => {
+        const name = animation.animationName || 'unnamed';
+        counts[name] = (counts[name] || 0) + 1;
+        return counts;
+      }, {});
       return {
         readyState: document.readyState,
         hubClass: hub?.className || '',
         bootDisplay: boot ? getComputedStyle(boot).display : '',
         bootVisibility: boot ? getComputedStyle(boot).visibility : '',
         meteorCount,
+        activeAnimationCount: activeAnimations.length,
+        animationCounts,
         planetProbe: planet ? {
           label: planet.getAttribute('aria-label'),
           cssWidth: getComputedStyle(planet).width,
@@ -349,6 +357,8 @@ try {
     bootDisplay: value.bootDisplay,
     bootVisibility: value.bootVisibility,
     meteorCount: value.meteorCount,
+    activeAnimationCount: value.activeAnimationCount,
+    animationCounts: value.animationCounts,
     planetProbe: value.planetProbe,
     windows,
     worstFrames,

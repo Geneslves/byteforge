@@ -109,7 +109,7 @@ body {
     z-index: 0;
     overflow: hidden;
     transform: var(--parallax-back);
-    will-change: transform;
+    will-change: auto;
   }
 
   .datafield::after {
@@ -129,7 +129,7 @@ body {
     pointer-events: none;
     contain: layout style paint;
     transform: var(--parallax-star);
-    will-change: transform;
+    will-change: auto;
   }
 
   /* ===== Starfield ===== */
@@ -369,7 +369,7 @@ body {
     max-height: 680px;
     transform: translate(-50%, -50%) var(--parallax-stage);
     contain: layout style paint;
-    will-change: transform;
+    will-change: auto;
   }
 
   .edge-particle {
@@ -499,7 +499,7 @@ body {
     pointer-events: none;
     contain: layout style paint;
     transform: var(--parallax-orbit);
-    will-change: transform;
+    will-change: auto;
     opacity: 0;
   }
 
@@ -509,7 +509,7 @@ body {
   }
 
   .planet {
-    --planet-hit-size: 44px;
+    --planet-hit-size: 52px;
     appearance: none;
     -webkit-tap-highlight-color: transparent;
     position: absolute;
@@ -532,7 +532,7 @@ body {
     animation: orbit-point var(--speed) linear infinite;
     animation-delay: var(--phase, 0s);
     will-change: transform;
-    transition: filter 0.16s ease;
+    transition: opacity 0.16s ease;
   }
 
   .planet:hover,
@@ -542,11 +542,11 @@ body {
   }
 
   .planet:hover {
-    filter: brightness(1.22) saturate(1.18);
+    z-index: 2;
   }
 
   .planet:active {
-    filter: brightness(1.5) saturate(1.4);
+    z-index: 2;
   }
 
   .planet::before {
@@ -576,12 +576,11 @@ body {
     padding: 7px 10px;
     border: 1px solid rgba(var(--fg-alt),.18);
     border-radius: 6px;
-    background: rgba(var(--bg-darkest),.78);
+    background: rgba(var(--bg-darkest),.94);
     color: var(--fg);
     opacity: 0;
     pointer-events: none;
     transition: opacity .12s ease-out, transform .12s ease-out;
-    backdrop-filter: blur(8px);
     box-shadow: 0 0 24px color-mix(in srgb, var(--color), transparent 70%);
   }
 
@@ -606,27 +605,23 @@ body {
   .planet[data-state="ready"] {
     opacity: 1;
     cursor: pointer;
-    filter: saturate(1.18) brightness(1.05);
   }
 
   .planet[data-state="beta"] {
     opacity: .94;
     cursor: pointer;
-    filter: saturate(1.22) brightness(1.08);
   }
 
   .planet[data-kind="future"] {
     animation-name: orbit-drift;
     animation-duration: calc(var(--speed) * 3);
     opacity: .38;
-    filter: grayscale(0.75);
     cursor: not-allowed;
   }
 
   .planet[data-state="future"],
   .planet[data-state="disabled"] {
     opacity: .38;
-    filter: grayscale(0.75);
     cursor: not-allowed;
   }
 
@@ -1900,6 +1895,49 @@ body {
 
   .hub-v2.is-boot-complete:not(.is-route-return) .hotspot {
     animation: hotspot-breathe 2.4s cubic-bezier(.37,0,.24,1) infinite alternate;
+  }
+
+  .hub-v2.is-ambient-lite .stream-track,
+  .hub-v2.is-ambient-lite .edge-particle,
+  .hub-v2.is-ambient-lite .edge-particle::after,
+  .hub-v2.is-ambient-lite .impact-bloom,
+  .hub-v2.is-ambient-lite .lightfield {
+    animation: none !important;
+    will-change: auto;
+  }
+
+  .hub-v2.is-ambient-lite .stream-track {
+    transform: translateX(-8%);
+  }
+
+  .hub-v2.is-ambient-lite .star-glint {
+    animation: none;
+    opacity: calc(var(--o) * .34);
+    transform: translate(-50%, -50%) scale(.72) rotate(var(--r));
+    will-change: auto;
+  }
+
+  .hub-v2.is-boot-complete.is-ambient-lite .star-glint:nth-child(6n + 1) {
+    animation: star-twinkle var(--t) steps(1, end) infinite;
+    animation-delay: var(--d);
+    will-change: opacity, transform;
+  }
+
+  .hub-v2.is-ambient-lite .lightfield {
+    opacity: .5;
+    transform: scale(1);
+  }
+
+  .hub-v2.is-motion-reduced .star-glint,
+  .hub-v2.is-motion-reduced .hotspot,
+  .hub-v2.is-motion-reduced .planet::before {
+    animation: none !important;
+  }
+
+  .hub-v2.is-page-hidden *,
+  .hub-v2.is-page-hidden *::before,
+  .hub-v2.is-page-hidden *::after {
+    animation-play-state: paused !important;
   }
 
   .hub-v2.is-performance-lite .star-glint.is-faint,
