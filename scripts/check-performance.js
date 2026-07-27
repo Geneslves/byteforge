@@ -127,6 +127,21 @@ expectIncludes(
   'meteors should render a visible outer trail'
 );
 expectIncludes(
+  ambientCanvasModule,
+  'STAR_BASE_PULSE = 0.24',
+  'ambient stars should retain a visible baseline between twinkles'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'particle.size * 2',
+  'inbound particles should render a visible glow trail'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'PARTICLE_ACTIVE_WINDOW = 0.105',
+  'inbound particles should stay sparse and independently staggered'
+);
+expectIncludes(
   effectsModule,
   "classList.remove('is-performance-lite')",
   'performance-lite mode should end after boot so ambient animations resume'

@@ -34,7 +34,7 @@ const createScene = (hub) => ({
     text: node.querySelector('.stream-track span')?.textContent || '',
     patternWidth: 0,
   })),
-  particles: [...hub.querySelectorAll('.edge-particle')].map((node) => ({
+  particles: [...hub.querySelectorAll('.edge-particle')].map((node, index) => ({
     fromX: customNumber(node, '--from-x') / 100,
     fromY: customNumber(node, '--from-y') / 100,
     size: customNumber(node, '--s', 3),
@@ -42,8 +42,7 @@ const createScene = (hub) => ({
     travelX: customNumber(node, '--tx'),
     travelY: customNumber(node, '--ty'),
     trail: customNumber(node, '--trail', 110),
-    duration: customNumber(node, '--t', 2.2),
-    delay: customNumber(node, '--d'),
+    phaseOffset: modulo(index * 0.61803398875, 1),
   })),
   blooms: [...hub.querySelectorAll('.impact-bloom')].map((node) => ({
     x: customNumber(node, '--x'),
@@ -54,30 +53,34 @@ const createScene = (hub) => ({
   })),
 });
 
+const STAR_BASE_PULSE = 0.24;
+const PARTICLE_CYCLE_DURATION = 8.6;
+const PARTICLE_ACTIVE_WINDOW = 0.105;
+
 const starPulse = (phase) => {
-  if (phase < 0.48 || phase > 0.68) return 0.06;
-  if (phase < 0.52) return 0.06 + ((phase - 0.48) / 0.04) * 0.94;
-  if (phase < 0.56) return 1 - ((phase - 0.52) / 0.04) * 0.78;
-  if (phase < 0.61) return 0.22 + ((phase - 0.56) / 0.05) * 0.32;
-  return 0.54 * (1 - (phase - 0.61) / 0.07);
+  if (phase < 0.34 || phase > 0.76) return STAR_BASE_PULSE;
+  if (phase < 0.44) return STAR_BASE_PULSE + ((phase - 0.34) / 0.1) * (1 - STAR_BASE_PULSE);
+  if (phase < 0.52) return 1 - ((phase - 0.44) / 0.08) * 0.58;
+  if (phase < 0.62) return 0.42 + ((phase - 0.52) / 0.1) * 0.3;
+  return 0.72 - ((phase - 0.62) / 0.14) * (0.72 - STAR_BASE_PULSE);
 };
 
 const drawStar = (context, star, width, height, time, pointer, lightTheme) => {
   const phase = modulo(time + star.delay, star.duration) / star.duration;
   const pulse = starPulse(phase);
   const alpha = star.opacity * pulse * (lightTheme ? 0.66 : 1);
-  if (alpha < 0.02) return;
+  const twinkle = clamp((pulse - STAR_BASE_PULSE) / (1 - STAR_BASE_PULSE), 0, 1);
 
   const x = star.x * width + pointer.x * star.depth * 10;
   const y = star.y * height + pointer.y * star.depth * 7;
-  const ray = star.ray * (0.68 + pulse * 0.45);
+  const ray = star.ray * (0.62 + twinkle * 0.8);
   const cos = Math.cos(star.rotation);
   const sin = Math.sin(star.rotation);
   const halfRay = ray / 2;
 
   context.strokeStyle = star.color;
   context.lineWidth = 0.7;
-  context.globalAlpha = alpha * 0.58;
+  context.globalAlpha = alpha * (0.18 + twinkle * 0.58);
   context.beginPath();
   context.moveTo(x - cos * halfRay, y - sin * halfRay);
   context.lineTo(x + cos * halfRay, y + sin * halfRay);
@@ -118,33 +121,52 @@ const drawStream = (context, stream, width, height, time, pointer, lightTheme) =
 };
 
 const drawParticle = (context, particle, stage, time, pointer) => {
-  const phase = modulo(time + particle.delay, particle.duration) / particle.duration;
-  if (phase >= 0.47) return;
+  const phase = modulo(time / PARTICLE_CYCLE_DURATION + particle.phaseOffset, 1);
+  if (phase >= PARTICLE_ACTIVE_WINDOW) return;
 
-  const progress = phase / 0.47;
-  const alpha = phase < 0.05
-    ? phase / 0.05
-    : phase > 0.41
-      ? (0.47 - phase) / 0.06
+  const progress = phase / PARTICLE_ACTIVE_WINDOW;
+  const alpha = phase < 0.02
+    ? phase / 0.02
+    : phase > 0.085
+      ? (PARTICLE_ACTIVE_WINDOW - phase) / 0.02
       : 0.96;
   const x = stage.x + stage.width * particle.fromX + particle.travelX * progress + pointer.x * 12;
   const y = stage.y + stage.height * particle.fromY + particle.travelY * progress + pointer.y * 9;
   const magnitude = Math.hypot(particle.travelX, particle.travelY) || 1;
   const trailX = particle.travelX / magnitude * particle.trail;
   const trailY = particle.travelY / magnitude * particle.trail;
+  const trailGradient = context.createLinearGradient(x - trailX, y - trailY, x, y);
+  trailGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  trailGradient.addColorStop(0.42, particle.color);
+  trailGradient.addColorStop(0.82, particle.color);
+  trailGradient.addColorStop(1, '#fdf4cb');
+  context.lineCap = 'round';
 
-  context.strokeStyle = particle.color;
-  context.globalAlpha = alpha * 0.52;
-  context.lineWidth = 1;
+  context.strokeStyle = trailGradient;
+  context.globalAlpha = alpha * 0.24;
+  context.lineWidth = particle.size * 2;
+  context.beginPath();
+  context.moveTo(x - trailX, y - trailY);
+  context.lineTo(x, y);
+  context.stroke();
+
+  context.globalAlpha = alpha * 0.9;
+  context.lineWidth = 1.25;
   context.beginPath();
   context.moveTo(x - trailX, y - trailY);
   context.lineTo(x, y);
   context.stroke();
 
   context.fillStyle = particle.color;
+  context.globalAlpha = alpha * 0.24;
+  context.beginPath();
+  context.arc(x, y, particle.size * 1.45, 0, TAU);
+  context.fill();
+
+  context.fillStyle = '#fdf4cb';
   context.globalAlpha = alpha;
   context.beginPath();
-  context.arc(x, y, particle.size / 2, 0, TAU);
+  context.arc(x, y, particle.size * 0.55, 0, TAU);
   context.fill();
 };
 
