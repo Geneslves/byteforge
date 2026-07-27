@@ -417,6 +417,92 @@ body::after {
   background: linear-gradient(90deg, transparent, var(--neon-pink), transparent);
 }
 
+/* 中转服务 */
+.cards-grid-relay {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.relay-card {
+  min-height: 156px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 20px;
+  border-color: rgba(45, 212, 191, 0.38);
+  background:
+    linear-gradient(120deg, rgba(45, 212, 191, 0.08), transparent 48%),
+    var(--bg-card);
+}
+
+.relay-card::before {
+  background: linear-gradient(90deg, transparent, #2dd4bf, #facc15, transparent);
+}
+
+.relay-card::after {
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.22) 0%, transparent 70%);
+}
+
+.relay-card:hover {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.28);
+}
+
+.relay-logo {
+  position: relative;
+  z-index: 1;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  filter: drop-shadow(0 0 14px rgba(45, 212, 191, 0.24));
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.relay-card:hover .relay-logo {
+  transform: rotate(4deg) scale(1.05);
+  filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.34));
+}
+
+.relay-content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.relay-label,
+.relay-domain {
+  display: block;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0;
+}
+
+.relay-label {
+  margin-bottom: 6px;
+  color: #5eead4;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.relay-domain {
+  margin-top: 12px;
+  color: #facc15;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.relay-external {
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  color: #facc15;
+  font-size: 22px;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.relay-card:hover .relay-external {
+  transform: translate(2px, -2px);
+}
+
 /* 卡片内容 */
 .card-icon {
   position: relative;
@@ -553,6 +639,18 @@ body::after {
     grid-template-columns: 1fr;
   }
 
+  .relay-card {
+    grid-template-columns: 60px minmax(0, 1fr) 20px;
+    gap: 16px;
+    min-height: 144px;
+    padding: 24px 20px;
+  }
+
+  .relay-logo {
+    width: 60px;
+    height: 60px;
+  }
+
   .nav-footer {
     flex-direction: column;
     align-items: flex-start;
@@ -584,4 +682,12 @@ body::after {
 
 .nav-section:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+.nav-section:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.nav-section:nth-child(5) {
+  animation-delay: 0.5s;
 }
