@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-labelledby="title desc">
+  <title id="title">Relay Station</title>
+  <desc id="desc">A central relay core connecting three network nodes.</desc>
+  <path d="M14 24A25 25 0 0 1 47 12" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linecap="round"/>
+  <path d="M59 24a25 25 0 0 1-7 30" fill="none" stroke="#facc15" stroke-width="3" stroke-linecap="round"/>
+  <path d="M39 61a25 25 0 0 1-25-14" fill="none" stroke="#fb7185" stroke-width="3" stroke-linecap="round"/>
+  <path d="M20 22l13 11M52 22L39 33M49 51L39 40" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="15" cy="20" r="5" fill="#07110f" stroke="#2dd4bf" stroke-width="3"/>
+  <circle cx="56" cy="19" r="5" fill="#111006" stroke="#facc15" stroke-width="3"/>
+  <circle cx="53" cy="55" r="5" fill="#13090c" stroke="#fb7185" stroke-width="3"/>
+  <path d="M36 27l10 9-10 9-10-9 10-9z" fill="#07110f" stroke="#e2e8f0" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M31 36h10M38 32l4 4-4 4" fill="none" stroke="#2dd4bf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

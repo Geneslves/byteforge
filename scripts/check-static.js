@@ -58,6 +58,20 @@ requireFile(join(distDir, 'audio', 'ink-wash-terminal.mp3'));
 requireFile(join(distDir, 'og-image.svg'));
 requireFile(join(distDir, 'manifest.json'));
 requireFile(join(distDir, 'rss.xml'));
+requireFile(join(distDir, 'images', 'relay-station.svg'));
+
+const navPagePath = join(distDir, 'pages', 'nav.html');
+if (requireFile(navPagePath)) {
+  const navHtml = readFileSync(navPagePath, 'utf8');
+  for (const relayOrigin of ['https://sub2api.thebyte.tech', 'https://cpa.thebyte.tech']) {
+    if (!navHtml.includes(`href="${relayOrigin}"`)) errors.push(`${navPagePath} is missing relay entry: ${relayOrigin}`);
+  }
+  if (!navHtml.includes('/images/relay-station.svg')) errors.push(`${navPagePath} is missing the relay station logo`);
+  if ((navHtml.match(/rel="noopener noreferrer"/g) || []).length < 2) {
+    errors.push(`${navPagePath} relay entries should isolate their external browsing contexts`);
+  }
+}
+
 
 const searchIndexPath = join(distDir, 'search-index.json');
 if (requireFile(searchIndexPath)) {
