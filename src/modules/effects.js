@@ -1,3 +1,5 @@
+import { initAmbientCanvas } from './ambient-canvas.js';
+
 const createMeteor = () => {
   const meteor = document.createElement('div');
   meteor.className = 'meteor';
@@ -169,7 +171,6 @@ const initMotionBudget = (hub) => {
     (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 4) ||
     (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 4);
 
-  hub.classList.add('is-ambient-lite');
   hub.classList.toggle('is-motion-reduced', constrainedDevice);
 
   const syncVisibility = () => {
@@ -179,7 +180,7 @@ const initMotionBudget = (hub) => {
   document.addEventListener('visibilitychange', syncVisibility, { passive: true });
 
   return {
-    allowMeteors: !constrainedDevice && window.matchMedia('(min-width: 900px)').matches,
+    constrainedDevice,
   };
 };
 
@@ -199,9 +200,9 @@ const markBootComplete = (hub) => {
 
 export const initEffects = (hub) => {
   hub.classList.add('is-performance-lite');
-  const { allowMeteors } = initMotionBudget(hub);
+  const { constrainedDevice } = initMotionBudget(hub);
   markBootComplete(hub);
-  if (allowMeteors) scheduleIdle(() => initMeteorShower(hub), { timeout: 3200 });
+  initAmbientCanvas(hub, { constrained: constrainedDevice });
 
   window.addEventListener('pageshow', (event) => {
     if (event.persisted) hub.classList.add('is-route-return');

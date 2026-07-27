@@ -162,12 +162,23 @@ const summarizeWindow = (frames, start, end) => {
   };
 };
 
+const trackedMetricNames = ['TaskDuration', 'ScriptDuration', 'LayoutDuration', 'RecalcStyleDuration'];
+const readPerformanceMetrics = async (client) => {
+  const result = await client.send('Performance.getMetrics');
+  return Object.fromEntries(
+    result.metrics
+      .filter((metric) => trackedMetricNames.includes(metric.name))
+      .map((metric) => [metric.name, metric.value]),
+  );
+};
+
 const browser = await startBrowser();
 const client = await createCdpClient(browser.pageWsUrl);
 
 try {
   await client.send('Page.enable');
   await client.send('Runtime.enable');
+  await client.send('Performance.enable');
   await client.send('Emulation.setDeviceMetricsOverride', {
     width: 1365,
     height: 768,
@@ -236,6 +247,7 @@ try {
   for (let elapsed = 0; elapsed < 10000 && !loaded; elapsed += 100) {
     await wait(100);
   }
+  const metricStart = await readPerformanceMetrics(client);
   if (scenario === 'pointer-sweep') {
     const startedAt = Date.now();
     let step = 0;
@@ -316,6 +328,7 @@ try {
         meteorCount,
         activeAnimationCount: activeAnimations.length,
         animationCounts,
+        ambientCanvas: window.__byteforgeAmbientStats || null,
         planetProbe: planet ? {
           label: planet.getAttribute('aria-label'),
           cssWidth: getComputedStyle(planet).width,
@@ -331,6 +344,13 @@ try {
   });
 
   const value = result.result.value;
+  const metricEnd = await readPerformanceMetrics(client);
+  const performanceMetrics = Object.fromEntries(
+    trackedMetricNames.map((name) => [
+      name,
+      Number(((metricEnd[name] || 0) - (metricStart[name] || 0)).toFixed(4)),
+    ]),
+  );
   const frames = value.frames || [];
   const windows = [];
   for (let start = 0; start < waitMs; start += 500) {
@@ -359,6 +379,8 @@ try {
     meteorCount: value.meteorCount,
     activeAnimationCount: value.activeAnimationCount,
     animationCounts: value.animationCounts,
+    ambientCanvas: value.ambientCanvas,
+    performanceMetrics,
     planetProbe: value.planetProbe,
     windows,
     worstFrames,

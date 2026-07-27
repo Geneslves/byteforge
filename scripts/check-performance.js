@@ -65,6 +65,7 @@ expectIncludes(
 );
 
 const effectsModule = readFileSync('src/modules/effects.js', 'utf8');
+const ambientCanvasModule = readFileSync('src/modules/ambient-canvas.js', 'utf8');
 expectIncludes(
   effectsModule,
   'requestIdleCallback',
@@ -89,6 +90,26 @@ expectNotIncludes(
   effectsModule,
   'initParallax(hub);',
   'pointer movement should not continuously transform full-page layers'
+);
+expectIncludes(
+  effectsModule,
+  'initAmbientCanvas(hub',
+  'homepage effects should use the consolidated canvas renderer'
+);
+expectIncludes(
+  ambientCanvasModule,
+  "requestAnimationFrame(tick)",
+  'ambient canvas should use one coordinated animation loop'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'pixelRatioCap',
+  'ambient canvas should cap backing-store resolution'
+);
+expectIncludes(
+  ambientCanvasModule,
+  "document.addEventListener('visibilitychange'",
+  'ambient canvas should stop when the page is hidden'
 );
 expectIncludes(
   effectsModule,
@@ -164,13 +185,13 @@ expectIncludes(
 );
 expectIncludes(
   styleSheet,
-  '.hub-v2.is-boot-complete.is-ambient-lite .star-glint:nth-child(6n + 1)',
-  'ambient mode should animate only a bounded subset of star glints'
+  '.hub-v2.is-ambient-canvas .datafield',
+  'canvas mode should disable the legacy data-stream DOM layer'
 );
 expectIncludes(
   styleSheet,
-  '.hub-v2.is-ambient-lite .edge-particle::after',
-  'ambient mode should freeze particle trail pseudo-elements'
+  '.hub-v2.is-ambient-canvas .stage',
+  'canvas mode should disable the legacy particle DOM layer'
 );
 expectIncludes(
   styleSheet,

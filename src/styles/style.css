@@ -1940,6 +1940,33 @@ body {
     animation-play-state: paused !important;
   }
 
+  .ambient-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    contain: strict;
+    opacity: 1;
+    transition: opacity .5s ease;
+  }
+
+  .hub-v2.is-ambient-canvas .datafield,
+  .hub-v2.is-ambient-canvas .starfield,
+  .hub-v2.is-ambient-canvas .stage {
+    display: none;
+  }
+
+  .hub-v2.is-ambient-canvas.is-content-route .ambient-canvas {
+    opacity: .42;
+  }
+
+  .hub-v2.is-motion-reduced .ambient-canvas {
+    opacity: .72;
+  }
+
   .hub-v2.is-performance-lite .star-glint.is-faint,
   .hub-v2.is-performance-lite .edge-particle:nth-of-type(n + 6),
   .hub-v2.is-performance-lite .impact-bloom:nth-of-type(n + 11) {
