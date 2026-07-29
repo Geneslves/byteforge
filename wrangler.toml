@@ -3,8 +3,10 @@ compatibility_date = "2026-06-15"
 pages_build_output_dir = "dist"
 
 [vars]
-SITE_ORIGIN = "https://byteforge.dev"
-ALLOWED_ORIGINS = "https://byteforge.dev"
+SITE_URL = "https://www.thebyte.tech"
+SITE_ORIGIN = "https://www.thebyte.tech"
+ALLOWED_ORIGINS = "https://www.thebyte.tech"
+REGISTRATION_ENABLED = "false"
 
 [observability]
 enabled = true

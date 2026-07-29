@@ -1,10 +1,6 @@
-const API_BASE = location.hostname === 'localhost'
-  ? 'http://localhost:8788'
-  : '';
-
 export async function submitFeedback(routePath, message, documentId = null) {
   try {
-    const response = await fetch(`${API_BASE}/api/feedback`, {
+    const response = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ routePath, documentId, message }),
@@ -19,7 +15,7 @@ export async function submitFeedback(routePath, message, documentId = null) {
 
 export async function trackEvent(routePath, eventType, documentId = null) {
   try {
-    await fetch(`${API_BASE}/api/content-events`, {
+    await fetch('/api/content-events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ routePath, documentId, eventType }),

@@ -2,7 +2,9 @@
 
 > **生成日期**：2026-06-15  
 > **项目版本**：v2.0  
-> **状态**：前端完成，后端待启动
+> **状态**：历史问题基线，部分条目已被当前实现关闭  
+
+> 当前代码状态：前端静态路由、RSS、Pagefind 构建、Cloudflare Functions/Express 后端适配、认证/Admin API、CI/CD、Docker/Caddy 部署脚本和生产服务器检查已落地。本文保留为问题追踪和优先级参考，具体实施状态以代码、`README.md`、`docs/implementation-plan.md` 和检查脚本输出为准。
 
 ---
 
@@ -31,6 +33,11 @@
 
 ### 1.2 搜索功能不完整 ⚠️ **高优先级**
 
+**当前进展**：
+- 已生成 `dist/pagefind/*`，详情页有 `data-pagefind-body` 和 filter metadata。
+- `/search/` 已优先加载 Pagefind 做全文搜索，并保留本地索引回退。
+- 仍可继续优化高亮摘要、结果排序和中文检索体验。
+
 **问题描述**：
 - 当前搜索是前端 JavaScript 数组 `filter()` 实现
 - 无全文索引，无关键词高亮，无搜索建议
@@ -55,24 +62,23 @@
 
 ---
 
-### 1.3 无后端支持 ⚠️ **中优先级**
+### 1.3 后端能力生产化 ⚠️ **中优先级**
 
 **问题描述**：
-- 纯静态站点，无用户系统、评论、点赞、收藏等交互
-- 无法统计真实浏览量（只能用 Google Analytics）
-- 无内容管理后台
+- Cloudflare Pages Functions 与 Express/PostgreSQL 适配层已存在
+- 已有认证、注册开关、Admin API、feedback、content-events、health、rate limit 和安全头
+- 生产上线仍需要真实 D1 `database_id`、`JWT_SECRET`、环境变量和 staging smoke 验证
 
 **影响范围**：
-- 缺少社区互动
-- 运营数据不足
-- 内容管理效率低
+- 未填真实部署配置时无法安全上线
+- 需要先通过 staging 验证再开放生产流量
+- 内容管理后台仍是基础形态，Markdown/CMS 工作流待完善
 
 **建议方案**：
-按 ROADMAP.md 的 6 个月计划逐步实现：
-1. **阶段 1-2**（第 1-4 周）：Supabase Auth + 用户注册登录
-2. **阶段 3**（第 5-8 周）：管理后台 + Markdown 编辑器
-3. **阶段 4**（第 9-10 周）：评论系统 + 点赞收藏
-4. **阶段 5**（第 11-12 周）：全文搜索 + 数据统计
+1. 部署前运行 `corepack pnpm run check:deploy-config -- infra/env/production.env`
+2. 替换 `wrangler.toml` 的 D1 `database_id`
+3. 配置 staging/production secrets 并跑 smoke/rollback 流程
+4. 后续再扩展评论、点赞、收藏和 CMS 编辑能力
 
 ---
 
@@ -98,28 +104,17 @@
 
 ---
 
-### 2.2 无 CI/CD 流水线 ⚠️ **中优先级**
+### 2.2 CI/CD 流水线待真实环境联调 ⚠️ **中优先级**
 
 **问题描述**：
-- 无自动化构建检查
-- 无 Lighthouse 性能监控
-- 无依赖安全扫描
-- 手动部署，容易遗漏步骤
+- GitHub Actions CI 和 Release workflow 已存在
+- 已有镜像构建、staging -> production 部署、smoke 和 rollback 脚本
+- 仍需要在真实 GitHub secrets、GHCR、服务器和 DNS 环境中完整跑通
 
 **建议方案**：
-使用 GitHub Actions 配置：
-```yaml
-name: CI
-on: [push, pull_request]
-jobs:
-  test:
-    - pnpm install
-    - pnpm run check
-    - pnpm run audit
-  deploy:
-    - pnpm build
-    - vercel deploy
-```
+1. 配置 `DEPLOY_HOST`、`DEPLOY_USER`、SSH、GHCR pull token 等 secrets
+2. 首次只跑 staging，确认 `/api/health/ready`、404、RSS、sitemap、Pagefind 和登录状态
+3. production environment 保持人工审批
 
 ---
 
@@ -352,7 +347,7 @@ Content-Security-Policy: default-src 'self';
 
 **建议方案**（ROADMAP 阶段 1）：
 1. **第 1-2 天**：部署到 Vercel 或 Cloudflare Pages
-2. **第 3 天**：购买域名 `byteforge.dev`，配置 DNS
+2. **第 3 天**：配置主域名 `www.thebyte.tech` 与根域跳转
 3. **第 4 天**：配置 SSL（Vercel/Cloudflare 自动）
 4. **第 5-7 天**：验证所有路由可直接刷新访问
 

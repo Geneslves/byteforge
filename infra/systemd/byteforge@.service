@@ -1,0 +1,20 @@
+[Unit]
+Description=ByteForge container stack (%i)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=byteforge-deploy
+Group=byteforge-deploy
+SupplementaryGroups=docker
+ExecStart=/usr/bin/bash /opt/byteforge/current-%i/infra/scripts/compose.sh %i up -d --remove-orphans
+ExecReload=/usr/bin/bash /opt/byteforge/current-%i/infra/scripts/compose.sh %i up -d --remove-orphans
+ExecStop=/usr/bin/bash /opt/byteforge/current-%i/infra/scripts/compose.sh %i stop
+TimeoutStartSec=0
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

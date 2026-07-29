@@ -3,6 +3,7 @@ node_modules/
 dist/
 
 # Build and temporary files
+.agent/
 .superpowers/
 .tmp-chrome-cdp-profile/
 .tmp-chrome-cdp-*/

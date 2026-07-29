@@ -1,6 +1,6 @@
 # ByteForge
 
-ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉首页为入口，使用原生 JavaScript 实现轻量 SPA 内容路由、本地搜索、主题切换和静态子路由入口。
+ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉首页为入口，使用原生 JavaScript 实现轻量 SPA 内容路由、Pagefind 优先搜索、本地搜索回退、主题切换、静态子路由入口和轻量后端 API。
 
 ## 当前技术栈
 
@@ -8,14 +8,16 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 - 运行时：Vanilla JavaScript + 原生 Web API
 - 样式：CSS Variables + 原生 CSS
 - 路由：History API + 构建期静态入口生成
-- 内容来源：`src/data/content.js`
+- 内容来源：`src/data/collections/*` + `src/data/content-model.js`
+- 搜索索引：Pagefind 构建产物 + 本地索引回退
+- 后端：Cloudflare Pages Functions + Express/PostgreSQL 适配层
 - 行为模块：`src/modules/`
 - 样式入口：`src/styles/`
 - 静态音频：`public/audio/ink-wash-terminal.mp3`
 
 ## 当前路由
 
-路由配置的唯一来源是 `src/data/content.js` 里的 `routeData`。
+路由配置的主要来源是 `src/data/routes.js` 里的 `routeDefinitions`，内容集合由 `src/data/content-model.js` 汇总并派生出 `routeData`、`documentRoutes`、RSS 和搜索索引。
 
 - `/logs/`
 - `/deployments/`
@@ -27,42 +29,58 @@ ByteForge 是一个基于 Vite 的个人技术站点。当前版本以强视觉�
 
 每个内容条目现在也会实体化为独立详情页，路径为 `/documents/<id>/`。列表页和搜索页只负责发现与过滤，真正的可索引正文、Pagefind 预备标记和 RSS item 来源都落在详情页上。
 
-`scripts/build.js` 会读取 `routeData`，并把 `dist/index.html` 复制到每个路由目录下，保证静态托管环境中可以直接刷新访问子路由。
+`scripts/build.js` 会读取 `routeData`，并把 `dist/index.html` 复制到每个路由目录下，保证静态托管环境中可以直接刷新访问子路由。完整生产构建请使用 `corepack pnpm run build`，它会在站点构建后继续生成 `dist/pagefind/*`。
 
 ## 搜索索引
 
-搜索数据由 `src/data/content.js` 统一导出，包含 `searchEntries`、`contentDocuments`、`documentRoutes`、`rssItems`、`searchFacets`、`searchIndexDocuments`、`archiveIndex` 和 `pagefindIndexConfig`。当前 `/search/` 使用本地索引完成关键词、collection、category、series 和 tag 过滤；`/archive/` 使用同一份索引按 timeline、category、series 和 tag 聚合浏览；构建时会生成 `dist/search-index.json` 和 `dist/rss.xml`，作为后续接入 Pagefind 与 RSS 发布的稳定数据出口。
+搜索数据由 `src/data/content-model.js` 统一导出，包含 `searchEntries`、`contentDocuments`、`documentRoutes`、`rssItems`、`searchFacets`、`searchIndexDocuments`、`archiveIndex` 和 `pagefindIndexConfig`。`/search/` 在生产构建中优先加载 `/pagefind/pagefind.js` 做全文搜索，并保留本地索引作为开发模式或 Pagefind 加载失败时的回退；`/archive/` 使用同一份索引按 timeline、category、series 和 tag 聚合浏览。构建时会生成 `dist/search-index.json`、`dist/rss.xml` 和 `dist/pagefind/*`。
 
 ## 常用命令
 
 ```powershell
 # 开发
-pnpm dev                    # 启动开发服务器
-pnpm stop                   # 停止开发服务器
+corepack pnpm dev           # 启动开发服务器
+corepack pnpm stop          # 停止开发服务器
 
 # 检查与构建
-pnpm run check              # 完整检查流程
-pnpm build                  # 生产构建
-pnpm run check:project      # 项目结构检查
-pnpm run check:content      # 内容数据检查
-pnpm run check:routes       # 路由一致性检查
-pnpm run check:static       # 静态产物检查
-pnpm run check:source       # 源码质量检查
-pnpm run check:visual       # 视觉回归检查
-pnpm run audit              # 依赖安全审计
-pnpm run clean              # 清理构建产物
+corepack pnpm run check     # 完整检查流程
+corepack pnpm run build     # 生产构建，包含 Pagefind
+corepack pnpm run check:project
+corepack pnpm run check:content
+corepack pnpm run check:routes
+corepack pnpm run check:static
+corepack pnpm run check:source
+corepack pnpm run check:visual
+corepack pnpm run audit
+corepack pnpm run clean
+corepack pnpm run deploy:env -- production  # 生成未跟踪的生产 env
 
 # 预览
-pnpm preview                # 预览生产构建
+corepack pnpm preview       # 预览生产构建
 ```
 
-`pnpm run check` 会按顺序执行项目结构检查、内容数据检查、生产构建、路由/head 检查、静态构建产物烟测、源码质量检查和浏览器级视觉回归检查。`pnpm run check:content` 会检查用户可见内容是否出现乱码，并验证内容集合、路由数据、搜索 facets、Pagefind 预备配置和搜索索引文档。`pnpm run check:static` 会检查构建后的 `search-index.json`。`pnpm run check:visual` 会用本机 Chrome/Edge 检查构建后的关键路由在桌面和移动视口下是否加载样式、显示内容面板、没有明显空白或横向溢出，并验证搜索过滤控件和 URL 状态恢复。`pnpm run audit` 固定使用官方 npm registry 做依赖安全审计，避免本地镜像缺少 audit endpoint。`pnpm run clean` 用于删除 `dist/`、本地调试 profile、临时 pid 和开发/预览日志等可再生成文件。
+`corepack pnpm run check` 会按顺序执行项目结构检查、内容数据检查、生产构建、Pagefind 构建、路由/head 检查、静态构建产物烟测、源码质量检查、浏览器级视觉回归检查、认证/后端/生产服务器/基础设施和性能检查。`check:visual` 在 CI 或 `BYTEFORGE_VISUAL_STRICT=1` 下严格失败；本地 Chrome/Edge DevTools 不可用时会输出诊断并跳过浏览器级检查。`check:deploy-config` 不在默认检查中，部署前应显式指向真实 env 文件运行：
 
-构建脚本本体：
+```powershell
+corepack pnpm run deploy:env -- production
+corepack pnpm run check:deploy-config -- infra/env/production.env
+```
+
+`deploy:env` 只生成 PostgreSQL 密码和 `JWT_SECRET`，不会也不能生成 Cloudflare D1 `database_id`。Cloudflare 发布前需要额外检查 D1 配置：
+
+```powershell
+corepack pnpm run check:deploy-config -- --cloudflare infra/env/production.env
+```
+
+D1 ID 仍需通过 Cloudflare 账号中的 `wrangler d1 create byteforge` 获取后写入 `wrangler.toml`。
+
+仅生成站点本体：
 
 ```powershell
 node scripts/build.js
 ```
+
+这不会生成 `dist/pagefind/*`，完整发布构建必须使用 `corepack pnpm run build`。
 
 如果当前环境运行 `pnpm` 有本地权限问题，可以在依赖已安装后直接启动 Vite：
 

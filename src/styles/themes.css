@@ -41,15 +41,14 @@ html[data-theme-init="light"] .hub-v2 .lightfield {
 
 .hub-v2[data-theme="light"] .starfield,
 html[data-theme-init="light"] .hub-v2 .starfield {
-  opacity: .5;
+  opacity: .34;
 }
 
 .hub-v2[data-theme="light"] .star-glint,
 html[data-theme-init="light"] .hub-v2 .star-glint {
   box-shadow:
-    0 0 12px var(--c),
-    var(--glow-sm) color-mix(in srgb, var(--c), transparent 20%),
-    0 0 4px 1px rgba(0, 0, 0, .4);
+    0 0 4px color-mix(in srgb, var(--c), transparent 58%),
+    0 0 1px 1px rgba(0, 0, 0, .28);
 }
 
 .hub-v2[data-theme="light"] .datafield,
@@ -62,12 +61,12 @@ html[data-theme-init="light"] .hub-v2 .stream-line {
   opacity: calc(var(--o) * .5);
 }
 
-.hub-v2[data-theme="light"] .planet,
-html[data-theme-init="light"] .hub-v2 .planet {
+.hub-v2[data-theme="light"] .planet::before,
+html[data-theme-init="light"] .hub-v2 .planet::before {
   box-shadow:
-    var(--glow-sm) var(--color),
-    0 0 54px color-mix(in srgb, var(--color), transparent 30%),
-    0 0 2px rgba(0, 0, 0, .3);
+    0 0 3px color-mix(in srgb, var(--color), transparent 46%),
+    0 0 10px color-mix(in srgb, var(--color), transparent 82%),
+    0 0 0 1px rgba(0, 0, 0, .16);
 }
 
 .hub-v2[data-theme="light"] .route-view,

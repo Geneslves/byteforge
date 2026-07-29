@@ -7,6 +7,9 @@ import { spawn } from 'node:child_process';
 const targetUrl = process.argv[2] || 'http://localhost:3000/';
 const waitMs = Number(process.argv[3] || 5200);
 const scenario = process.argv[4] || 'baseline';
+const viewportWidth = Number(process.env.BYTEFORGE_VIEWPORT_WIDTH || 1365);
+const viewportHeight = Number(process.env.BYTEFORGE_VIEWPORT_HEIGHT || 768);
+const deviceScaleFactor = Number(process.env.BYTEFORGE_DEVICE_SCALE_FACTOR || 1);
 
 const chromeCandidates = [
   process.env.CHROME_PATH,
@@ -162,22 +165,34 @@ const summarizeWindow = (frames, start, end) => {
   };
 };
 
+const trackedMetricNames = ['TaskDuration', 'ScriptDuration', 'LayoutDuration', 'RecalcStyleDuration'];
+const readPerformanceMetrics = async (client) => {
+  const result = await client.send('Performance.getMetrics');
+  return Object.fromEntries(
+    result.metrics
+      .filter((metric) => trackedMetricNames.includes(metric.name))
+      .map((metric) => [metric.name, metric.value]),
+  );
+};
+
 const browser = await startBrowser();
 const client = await createCdpClient(browser.pageWsUrl);
 
 try {
   await client.send('Page.enable');
   await client.send('Runtime.enable');
+  await client.send('Performance.enable');
   await client.send('Emulation.setDeviceMetricsOverride', {
-    width: 1365,
-    height: 768,
-    deviceScaleFactor: 1,
+    width: viewportWidth,
+    height: viewportHeight,
+    deviceScaleFactor,
     mobile: false,
   });
   await client.send('Page.addScriptToEvaluateOnNewDocument', {
     source: `
       (() => {
         const scenario = ${JSON.stringify(scenario)};
+        if (scenario === 'light-theme') localStorage.setItem('byteforge:theme', 'light');
         if (scenario === 'block-idle') {
           window.requestIdleCallback = () => 0;
           window.cancelIdleCallback = () => {};
@@ -236,6 +251,7 @@ try {
   for (let elapsed = 0; elapsed < 10000 && !loaded; elapsed += 100) {
     await wait(100);
   }
+  const metricStart = await readPerformanceMetrics(client);
   if (scenario === 'pointer-sweep') {
     const startedAt = Date.now();
     let step = 0;
@@ -277,6 +293,50 @@ try {
       y: Math.round(target.y),
     });
     await wait(Math.max(160, waitMs - 1600));
+  } else if (scenario === 'route-click-probe') {
+    await wait(1600);
+    const targetResult = await client.send('Runtime.evaluate', {
+      returnByValue: true,
+      expression: `(() => {
+        const planet = document.querySelector('.planet[data-state="ready"]');
+        if (!planet) return null;
+        const rect = planet.getBoundingClientRect();
+        window.__byteforgeRouteProbe = {
+          label: planet.getAttribute('aria-label'),
+          clickedAt: performance.now(),
+          route: planet.dataset.route,
+        };
+        const observer = new MutationObserver(() => {
+          const routeView = document.querySelector('[data-route-view]');
+          if (routeView && !routeView.hidden && getComputedStyle(routeView).visibility === 'visible') {
+            window.__byteforgeRouteProbe.visibleAt = performance.now();
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.querySelector('[data-boot-scope="byteforge-home"]'), { attributes: true, subtree: true });
+        return {
+          x: rect.left + rect.width / 2 + 42,
+          y: rect.top + rect.height / 2,
+        };
+      })()`,
+    });
+    const target = targetResult.result.value;
+    if (!target) throw new Error('No interactive planet found for route click probe');
+    await client.send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      button: 'left',
+      clickCount: 1,
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+    });
+    await client.send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      button: 'left',
+      clickCount: 1,
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+    });
+    await wait(Math.max(600, waitMs - 1600));
   } else {
     await wait(waitMs);
   }
@@ -288,6 +348,7 @@ try {
       const boot = document.querySelector('.boot-sequence');
       const meteorCount = document.querySelectorAll('.meteor').length;
       const planet = document.querySelector('.planet[data-state="ready"]');
+      const planets = [...document.querySelectorAll('.planet')];
       const planetRect = planet?.getBoundingClientRect();
       const planetCenter = planetRect ? {
         x: planetRect.left + planetRect.width / 2,
@@ -302,20 +363,56 @@ try {
       const orbitAnimation = planet?.getAnimations().find((animation) =>
         animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
       );
+      const orbitPlayStates = planets.map((node) => ({
+        label: node.getAttribute('aria-label'),
+        state: node.getAnimations().find((animation) =>
+          animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
+        )?.playState || '',
+      }));
+      const planetCores = planets.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          radius: Number.parseFloat(getComputedStyle(node, '::before').width) / 2,
+        };
+      });
+      let minimumPlanetGap = Infinity;
+      for (let i = 0; i < planetCores.length; i += 1) {
+        for (let j = i + 1; j < planetCores.length; j += 1) {
+          const first = planetCores[i];
+          const second = planetCores[j];
+          minimumPlanetGap = Math.min(minimumPlanetGap, Math.hypot(first.x - second.x, first.y - second.y) - first.radius - second.radius);
+        }
+      }
+      const activeAnimations = document.getAnimations().filter((animation) => animation.playState === 'running');
+      const animationCounts = activeAnimations.reduce((counts, animation) => {
+        const name = animation.animationName || 'unnamed';
+        counts[name] = (counts[name] || 0) + 1;
+        return counts;
+      }, {});
       return {
         readyState: document.readyState,
+        theme: hub?.dataset.theme || '',
         hubClass: hub?.className || '',
         bootDisplay: boot ? getComputedStyle(boot).display : '',
         bootVisibility: boot ? getComputedStyle(boot).visibility : '',
         meteorCount,
+        activeAnimationCount: activeAnimations.length,
+        animationCounts,
+        ambientCanvas: window.__byteforgeAmbientStats || null,
+        minimumPlanetGap: Number(minimumPlanetGap.toFixed(1)),
+        orbitPlayStates,
         planetProbe: planet ? {
           label: planet.getAttribute('aria-label'),
           cssWidth: getComputedStyle(planet).width,
           hovered: planet.matches(':hover'),
           orbitPlayState: orbitAnimation?.playState || '',
+          glow: getComputedStyle(planet, '::before').boxShadow,
           hitSamples,
           ...window.__byteforgeHoverProbe,
         } : null,
+        routeProbe: window.__byteforgeRouteProbe || null,
         frames: window.__byteforgeFrames || [],
         longTasks: window.__byteforgeLongTasks || [],
       };
@@ -323,6 +420,13 @@ try {
   });
 
   const value = result.result.value;
+  const metricEnd = await readPerformanceMetrics(client);
+  const performanceMetrics = Object.fromEntries(
+    trackedMetricNames.map((name) => [
+      name,
+      Number(((metricEnd[name] || 0) - (metricStart[name] || 0)).toFixed(4)),
+    ]),
+  );
   const frames = value.frames || [];
   const windows = [];
   for (let start = 0; start < waitMs; start += 500) {
@@ -345,11 +449,19 @@ try {
     targetUrl,
     scenario,
     readyState: value.readyState,
+    theme: value.theme,
     hubClass: value.hubClass,
     bootDisplay: value.bootDisplay,
     bootVisibility: value.bootVisibility,
     meteorCount: value.meteorCount,
+    activeAnimationCount: value.activeAnimationCount,
+    animationCounts: value.animationCounts,
+    ambientCanvas: value.ambientCanvas,
+    minimumPlanetGap: value.minimumPlanetGap,
+    orbitPlayStates: value.orbitPlayStates,
+    performanceMetrics,
     planetProbe: value.planetProbe,
+    routeProbe: value.routeProbe,
     windows,
     worstFrames,
     longTasks,

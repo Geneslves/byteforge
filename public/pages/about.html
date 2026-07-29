@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="了解 ByteForge 的知识结构、运行组件与内容入口。">
+  <meta name="theme-color" content="#050807">
+  <title>关于 | ByteForge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/variables.css">
+  <link rel="stylesheet" href="/styles/pages.css">
+  <link rel="stylesheet" href="/styles/ink-sci-fi.css">
+</head>
+<body data-page="about">
+  <a class="skip-link" href="#main-content">跳至主内容</a>
+  <canvas id="page-canvas" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand-link" href="/">ByteForge</a>
+      <nav class="topnav" aria-label="页面导航">
+        <a class="nav-link" href="/pages/nav.html">导航</a>
+        <a class="nav-link" href="/pages/help.html">帮助</a>
+        <a class="nav-link" aria-current="page" href="/pages/about.html">关于</a>
+        <a class="nav-link" href="/pages/contact.html">联系</a>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="page-hero">
+        <div>
+          <p class="eyebrow">About ByteForge</p>
+          <h1 class="page-title">关于 ByteForge</h1>
+          <p class="page-summary">ByteForge 是面向工程日志、部署记录、代码片段和研究资料的个人知识站点。</p>
+        </div>
+        <aside class="hero-status">
+          <span class="status-row"><span>CONTENT</span><strong>STATIC FIRST</strong></span>
+          <span class="status-row"><span>API</span><strong>SERVERLESS</strong></span>
+          <span class="status-row"><span>SEARCH</span><strong>PAGEFIND</strong></span>
+        </aside>
+      </section>
+
+      <div class="layout-grid">
+        <section class="panel">
+          <h2 class="panel-title">站点结构</h2>
+          <ul class="detail-list">
+            <li><span>内容集合</span><strong>logs / deployments / archive / snippets / academic</strong></li>
+            <li><span>用户页面</span><strong>profile / account / notifications</strong></li>
+            <li><span>支持页面</span><strong>help / about / contact</strong></li>
+            <li><span>管理界面</span><strong>admin dashboard</strong></li>
+          </ul>
+        </section>
+
+        <aside class="stack">
+          <section class="panel">
+            <h2 class="panel-title">运行组件</h2>
+            <ul class="detail-list">
+              <li><span>前端构建</span><strong>Vite</strong></li>
+              <li><span>静态搜索</span><strong>Pagefind</strong></li>
+              <li><span>API 适配</span><strong>Cloudflare Pages / Express</strong></li>
+              <li><span>数据层</span><strong>D1 / PostgreSQL</strong></li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">入口</h2>
+            <ul class="link-list">
+              <li><a href="/pages/nav.html"><strong>导航中心</strong><span>Routes</span></a></li>
+              <li><a href="/search/"><strong>搜索</strong><span>Search</span></a></li>
+              <li><a href="/pages/contact.html"><strong>反馈</strong><span>Feedback</span></a></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="page-footer">ByteForge knowledge system</footer>
+  </div>
+  <script src="/scripts/pages.js"></script>
+</body>
+</html>

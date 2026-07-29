@@ -24,6 +24,68 @@ const matchesFilters = (entry, filters) => {
   return true;
 };
 
+let pagefindModulePromise;
+
+const loadPagefind = async () => {
+  if (!pagefindModulePromise) {
+    const runtimeImport = new Function('specifier', 'return import(specifier)');
+    pagefindModulePromise = runtimeImport('/pagefind/pagefind.js')
+      .then(async (module) => {
+        await module.options({ basePath: '/pagefind/' });
+        return module;
+      })
+      .catch(() => null);
+  }
+
+  return pagefindModulePromise;
+};
+
+const buildPagefindFilters = (filters) => {
+  const pagefindFilters = {};
+  if (filters.collection && filters.collection !== 'all') pagefindFilters.collection = filters.collection;
+  if (filters.category) pagefindFilters.category = filters.category;
+  if (filters.series) pagefindFilters.series = filters.series;
+  if (filters.tag) pagefindFilters.tag = filters.tag;
+  return pagefindFilters;
+};
+
+const searchWithPagefind = async (entries, filters) => {
+  if (!filters.query) return null;
+
+  const pagefind = await loadPagefind();
+  if (!pagefind) return null;
+
+  let response;
+  try {
+    response = await pagefind.search(filters.query, {
+      filters: buildPagefindFilters(filters),
+    });
+  } catch {
+    return null;
+  }
+
+  const results = await Promise.all((response.results || []).slice(0, 30).map(async (result) => {
+    const data = await result.data();
+    const pathname = getRoutePath(new URL(data.url, location.origin));
+    const matchingEntry = entries.find((entry) => getRoutePath(new URL(entry.href, location.origin)) === pathname);
+
+    return {
+      ...(matchingEntry || {}),
+      id: matchingEntry?.id || data.url,
+      href: matchingEntry?.href || data.url,
+      meta: matchingEntry?.meta || 'Pagefind',
+      title: data.meta?.title || matchingEntry?.title || data.url,
+      text: data.excerpt ? data.excerpt.replace(/<[^>]+>/g, '') : matchingEntry?.text || '',
+      tags: matchingEntry?.tags || [],
+      collection: matchingEntry?.collection || data.filters?.collection?.[0] || '',
+      category: matchingEntry?.category || data.filters?.category?.[0] || '',
+      series: matchingEntry?.series || data.filters?.series?.[0] || '',
+    };
+  }));
+
+  return results.filter(Boolean);
+};
+
 const renderEntry = (entry) => `
   <article class="route-entry" id="${escapeHtml(entry.id)}">
     <code>${escapeHtml(entry.meta)}</code>
@@ -329,7 +391,6 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     if (document) {
       routeView.innerHTML = renderDocumentDetail(document);
       routeView.hidden = false;
-      routeView.offsetHeight;
       hub.classList.add('is-content-route', 'is-route-return');
       installOutsideClickHandler();
 
@@ -374,7 +435,6 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     `;
 
     routeView.hidden = false;
-    routeView.offsetHeight;
     hub.classList.add('is-content-route', 'is-route-return');
 
     installOutsideClickHandler();
@@ -421,11 +481,17 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
         }
         history.replaceState(null, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
       };
-      const applySearch = (syncUrl = false) => {
+      let searchRequestId = 0;
+      const applySearch = async (syncUrl = false) => {
+        const requestId = ++searchRequestId;
         const filters = readFilters();
-        const filteredEntries = config.entries.filter((entry) =>
+        const localEntries = config.entries.filter((entry) =>
           matchesQuery(entry, filters.query) && matchesFilters(entry, filters)
         );
+        const pagefindEntries = await searchWithPagefind(config.entries, filters);
+        if (requestId !== searchRequestId) return;
+
+        const filteredEntries = pagefindEntries || localEntries;
         const listTarget = routeView.querySelector('[data-route-list], .route-empty');
         if (!listTarget) return;
         listTarget.outerHTML = renderEntries(filteredEntries, config.search.emptyText);
@@ -464,13 +530,22 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     scrollToRouteHash(routeView);
   };
 
+  let routeFrame = 0;
+  const scheduleRouteRender = () => {
+    if (routeFrame) cancelAnimationFrame(routeFrame);
+    routeFrame = requestAnimationFrame(() => {
+      routeFrame = 0;
+      renderRoute();
+    });
+  };
+
   const navigateToRoute = (url) => {
     const targetPath = getRoutePath(url);
     if (targetPath !== '/' && !routeData[targetPath] && !documentRoutes[targetPath]) return false;
 
     sessionStorage.setItem(skipKey, '1');
     history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);
-    renderRoute();
+    scheduleRouteRender();
     return true;
   };
 
@@ -497,7 +572,7 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
   });
 
   window.addEventListener('popstate', () => {
-    renderRoute();
+    scheduleRouteRender();
     sessionStorage.setItem(skipKey, '1');
   });
 
@@ -512,5 +587,5 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     if (navigateToRoute(url)) event.preventDefault();
   });
 
-  return { renderRoute };
+  return { renderRoute: scheduleRouteRender };
 };

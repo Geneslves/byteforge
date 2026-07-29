@@ -117,6 +117,8 @@ try {
     host,
     '--port',
     String(port),
+    '--binding',
+    'REGISTRATION_ENABLED=true',
   ];
   server = spawn(process.platform === 'win32' ? 'cmd.exe' : wrangler, process.platform === 'win32' ? ['/d', '/c', wrangler, ...wranglerArgs] : wranglerArgs, {
     cwd: process.cwd(),

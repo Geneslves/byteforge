@@ -4,10 +4,14 @@
  */
 
 import express from 'express'
+import helmet from 'helmet'
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { readFileSync } from 'fs'
 import pg from 'pg'
 import { createPostgresConfig } from './postgres-config.js'
+import { RateLimitPresets } from '../functions/lib/rate-limit/index.js'
 
 const { Pool } = pg
 
@@ -32,6 +36,42 @@ pool.on('error', (err) => {
 })
 
 const app = express()
+const canonicalOrigin = process.env.SITE_URL || process.env.SITE_ORIGIN || 'https://www.thebyte.tech'
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || canonicalOrigin)
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+)
+
+app.disable('x-powered-by')
+app.set('trust proxy', 1)
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    reportOnly: true,
+    directives: {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    },
+  },
+  strictTransportSecurity: process.env.NODE_ENV === 'production'
+    ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+    : false,
+}))
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()')
+  next()
+})
+app.use(express.json())
 
 // 中间件
 app.use(express.json())
@@ -39,12 +79,25 @@ app.use(express.urlencoded({ extended: true }))
 
 // CORS 支持
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+  const origin = req.get('Origin')
+  res.vary('Origin')
+
+  if (origin && !allowedOrigins.has(origin)) {
+    return res.status(403).json({
+      ok: false,
+      error: 'origin_not_allowed',
+      message: 'Origin is not allowed',
+    })
+  }
+
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin)
+  }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200)
+    return res.sendStatus(204)
   }
 
   next()
@@ -99,7 +152,7 @@ function adaptToExpress(cloudflareHandler) {
       res.status(500).json({
         ok: false,
         error: 'server_error',
-        message: error.message
+        message: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
       })
     }
   }
@@ -126,7 +179,15 @@ async function setupRoutes() {
   try {
     // 健康检查
     const { onRequestGet: healthGet } = await import('../functions/api/health.js')
-    app.get('/api/health', adaptToExpress(healthGet))
+    const live = (req, res) => {
+      res.setHeader('Cache-Control', 'no-store')
+      res.json({
+        ok: true,
+        status: 'live',
+        service: 'byteforge-api',
+        timestamp: new Date().toISOString(),
+      })
+    }
 
     const ready = async (req, res) => {
       res.setHeader('Cache-Control', 'no-store')
@@ -139,7 +200,8 @@ async function setupRoutes() {
           database: 'postgresql',
           timestamp: new Date().toISOString(),
         })
-      } catch {
+      } catch (error) {
+        console.error('Readiness check failed:', error.message)
         res.status(503).json({
           ok: false,
           status: 'not_ready',
@@ -150,7 +212,33 @@ async function setupRoutes() {
       }
     }
 
+    app.get('/api/health', live)
+    app.get('/api/health/live', live)
     app.get('/api/health/ready', ready)
+
+    const strictAuthLimiter = rateLimit({
+      windowMs: RateLimitPresets.strict.windowMs,
+      limit: RateLimitPresets.strict.maxRequests,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      keyGenerator: (req) => ipKeyGenerator(req.get('cf-connecting-ip') || req.ip),
+      message: {
+        ok: false,
+        error: 'rate_limit_exceeded',
+        message: 'Too many authentication attempts; try again later',
+      },
+    })
+    const registrationGate = (req, res, next) => {
+      if (process.env.REGISTRATION_ENABLED === 'true') {
+        return next()
+      }
+
+      return res.status(403).json({
+        ok: false,
+        error: 'registration_disabled',
+        message: 'Registration is currently disabled',
+      })
+    }
 
     // 反馈
     const { onRequestPost: feedbackPost } = await import('../functions/api/feedback.js')
@@ -162,17 +250,24 @@ async function setupRoutes() {
 
     // 认证端点
     const { onRequestPost: loginPost } = await import('../functions/api/auth/login.js')
-    app.post('/api/auth/login', adaptToExpress(loginPost))
+    app.post('/api/auth/login', strictAuthLimiter, adaptToExpress(loginPost))
 
     const { onRequestPost: registerPost } = await import('../functions/api/auth/register.js')
-    app.post('/api/auth/register', adaptToExpress(registerPost))
+    app.get('/api/auth/registration-status', (req, res) => {
+      res.setHeader('Cache-Control', 'no-store')
+      res.json({
+        ok: true,
+        enabled: process.env.REGISTRATION_ENABLED === 'true',
+      })
+    })
+    app.post('/api/auth/register', registrationGate, strictAuthLimiter, adaptToExpress(registerPost))
 
     const { onRequestGet: meGet } = await import('../functions/api/auth/me.js')
     app.get('/api/auth/me', adaptToExpress(meGet))
 
     // Token 刷新
     const { onRequestPost: refreshPost } = await import('../functions/api/v1/auth/refresh.js')
-    app.post('/api/v1/auth/refresh', adaptToExpress(refreshPost))
+    app.post('/api/v1/auth/refresh', strictAuthLimiter, adaptToExpress(refreshPost))
 
     // 管理员端点
     const { onRequestGet: analyticsGet } = await import('../functions/api/admin/analytics.js')
@@ -214,6 +309,14 @@ async function start() {
     // 设置 API 路由（优先级最高）
     await setupRoutes()
 
+    app.use('/api', (req, res) => {
+      res.status(404).json({
+        ok: false,
+        error: 'not_found',
+        message: 'API endpoint not found',
+      })
+    })
+
     // 静态文件服务（API 路由之后）
     app.use('/assets', express.static(join(staticRoot, 'assets'), immutableStaticOptions))
     app.use('/pagefind', express.static(join(staticRoot, 'pagefind'), immutableStaticOptions))
@@ -227,9 +330,26 @@ async function start() {
     }))
 
     // SPA 路由支持 - 所有非 API 路由返回 index.html
+    const routeManifest = JSON.parse(readFileSync(join(staticRoot, 'route-manifest.json'), 'utf8'))
+    const spaRoutes = new Set(routeManifest.spaRoutes || [])
+
     app.get('*', (req, res) => {
-      res.setHeader('Cache-Control', 'no-cache')
-      res.sendFile(join(staticRoot, 'index.html'))
+      const normalizedPath = req.path === '/' ? '/' : req.path.replace(/\/$/, '')
+      if (spaRoutes.has(normalizedPath)) {
+        const routeEntry = normalizedPath === '/'
+          ? join(staticRoot, 'index.html')
+          : join(staticRoot, normalizedPath.slice(1), 'index.html')
+        res.setHeader('Cache-Control', 'no-cache')
+        return res.sendFile(routeEntry)
+      }
+
+      res.status(404)
+      return res.sendFile(join(staticRoot, '404.html'))
+    })
+
+    app.use((req, res) => {
+      res.status(404)
+      res.sendFile(join(staticRoot, '404.html'))
     })
 
     // 错误处理

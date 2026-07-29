@@ -1,7 +1,5 @@
 // ByteForge Auth V2 - Futuristic Authentication System
 
-const API_BASE = location.hostname === 'localhost' ? 'http://localhost:8788' : '';
-
 // ===== 粒子系统 =====
 class ParticleSystem {
   constructor(canvas) {
@@ -209,14 +207,10 @@ function showLoginForm() {
 async function showRegisterForm() {
   // 检查注册是否启用
   try {
-    const testRes = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: '', email: '', password: '' })
-    });
+    const testRes = await fetch('/api/auth/registration-status');
     const testData = await testRes.json();
 
-    if (testData.error === 'registration_disabled') {
+    if (testData.enabled === false) {
       document.getElementById('login-container').classList.remove('active');
       document.getElementById('register-container').classList.remove('active');
       document.getElementById('registration-disabled').classList.add('active');
@@ -256,7 +250,7 @@ function initPasswordToggle() {
 // ===== 检查注册状态 =====
 async function checkRegistrationStatus() {
   try {
-    await fetch(`${API_BASE}/api/health`);
+    await fetch('/api/health/live');
   } catch (error) {
     // 静默失败
   }
@@ -279,7 +273,7 @@ async function handleLogin(e) {
   btnIcon.textContent = '◆';
 
   try {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
@@ -346,7 +340,7 @@ async function handleRegister(e) {
   btnIcon.textContent = '◆';
 
   try {
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password })

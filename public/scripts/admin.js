@@ -1,12 +1,10 @@
 // ByteForge 管理系统 V2 - JavaScript
 
-const API_BASE = location.hostname === 'localhost' ? 'http://localhost:8788' : '';
-
 function requireAdminToken() {
   const token = localStorage.getItem('auth_token');
   if (!token) {
     showToast('请先登录', 'error');
-    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    setTimeout(() => location.href = '/pages/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
     throw new Error('missing_auth_token');
   }
   return token;
@@ -14,7 +12,7 @@ function requireAdminToken() {
 
 function adminFetch(path, options = {}) {
   const token = requireAdminToken();
-  return fetch(`${API_BASE}${path}`, {
+  return fetch(path, {
     ...options,
     headers: {
       ...(options.headers || {}),
@@ -265,7 +263,7 @@ async function deleteFeedback(id) {
   if (!confirm('确定要删除这条反馈吗？')) return;
 
   try {
-    const res = await adminFetch(`/api/admin/feedback/delete/${id}`, {
+    const res = await adminFetch(`/api/admin/feedback/${id}`, {
       method: 'DELETE'
     });
     const data = await res.json();
@@ -423,7 +421,7 @@ async function loadUsers() {
   const token = localStorage.getItem('auth_token');
   if (!token) {
     showToast('请先登录', 'error');
-    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    setTimeout(() => location.href = '/pages/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
     return;
   }
 
@@ -437,7 +435,7 @@ async function loadUsers() {
     } else {
       showToast('加载用户失败: ' + data.error, 'error');
       if (data.error === 'invalid_token') {
-        setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+        setTimeout(() => location.href = '/pages/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
       }
     }
   } catch (error) {
@@ -544,7 +542,7 @@ async function loadSettings() {
   const token = localStorage.getItem('auth_token');
   if (!token) {
     showToast('请先登录', 'error');
-    setTimeout(() => location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
+    setTimeout(() => location.href = '/pages/login.html?redirect=' + encodeURIComponent(location.pathname), 1000);
     return;
   }
 

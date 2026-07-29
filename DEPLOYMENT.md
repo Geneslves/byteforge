@@ -1,5 +1,9 @@
 # Multi-Platform Deployment Guide
 
+> DigitalOcean production and staging deployments now use the repository-owned
+> configuration in [`infra/`](infra/README.md). Treat that runbook as
+> authoritative for Caddy, Docker Compose, backups, CI/CD, and rollback.
+
 ByteForge 现在支持在多个平台上部署。本指南涵盖所有支持的平台。
 
 ## 📋 支持的平台
