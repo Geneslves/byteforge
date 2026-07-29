@@ -293,6 +293,50 @@ try {
       y: Math.round(target.y),
     });
     await wait(Math.max(160, waitMs - 1600));
+  } else if (scenario === 'route-click-probe') {
+    await wait(1600);
+    const targetResult = await client.send('Runtime.evaluate', {
+      returnByValue: true,
+      expression: `(() => {
+        const planet = document.querySelector('.planet[data-state="ready"]');
+        if (!planet) return null;
+        const rect = planet.getBoundingClientRect();
+        window.__byteforgeRouteProbe = {
+          label: planet.getAttribute('aria-label'),
+          clickedAt: performance.now(),
+          route: planet.dataset.route,
+        };
+        const observer = new MutationObserver(() => {
+          const routeView = document.querySelector('[data-route-view]');
+          if (routeView && !routeView.hidden && getComputedStyle(routeView).visibility === 'visible') {
+            window.__byteforgeRouteProbe.visibleAt = performance.now();
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.querySelector('[data-boot-scope="byteforge-home"]'), { attributes: true, subtree: true });
+        return {
+          x: rect.left + rect.width / 2 + 42,
+          y: rect.top + rect.height / 2,
+        };
+      })()`,
+    });
+    const target = targetResult.result.value;
+    if (!target) throw new Error('No interactive planet found for route click probe');
+    await client.send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      button: 'left',
+      clickCount: 1,
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+    });
+    await client.send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      button: 'left',
+      clickCount: 1,
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+    });
+    await wait(Math.max(600, waitMs - 1600));
   } else {
     await wait(waitMs);
   }
@@ -368,6 +412,7 @@ try {
           hitSamples,
           ...window.__byteforgeHoverProbe,
         } : null,
+        routeProbe: window.__byteforgeRouteProbe || null,
         frames: window.__byteforgeFrames || [],
         longTasks: window.__byteforgeLongTasks || [],
       };
@@ -416,6 +461,7 @@ try {
     orbitPlayStates: value.orbitPlayStates,
     performanceMetrics,
     planetProbe: value.planetProbe,
+    routeProbe: value.routeProbe,
     windows,
     worstFrames,
     longTasks,

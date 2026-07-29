@@ -391,7 +391,6 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     if (document) {
       routeView.innerHTML = renderDocumentDetail(document);
       routeView.hidden = false;
-      routeView.offsetHeight;
       hub.classList.add('is-content-route', 'is-route-return');
       installOutsideClickHandler();
 
@@ -436,7 +435,6 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     `;
 
     routeView.hidden = false;
-    routeView.offsetHeight;
     hub.classList.add('is-content-route', 'is-route-return');
 
     installOutsideClickHandler();
@@ -532,13 +530,22 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     scrollToRouteHash(routeView);
   };
 
+  let routeFrame = 0;
+  const scheduleRouteRender = () => {
+    if (routeFrame) cancelAnimationFrame(routeFrame);
+    routeFrame = requestAnimationFrame(() => {
+      routeFrame = 0;
+      renderRoute();
+    });
+  };
+
   const navigateToRoute = (url) => {
     const targetPath = getRoutePath(url);
     if (targetPath !== '/' && !routeData[targetPath] && !documentRoutes[targetPath]) return false;
 
     sessionStorage.setItem(skipKey, '1');
     history.pushState(null, '', `${targetPath}${url.search}${url.hash}`);
-    renderRoute();
+    scheduleRouteRender();
     return true;
   };
 
@@ -565,7 +572,7 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
   });
 
   window.addEventListener('popstate', () => {
-    renderRoute();
+    scheduleRouteRender();
     sessionStorage.setItem(skipKey, '1');
   });
 
@@ -580,5 +587,5 @@ export const initRouting = (hub, routeData, { skipKey, documentRoutes = {} }) =>
     if (navigateToRoute(url)) event.preventDefault();
   });
 
-  return { renderRoute };
+  return { renderRoute: scheduleRouteRender };
 };

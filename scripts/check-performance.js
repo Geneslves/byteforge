@@ -66,6 +66,8 @@ expectIncludes(
 
 const effectsModule = readFileSync('src/modules/effects.js', 'utf8');
 const ambientCanvasModule = readFileSync('src/modules/ambient-canvas.js', 'utf8');
+const planetsModule = readFileSync('src/modules/planets.js', 'utf8');
+const routingModule = readFileSync('src/modules/routing.js', 'utf8');
 expectIncludes(
   effectsModule,
   'requestIdleCallback',
@@ -114,12 +116,12 @@ expectIncludes(
 expectIncludes(
   ambientCanvasModule,
   'renderStride: 1',
-  'ambient canvas should render every native frame by default'
+  'ambient canvas should begin without dropping startup frames'
 );
 expectIncludes(
   ambientCanvasModule,
-  'Math.round(cadence.refreshFps / 60)',
-  'constrained ambient rendering should target approximately 60 fps'
+  'Math.round(cadence.refreshFps / targetCanvasFps)',
+  'ambient rendering should use an even refresh-synchronized cadence'
 );
 expectNotIncludes(
   ambientCanvasModule,
@@ -138,8 +140,8 @@ expectIncludes(
 );
 expectIncludes(
   ambientCanvasModule,
-  'STAR_BASE_PULSE = 0.36',
-  'ambient stars should retain a visible baseline between twinkles'
+  'STAR_BASE_PULSE = 0.22',
+  'ambient stars should retain visible contrast between their dim and bright phases'
 );
 expectIncludes(
   ambientCanvasModule,
@@ -180,6 +182,16 @@ expectNotIncludes(
   effectsModule,
   "hub.style.setProperty(\n      `--parallax-${name}`",
   'parallax updates should not invalidate the full homepage subtree'
+);
+expectIncludes(
+  effectsModule,
+  "classList.toggle('is-motion-reduced', prefersReducedMotion)",
+  'reduced motion should follow the explicit user preference'
+);
+expectIncludes(
+  effectsModule,
+  "classList.toggle('is-ambient-lite', constrainedDevice && !prefersReducedMotion)",
+  'constrained devices should keep smooth ambient motion without disabling it'
 );
 
 const styleSheet = readFileSync('src/styles/style.css', 'utf8');
@@ -230,18 +242,48 @@ expectIncludes(
 );
 expectIncludes(
   styleSheet,
-  '--planet-hit-size: 52px;',
-  'planet controls should expose a stable 52px hit target'
+  '--planet-hit-size: 72px;',
+  'planet controls should expose a forgiving 72px hit target'
 );
-expectIncludes(
+expectNotIncludes(
   styleSheet,
   '.orbit-layer:has(.planet:hover) .planet',
-  'the complete planet system should pause together while one node is hovered'
+  'hovering one planet should not pause the complete orbit system'
 );
 expectIncludes(
   styleSheet,
-  'animation-play-state: paused;',
-  'planet orbits should pause synchronously while hovered or focused'
+  '.planet:hover,',
+  'only the directly targeted planet should pause for interaction'
+);
+expectIncludes(
+  styleSheet,
+  'animation: planet-twinkle 3.2s ease-in-out infinite;',
+  'ready planets should visibly twinkle without affecting their orbit'
+);
+expectNotIncludes(
+  styleSheet,
+  'steps(1, end) infinite',
+  'ambient twinkles should not use visibly stepped animation'
+);
+expectIncludes(
+  planetsModule,
+  'const hitRadius = Math.max(46, rect.width * 0.65);',
+  'planet clicks should resolve to a nearby interactive target'
+);
+expectNotIncludes(
+  routingModule,
+  'routeView.offsetHeight',
+  'route rendering should not force synchronous layout'
+);
+expectIncludes(
+  routingModule,
+  'const scheduleRouteRender',
+  'route rendering should be scheduled on the next animation frame'
+);
+expectIncludes(
+  ambientCanvasModule,
+  "hub.classList.contains('is-content-route') ? 2 : 1",
+  'content routes should reduce only the background canvas workload'
 );
 expectIncludes(
   styleSheet,

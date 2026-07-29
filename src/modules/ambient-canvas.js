@@ -59,7 +59,8 @@ const createScene = (hub) => ({
   })),
 });
 
-const STAR_BASE_PULSE = 0.36;
+const STAR_BASE_PULSE = 0.22;
+const TARGET_CANVAS_FPS = 75;
 const MAX_SCENE_DELTA_SECONDS = 0.05;
 const PARTICLE_CYCLE_DURATION = 8.6;
 const PARTICLE_ACTIVE_WINDOW = 0.105;
@@ -67,7 +68,7 @@ const PARTICLE_ACTIVE_WINDOW = 0.105;
 const starPulse = (phase, shimmerPhase) => {
   const breathe = 0.5 - Math.cos(phase * TAU) * 0.5;
   const shimmer = Math.max(0, Math.sin((phase * 2 + shimmerPhase) * TAU)) ** 6;
-  return clamp(STAR_BASE_PULSE + breathe * 0.42 + shimmer * 0.3, STAR_BASE_PULSE, 1);
+  return clamp(STAR_BASE_PULSE + breathe * 0.5 + shimmer * 0.38, STAR_BASE_PULSE, 1);
 };
 
 const drawStar = (context, star, width, height, time, pointer, lightTheme) => {
@@ -304,16 +305,15 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   const scene = createScene(hub);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobile = window.matchMedia('(max-width: 760px)').matches;
+  const targetCanvasFps = constrained ? 60 : TARGET_CANVAS_FPS;
   const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
   const layout = { left: 0, top: 0, width: 1, height: 1, pixelRatio: 1, stage: { x: 0, y: 0, width: 1, height: 1 } };
   const stats = { frames: 0, drawTime: 0, maxDrawTime: 0, measuredAt: performance.now(), measuredFrames: 0, fps: 0 };
   const meteors = [];
   const cadence = { lastRafAt: 0, rafIntervals: [], rafFrames: 0, refreshFps: 60, renderStride: 1, lastDrawAt: 0, intervalTotal: 0, intervalSquared: 0, intervalSamples: 0, maxInterval: 0 };
   let meteorEvents = 0;
-  let targetFrameMs = 0;
   let nextMeteorAt = 2.4 + Math.random() * 0.5;
   let nextBurstAt = 6 + Math.random() * 4;
-  let lastFrameAt = 0;
   let lastSceneFrameAt = 0;
   let lastDrawSceneTime = 0;
   let sceneTime = 0;
@@ -375,9 +375,10 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
       stats.measuredFrames = stats.frames;
     }
 
+    const activeRenderStride = cadence.renderStride * (hub.classList.contains('is-content-route') ? 2 : 1);
     window.__byteforgeAmbientStats = {
       mode: 'canvas',
-      targetFps: targetFrameMs ? Math.round(1000 / targetFrameMs) : Math.round(cadence.refreshFps / cadence.renderStride),
+      targetFps: Math.round(cadence.refreshFps / activeRenderStride),
       fps: stats.fps,
       frames: stats.frames,
       averageDrawMs: Number((stats.drawTime / Math.max(1, stats.frames)).toFixed(3)),
@@ -454,11 +455,11 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
     stats.drawTime += drawTime;
     stats.maxDrawTime = Math.max(stats.maxDrawTime, drawTime);
 
-    if (stats.frames % 30 === 0) {
+    if (stats.frames % 120 === 0) {
       publishStats(drawTime);
-      if (!constrained && stats.frames === 180 && stats.drawTime / stats.frames > 7) {
-        targetFrameMs = 1000 / 30;
-      }
+    }
+    if (!constrained && stats.frames === 180 && stats.drawTime / stats.frames > 7) {
+      cadence.renderStride *= 2;
     }
   };
 
@@ -482,24 +483,20 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
           const ordered = [...cadence.rafIntervals].sort((a, b) => a - b);
           const median = ordered[Math.floor(ordered.length / 2)];
           cadence.refreshFps = clamp(1000 / median, 30, 360);
-          cadence.renderStride = constrained
-            ? Math.max(1, Math.round(cadence.refreshFps / 60))
-            : 1;
+          cadence.renderStride = Math.max(1, Math.round(cadence.refreshFps / targetCanvasFps));
         }
       }
     }
     cadence.lastRafAt = now;
     cadence.rafFrames += 1;
-    if (!targetFrameMs && cadence.rafFrames % cadence.renderStride !== 0) return;
-    if (targetFrameMs && now - lastFrameAt < targetFrameMs - 0.75) return;
-    lastFrameAt = targetFrameMs ? now - modulo(now - lastFrameAt, targetFrameMs) : now;
+    const activeRenderStride = cadence.renderStride * (hub.classList.contains('is-content-route') ? 2 : 1);
+    if (cadence.rafFrames % activeRenderStride !== 0) return;
     draw(now, sceneTime);
   };
 
   const start = () => {
     if (running || reducedMotion) return;
     running = true;
-    lastFrameAt = 0;
     lastSceneFrameAt = 0;
     lastDrawSceneTime = sceneTime;
     cadence.lastRafAt = 0;

@@ -460,7 +460,7 @@ const isPageReady = async (client) => {
 
 const waitForLoad = async (client, url) => {
   await client.send('Page.navigate', { url });
-  const deadline = Date.now() + 5000;
+  const deadline = Date.now() + routeTimeoutMs;
 
   while (Date.now() < deadline) {
     if (await isPageReady(client)) {
@@ -470,7 +470,7 @@ const waitForLoad = async (client, url) => {
     await wait(100);
   }
 
-  throw new Error(`load ${url} timed out after 5000ms`);
+  throw new Error(`load ${url} timed out after ${routeTimeoutMs}ms`);
 };
 
 const checkRouteRender = async (client, origin, route, viewport, browserErrors) => {

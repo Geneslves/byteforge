@@ -6,7 +6,20 @@ const normalizePlanetConfig = (planetRoutes, label) => {
 };
 
 export const initPlanets = (hub, planetRoutes, renderRoute, { skipKey }) => {
-  hub.querySelectorAll('.planet').forEach((planet) => {
+  const planets = [...hub.querySelectorAll('.planet')];
+
+  const activatePlanet = (planet, event) => {
+    if (!planet || planet.dataset.kind === 'future' || planet.dataset.state === 'disabled') return;
+    if (!planet.dataset.route) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    history.pushState(null, '', planet.dataset.route);
+    renderRoute();
+    sessionStorage.setItem(skipKey, '1');
+  };
+
+  planets.forEach((planet) => {
     const label = planet.getAttribute('aria-label');
     const config = normalizePlanetConfig(planetRoutes, label);
     const route = config.route || null;
@@ -24,26 +37,33 @@ export const initPlanets = (hub, planetRoutes, renderRoute, { skipKey }) => {
       planet.dataset.kind = 'future';
     }
 
-    planet.addEventListener('click', (event) => {
-      if (planet.dataset.kind === 'future' || planet.dataset.state === 'disabled') return;
-
-      if (planet.dataset.route) {
-        event.preventDefault();
-        event.stopPropagation();
-        history.pushState(null, '', planet.dataset.route);
-        renderRoute();
-        sessionStorage.setItem(skipKey, '1');
-        return;
-      }
-
-      hub.querySelectorAll('.planet.is-locked').forEach((node) => {
-        if (node !== planet) node.classList.remove('is-locked');
-      });
-      planet.classList.toggle('is-locked');
-    });
-
     planet.addEventListener('pointerleave', () => {
       planet.classList.remove('is-locked');
     });
+  });
+
+  hub.addEventListener('click', (event) => {
+    const targetElement = event.target instanceof Element ? event.target : event.target.parentElement;
+    const targetPlanet = targetElement?.closest('.planet');
+    if (hub.classList.contains('is-content-route')) return;
+
+    let planet = targetPlanet;
+    if (event.detail > 0 && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+      let closestDistance = Infinity;
+      for (const candidate of planets) {
+        const rect = candidate.getBoundingClientRect();
+        const distance = Math.hypot(
+          event.clientX - (rect.left + rect.width / 2),
+          event.clientY - (rect.top + rect.height / 2),
+        );
+        const hitRadius = Math.max(46, rect.width * 0.65);
+        if (distance <= hitRadius && distance < closestDistance) {
+          planet = candidate;
+          closestDistance = distance;
+        }
+      }
+    }
+
+    activatePlanet(planet, event);
   });
 };

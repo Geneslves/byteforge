@@ -165,13 +165,15 @@ const scheduleIdle = (callback, { timeout = 1800 } = {}) => {
 
 const initMotionBudget = (hub) => {
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const constrainedDevice =
-    window.matchMedia('(prefers-reduced-motion: reduce), (update: slow)').matches ||
+    window.matchMedia('(update: slow)').matches ||
     connection?.saveData === true ||
     (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 4) ||
     (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 4);
 
-  hub.classList.toggle('is-motion-reduced', constrainedDevice);
+  hub.classList.toggle('is-motion-reduced', prefersReducedMotion);
+  hub.classList.toggle('is-ambient-lite', constrainedDevice && !prefersReducedMotion);
 
   const syncVisibility = () => {
     hub.classList.toggle('is-page-hidden', document.hidden);

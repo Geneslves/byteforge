@@ -336,7 +336,7 @@ body {
     display: inline-block;
     margin-left: 4px;
     color: var(--aqua);
-    animation: blink 1s step-end infinite;
+    animation: blink 1.8s ease-in-out infinite;
   }
 
   .nav-cursor {
@@ -508,7 +508,7 @@ body {
   }
 
   .planet {
-    --planet-hit-size: 52px;
+    --planet-hit-size: 72px;
     appearance: none;
     -webkit-tap-highlight-color: transparent;
     position: absolute;
@@ -534,9 +534,9 @@ body {
     transition: opacity 0.16s ease;
   }
 
-  .orbit-layer:has(.planet:hover) .planet,
-  .orbit-layer:has(.planet:focus-visible) .planet,
-  .orbit-layer:has(.planet.is-locked) .planet {
+  .planet:hover,
+  .planet:focus-visible,
+  .planet.is-locked {
     animation-play-state: paused;
   }
 
@@ -563,7 +563,15 @@ body {
     opacity: 1;
     pointer-events: none;
     transform: translate(-50%, -50%);
+    animation: planet-twinkle 3.2s ease-in-out infinite;
+    animation-delay: var(--phase, 0s);
     z-index: 0;
+  }
+
+  @keyframes planet-twinkle {
+    0%, 100% { opacity: .64; }
+    46% { opacity: 1; }
+    68% { opacity: .78; }
   }
 
   .planet span {
@@ -631,6 +639,7 @@ body {
   .planet[data-kind="future"]::before,
   .planet[data-state="future"]::before {
     animation: future-pulse 2.6s ease-in-out infinite;
+    animation-delay: var(--phase, 0s);
   }
 
   @keyframes future-pulse {
@@ -880,7 +889,7 @@ body {
     padding: 28px 32px;
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(var(--bg0), 0.96) 0%, rgba(var(--bg0), 0.94) 100%);
-    backdrop-filter: blur(20px);
+    backdrop-filter: none;
     box-shadow:
       0 0 0 1px rgba(var(--fg-alt), 0.12),
       0 8px 32px rgba(0, 0, 0, 0.5);
@@ -1534,7 +1543,7 @@ body {
   .hub-v2.is-content-route .orbit-layer,
   .hub-v2.is-content-route .datafield,
   .hub-v2.is-content-route .starfield {
-    transition: opacity 0.5s ease;
+    transition: opacity 0.22s ease-out;
   }
 
   .hub-v2.is-content-route .left-panel-container {
@@ -1628,7 +1637,7 @@ body {
     top: 40px;
     color: var(--orange);
     text-shadow: 0 0 12px rgba(var(--orange-base),.45);
-    animation: blink 1s step-end infinite;
+    animation: blink 1.8s ease-in-out infinite;
   }
 
   .boot-sequence::after {
@@ -1686,7 +1695,7 @@ body {
     height: 14px;
     background: var(--orange);
     box-shadow: 0 0 12px rgba(var(--orange-base),.70);
-    animation: blink 1s step-end infinite;
+    animation: blink 1.8s ease-in-out infinite;
   }
 
   @keyframes boot-log-away {
@@ -1916,8 +1925,8 @@ body {
     will-change: auto;
   }
 
-  .hub-v2.is-boot-complete.is-ambient-lite .star-glint:nth-child(6n + 1) {
-    animation: star-twinkle var(--t) steps(1, end) infinite;
+  .hub-v2.is-boot-complete.is-ambient-lite .star-glint:nth-child(3n + 1) {
+    animation: star-twinkle var(--t) ease-in-out infinite;
     animation-delay: var(--d);
     will-change: opacity, transform;
   }
