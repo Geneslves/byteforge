@@ -1,0 +1,14 @@
+[Unit]
+Description=ByteForge PostgreSQL backup (%i)
+Requires=docker.service
+After=docker.service byteforge@%i.service
+
+[Service]
+Type=oneshot
+User=byteforge-deploy
+Group=byteforge-deploy
+SupplementaryGroups=docker
+ExecStart=/usr/bin/bash /opt/byteforge/current-%i/infra/backup/postgres-backup.sh %i
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

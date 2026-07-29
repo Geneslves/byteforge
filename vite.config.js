@@ -1,6 +1,13 @@
 import { defineConfig } from 'vite'
+import { SITE_URL } from './site.config.js'
 
 export default defineConfig({
+  plugins: [{
+    name: 'site-url',
+    transformIndexHtml(html) {
+      return html.replaceAll('{{SITE_URL}}', SITE_URL)
+    }
+  }],
   server: {
     host: '127.0.0.1',
     port: 5173,

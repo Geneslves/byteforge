@@ -4,7 +4,7 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: postgres:15.18-alpine
     container_name: byteforge-db
     restart: unless-stopped
     environment:
@@ -42,13 +42,17 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:-byteforge_password}
       PGDATABASE: ${POSTGRES_DB:-byteforge}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      SITE_URL: ${SITE_URL:-https://www.thebyte.tech}
+      SITE_ORIGIN: ${SITE_ORIGIN:-https://www.thebyte.tech}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://www.thebyte.tech}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
     depends_on:
       db:
         condition: service_healthy
     networks:
       - byteforge-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health/ready', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 10s
       retries: 3

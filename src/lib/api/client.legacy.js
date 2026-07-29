@@ -7,10 +7,7 @@
  * - Redirects to login when refresh token expires
  */
 
-const API_BASE = location.hostname === 'localhost' ? 'http://localhost:8788' : '';
-
-// Export API_BASE for use in test pages
-window.API_BASE = API_BASE;
+const LOGIN_PATH = '/pages/login.html';
 
 /**
  * Refresh the access token using refresh token
@@ -24,7 +21,7 @@ async function refreshAccessToken() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+    const response = await fetch('/api/v1/auth/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken })
@@ -53,8 +50,8 @@ function logout() {
   localStorage.removeItem('user');
 
   const currentPath = location.pathname;
-  if (currentPath !== '/login.html') {
-    location.href = `/login.html?redirect=${encodeURIComponent(currentPath)}`;
+  if (currentPath !== LOGIN_PATH) {
+    location.href = `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}`;
   }
 }
 
@@ -66,7 +63,7 @@ function logout() {
  * @returns {Promise<Response>} Fetch response
  */
 async function apiRequest(url, options = {}) {
-  const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+  const fullUrl = url;
   let token = localStorage.getItem('auth_token');
 
   // Add authorization header
@@ -152,7 +149,7 @@ function isAdmin() {
 function requireAuth(redirectPath = null) {
   if (!isAuthenticated()) {
     const redirect = redirectPath || location.pathname;
-    location.href = `/login.html?redirect=${encodeURIComponent(redirect)}`;
+    location.href = `${LOGIN_PATH}?redirect=${encodeURIComponent(redirect)}`;
     return false;
   }
   return true;

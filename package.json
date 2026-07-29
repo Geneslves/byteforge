@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": "22.x",
+    "pnpm": "10.33.0"
+  },
   "description": "ByteForge - 数字熔炉 | Tech Blog",
   "type": "module",
   "scripts": {
@@ -12,9 +16,11 @@
     "dev:nodejs": "node server/index.js",
     "stop": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/stop-dev.ps1",
     "clean": "node scripts/clean.js",
+    "deploy:env": "node scripts/create-deploy-env.js",
     "api:test:local": "node scripts/api/integration-local.js",
-    "check": "pnpm run check:project && pnpm run check:content && pnpm build && pnpm run check:routes && pnpm run check:static && pnpm run check:head && pnpm run check:source && pnpm run check:visual && pnpm run check:auth && pnpm run check:backend && pnpm run check:performance",
-    "build": "node scripts/build.js && pnpm run build:pagefind",
+    "check": "node scripts/check-project.js && node scripts/check-content.js && node scripts/build.js && pagefind --site dist --output-subdir pagefind && node scripts/check-routes.js && node scripts/check-static.js && node scripts/check-head.js && node scripts/check-source.js && node scripts/check-visual.js && node scripts/check-auth.js && node scripts/check-backend.js && node scripts/check-production-server.js && node scripts/check-infra.js && node scripts/check-performance.js",
+    "build": "node scripts/build.js && pagefind --site dist --output-subdir pagefind",
+    "build:site": "node scripts/build.js",
     "build:pagefind": "pagefind --site dist --output-subdir pagefind",
     "check:project": "node scripts/check-project.js",
     "check:routes": "node scripts/check-routes.js",
@@ -25,8 +31,11 @@
     "check:visual": "node scripts/check-visual.js",
     "check:auth": "node scripts/check-auth.js",
     "check:backend": "node scripts/check-backend.js",
+    "check:production-server": "node scripts/check-production-server.js",
+    "check:infra": "node scripts/check-infra.js",
+    "check:deploy-config": "node scripts/check-deploy-config.js",
     "check:performance": "node scripts/check-performance.js",
-    "audit": "pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate",
+    "audit": "corepack pnpm audit --registry=https://registry.npmjs.org --audit-level=moderate",
     "preview": "vite preview",
     "db:init": "wrangler d1 execute byteforge --local --file=./schema/d1.sql",
     "db:reset:local": "node scripts/db/reset-local.js",
@@ -64,13 +73,8 @@
   },
   "dependencies": {
     "express": "^4.18.2",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "pg": "^8.11.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild": "0.28.1",
-      "undici": "7.28.0",
-      "ws": "8.21.0"
-    }
   }
 }

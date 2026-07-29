@@ -284,7 +284,7 @@ CREATE INDEX idx_daily_stats_date ON daily_stats(date DESC);
 
 ### RESTful API 规范
 
-**Base URL**: `https://api.byteforge.dev/v1`
+**Base URL**: `https://www.thebyte.tech/api/v1`
 
 **认证方式**: Bearer Token (JWT)
 

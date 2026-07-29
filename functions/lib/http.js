@@ -1,4 +1,8 @@
 const DEFAULT_ALLOWED_ORIGINS = [
+  'https://www.thebyte.tech',
+];
+
+const LOCAL_ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:8788',
   'http://127.0.0.1:5173',
@@ -10,6 +14,7 @@ const splitOrigins = (value = '') =>
 
 export const getAllowedOrigins = (env = {}) => [
   ...DEFAULT_ALLOWED_ORIGINS,
+  ...(env.NODE_ENV === 'development' ? LOCAL_ALLOWED_ORIGINS : []),
   ...splitOrigins(env.ALLOWED_ORIGINS),
   ...(env.SITE_ORIGIN ? [env.SITE_ORIGIN] : []),
 ];

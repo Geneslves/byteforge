@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ByteForge 帮助中心：查看常用路径、运行状态与支持入口。">
+  <meta name="theme-color" content="#050807">
+  <title>帮助中心 | ByteForge</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/variables.css">
+  <link rel="stylesheet" href="/styles/pages.css">
+  <link rel="stylesheet" href="/styles/ink-sci-fi.css">
+</head>
+<body data-page="help">
+  <a class="skip-link" href="#main-content">跳至主内容</a>
+  <canvas id="page-canvas" aria-hidden="true"></canvas>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand-link" href="/">ByteForge</a>
+      <nav class="topnav" aria-label="页面导航">
+        <a class="nav-link" href="/pages/nav.html">导航</a>
+        <a class="nav-link" aria-current="page" href="/pages/help.html">帮助</a>
+        <a class="nav-link" href="/pages/about.html">关于</a>
+        <a class="nav-link" href="/pages/contact.html">联系</a>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <section class="page-hero">
+        <div>
+          <p class="eyebrow">Help Desk</p>
+          <h1 class="page-title">帮助中心</h1>
+          <p class="page-summary">常用入口、运行状态和站点工作流集中在这里。</p>
+        </div>
+        <aside class="hero-status">
+          <span class="status-row"><span>LIVE</span><strong data-live-status aria-live="polite">CHECKING</strong></span>
+          <span class="status-row"><span>READY</span><strong data-ready-status aria-live="polite">CHECKING</strong></span>
+          <span class="status-row"><span>SESSION</span><strong class="status-value" data-auth-state>GUEST</strong></span>
+        </aside>
+      </section>
+
+      <div class="layout-grid">
+        <section class="panel">
+          <h2 class="panel-title">常用路径</h2>
+          <ul class="route-list">
+            <li><a href="/logs/"><strong>工程日志</strong><span>/logs/</span></a></li>
+            <li><a href="/search/"><strong>全站搜索</strong><span>/search/</span></a></li>
+            <li><a href="/archive/"><strong>知识归档</strong><span>/archive/</span></a></li>
+            <li><a href="/deployments/"><strong>部署记录</strong><span>/deployments/</span></a></li>
+            <li><a href="/pages/admin.html"><strong>管理后台</strong><span>/pages/admin.html</span></a></li>
+          </ul>
+        </section>
+
+        <aside class="stack">
+          <section class="panel">
+            <h2 class="panel-title">运行状态</h2>
+            <div class="health-row">
+              <div>
+                <strong>Live</strong>
+                <p>进程存活检查</p>
+              </div>
+              <span class="badge" data-live-status>CHECKING</span>
+            </div>
+            <div class="health-row">
+              <div>
+                <strong>Ready</strong>
+                <p>依赖可用检查</p>
+              </div>
+              <span class="badge" data-ready-status>CHECKING</span>
+            </div>
+            <div class="actions">
+              <button class="button" type="button" data-check-health>重新检查</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2 class="panel-title">支持</h2>
+            <ul class="link-list">
+              <li><a href="/pages/contact.html"><strong>提交反馈</strong><span>Contact</span></a></li>
+              <li><a href="/pages/account.html"><strong>账号设置</strong><span>Account</span></a></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="page-footer">ByteForge help center</footer>
+  </div>
+  <script src="/scripts/pages.js"></script>
+</body>
+</html>

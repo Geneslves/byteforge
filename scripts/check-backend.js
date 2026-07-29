@@ -50,6 +50,9 @@ if (!existsSync(functionsDir)) {
     if (!middlewareSource.includes('RateLimiter') || !middlewareSource.includes('RateLimitPresets.normal')) {
       errors.push('functions/_middleware.js should apply the normal rate limiter preset');
     }
+    if (!middlewareSource.includes('RateLimitPresets.strict')) {
+      errors.push('functions/_middleware.js should apply the strict preset to authentication endpoints');
+    }
     if (!middlewareSource.includes("url.pathname.startsWith('/api/')")) {
       errors.push('functions/_middleware.js should explicitly scope rate limiting to /api routes');
     }
@@ -133,6 +136,14 @@ if (!existsSync(authDir)) {
   }
 }
 
+for (const filePath of [
+  'functions/api/auth/registration-status.js',
+  'functions/api/health/live.js',
+  'functions/api/health/ready.js',
+]) {
+  if (!existsSync(filePath)) errors.push(`missing API function: ${filePath}`);
+}
+
 // Check auth library
 const authLib = 'functions/lib/auth.js';
 if (!existsSync(authLib)) {
@@ -183,6 +194,23 @@ if (existsSync(serverIndexPath)) {
   const serverIndexSource = readFileSync(serverIndexPath, 'utf8');
   if (!serverIndexSource.includes('createPostgresConfig(process.env')) {
     errors.push('server/index.js should use createPostgresConfig instead of raw DATABASE_URL parsing');
+  }
+  for (const requiredSnippet of [
+    "app.disable('x-powered-by')",
+    "app.set('trust proxy', 1)",
+    'helmet({',
+    "app.get('/api/health/live'",
+    "app.get('/api/health/ready'",
+    "app.use('/api'",
+    "res.status(404)",
+    'route-manifest.json',
+  ]) {
+    if (!serverIndexSource.includes(requiredSnippet)) {
+      errors.push(`server/index.js missing production behavior: ${requiredSnippet}`);
+    }
+  }
+  if (serverIndexSource.includes("res.header('Access-Control-Allow-Origin', '*')")) {
+    errors.push('server/index.js should not use wildcard CORS');
   }
 }
 
@@ -287,7 +315,23 @@ const authFiles = [
   'public/styles/auth.css',
 ];
 
-for (const file of [...adminFiles, ...authFiles]) {
+const standalonePageFiles = [
+  'public/pages/nav.html',
+  'public/pages/profile.html',
+  'public/pages/account.html',
+  'public/pages/notifications.html',
+  'public/pages/help.html',
+  'public/pages/about.html',
+  'public/pages/contact.html',
+  'public/images/ink-horizon.svg',
+  'public/scripts/nav.js',
+  'public/scripts/pages.js',
+  'public/styles/ink-sci-fi.css',
+  'public/styles/nav.css',
+  'public/styles/pages.css',
+];
+
+for (const file of [...adminFiles, ...authFiles, ...standalonePageFiles]) {
   if (!existsSync(file)) {
     errors.push(`missing file: ${file}`);
   }
@@ -298,4 +342,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Backend check passed: 12 API endpoints (3 public + 3 auth + 6 admin), 6 database tables, authentication system, 2 admin dashboards, wrangler.toml configured.');
+console.log('Backend check passed: 16 API endpoints (5 public + 5 auth + 6 admin), health split, hard 404s, security middleware, 6 database tables, and 2 admin dashboards.');

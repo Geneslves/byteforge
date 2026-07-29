@@ -37,6 +37,10 @@ export const onRequestPost = createHandler({
     }
   },
   handler: async ({ request, env, db, body }) => {
+    if (env.REGISTRATION_ENABLED !== 'true') {
+      return apiError('registration_disabled', 403, 'Registration is currently disabled', request, env, METHODS)
+    }
+
     // 检查是否允许注册
     const setting = await db.first(
       "SELECT value FROM settings WHERE key = 'registration_enabled'"

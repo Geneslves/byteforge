@@ -21,6 +21,7 @@ export async function onRequest(context) {
   // Skip rate limiting for health checks
   const skipPaths = [
     '/api/health',
+    '/api/health/live',
     '/api/health/ready',
     '/api/v1/public/health',
   ];
@@ -29,9 +30,32 @@ export async function onRequest(context) {
     return next();
   }
 
+  if (
+    url.pathname === '/api/auth/register' &&
+    request.method === 'POST' &&
+    env.REGISTRATION_ENABLED !== 'true'
+  ) {
+    return apiError(
+      'registration_disabled',
+      403,
+      'Registration is currently disabled',
+      request,
+      env,
+      'POST, OPTIONS'
+    );
+  }
+
   try {
     // Apply rate limiting
-    const rateLimiter = new RateLimiter(env, RateLimitPresets.normal);
+    const strictAuthPaths = new Set([
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/v1/auth/refresh',
+    ]);
+    const preset = strictAuthPaths.has(url.pathname)
+      ? RateLimitPresets.strict
+      : RateLimitPresets.normal;
+    const rateLimiter = new RateLimiter(env, preset);
     const key = RateLimiter.getKey(request);
 
     await rateLimiter.check(key);

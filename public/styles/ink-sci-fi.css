@@ -1,0 +1,1000 @@
+/* ByteForge ink-wash science-fiction theme for standalone pages. */
+
+:root {
+  --ink-night: #050807;
+  --ink-night-soft: #0a100e;
+  --ink-paper: #dce7e3;
+  --ink-paper-soft: #a9bbb5;
+  --ink-muted: #7f928c;
+  --ink-line: rgba(183, 207, 200, 0.18);
+  --ink-line-soft: rgba(183, 207, 200, 0.09);
+  --ink-panel: rgba(9, 16, 14, 0.78);
+  --ink-panel-strong: rgba(11, 20, 17, 0.92);
+  --ink-accent: #8de7df;
+  --ink-accent-rgb: 141, 231, 223;
+  --ink-seal: #d65b4a;
+  --ink-seal-rgb: 214, 91, 74;
+  --ink-sigil: "墨";
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body[data-page],
+body.ink-nav {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 16%, rgba(var(--ink-accent-rgb), 0.1), transparent 26rem),
+    radial-gradient(circle at 12% 82%, rgba(202, 215, 210, 0.07), transparent 30rem),
+    linear-gradient(148deg, #030504 0%, var(--ink-night) 42%, var(--ink-night-soft) 100%);
+  color: var(--ink-paper);
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  isolation: isolate;
+}
+
+body[data-page="profile"] {
+  --ink-accent: #8de7df;
+  --ink-accent-rgb: 141, 231, 223;
+  --ink-sigil: "人";
+}
+
+body[data-page="account"] {
+  --ink-accent: #b5a4ef;
+  --ink-accent-rgb: 181, 164, 239;
+  --ink-sigil: "衡";
+}
+
+body[data-page="notifications"] {
+  --ink-accent: #e3aa76;
+  --ink-accent-rgb: 227, 170, 118;
+  --ink-sigil: "讯";
+}
+
+body[data-page="help"] {
+  --ink-accent: #a8d58d;
+  --ink-accent-rgb: 168, 213, 141;
+  --ink-sigil: "问";
+}
+
+body[data-page="about"] {
+  --ink-accent: #8ebbe6;
+  --ink-accent-rgb: 142, 187, 230;
+  --ink-sigil: "源";
+}
+
+body[data-page="contact"] {
+  --ink-accent: #df8d88;
+  --ink-accent-rgb: 223, 141, 136;
+  --ink-sigil: "信";
+}
+
+body.ink-nav {
+  --ink-accent: #8de7df;
+  --ink-accent-rgb: 141, 231, 223;
+  --bg-primary: #050807;
+  --bg-secondary: #0a100e;
+  --bg-card: rgba(9, 16, 14, 0.82);
+  --text-primary: var(--ink-paper);
+  --text-secondary: var(--ink-paper-soft);
+  --text-muted: var(--ink-muted);
+  --neon-cyan: var(--ink-accent);
+  --neon-purple: #9fa8d9;
+  --neon-pink: var(--ink-seal);
+  --neon-green: #8bc9a2;
+}
+
+body[data-page]::before,
+body.ink-nav::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("/images/ink-horizon.svg") center bottom / cover no-repeat;
+  opacity: 0.7;
+  pointer-events: none;
+  transform: scale(1.02);
+  transform-origin: center bottom;
+  animation: ink-breathe 18s ease-in-out infinite alternate;
+}
+
+body[data-page]::after,
+body.ink-nav::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    repeating-radial-gradient(circle at 18% 24%, rgba(226, 236, 232, 0.025) 0 1px, transparent 1px 5px),
+    linear-gradient(90deg, transparent 0 49.9%, rgba(var(--ink-accent-rgb), 0.028) 50%, transparent 50.1%);
+  background-size: 170px 130px, 100% 100%;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes ink-breathe {
+  from { opacity: 0.58; transform: scale(1.01) translateY(0); }
+  to { opacity: 0.76; transform: scale(1.035) translateY(-0.8%); }
+}
+
+#page-canvas,
+.ink-nav #grid-canvas {
+  opacity: 0.18;
+  filter: grayscale(0.55) saturate(0.75);
+  pointer-events: none;
+}
+
+body[data-page] .scanlines,
+body.ink-nav .scanlines {
+  background:
+    linear-gradient(115deg, transparent 0 48%, rgba(var(--ink-accent-rgb), 0.025) 49%, transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(218, 231, 226, 0.012) 4px 5px);
+  background-size: 110px 110px, auto;
+  animation: none;
+  opacity: 0.55;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 9px 14px;
+  border: 1px solid rgba(var(--ink-accent-rgb), 0.55);
+  background: var(--ink-panel-strong);
+  color: var(--ink-paper);
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+body[data-page] .page-shell {
+  width: min(1200px, calc(100% - 48px));
+  padding: 24px 0 64px;
+}
+
+body[data-page] .topbar {
+  position: relative;
+  margin-bottom: 28px;
+  padding: 12px 0 18px;
+  border-bottom: 0;
+}
+
+body[data-page] .topbar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(var(--ink-accent-rgb), 0.7), var(--ink-line), transparent 82%);
+  box-shadow: 0 0 18px rgba(var(--ink-accent-rgb), 0.16);
+}
+
+body[data-page] .brand-link {
+  gap: 11px;
+  color: var(--ink-paper);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+body[data-page] .brand-link::before {
+  content: "锻";
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(var(--ink-seal-rgb), 0.75);
+  background: rgba(var(--ink-seal-rgb), 0.12);
+  color: #f0998d;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 16px;
+  line-height: 1;
+  box-shadow: inset 0 0 0 2px rgba(var(--ink-seal-rgb), 0.08);
+}
+
+body[data-page] .nav-link {
+  min-height: 36px;
+  border-radius: 2px;
+  color: var(--ink-muted);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+body[data-page] .nav-link:hover,
+body[data-page] .nav-link[aria-current="page"] {
+  border-color: rgba(var(--ink-accent-rgb), 0.32);
+  background: linear-gradient(90deg, rgba(var(--ink-accent-rgb), 0.09), transparent);
+  color: var(--ink-paper);
+  box-shadow: inset 2px 0 0 var(--ink-accent);
+}
+
+body[data-page] .page-hero {
+  position: relative;
+  min-height: 330px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: clamp(30px, 5vw, 58px);
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px 24px 2px 24px;
+  background:
+    linear-gradient(112deg, rgba(7, 14, 12, 0.96) 0%, rgba(9, 18, 15, 0.79) 52%, rgba(var(--ink-accent-rgb), 0.08) 100%),
+    var(--ink-panel);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(232, 242, 238, 0.05);
+}
+
+body[data-page] .page-hero::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: clamp(18px, 7vw, 92px);
+  width: clamp(190px, 25vw, 320px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(var(--ink-accent-rgb), 0.27);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(226, 239, 234, 0.14), transparent 4%),
+    radial-gradient(circle at 48% 46%, rgba(var(--ink-accent-rgb), 0.13), transparent 52%),
+    repeating-radial-gradient(circle, transparent 0 24px, rgba(var(--ink-accent-rgb), 0.06) 25px 26px);
+  box-shadow: 0 0 80px rgba(var(--ink-accent-rgb), 0.1), inset 0 0 55px rgba(0, 0, 0, 0.44);
+  opacity: 0.78;
+  transform: translateY(-50%);
+}
+
+body[data-page] .page-hero::after {
+  content: var(--ink-sigil);
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(var(--ink-seal-rgb), 0.68);
+  background: rgba(var(--ink-seal-rgb), 0.1);
+  color: rgba(239, 143, 131, 0.84);
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 24px;
+  line-height: 1;
+  transform: rotate(-3deg);
+}
+
+body[data-page] .page-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+body[data-page] .eyebrow {
+  color: var(--ink-accent);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+body[data-page] .eyebrow::before {
+  content: "// ";
+  color: rgba(var(--ink-accent-rgb), 0.55);
+}
+
+body[data-page] .page-title {
+  max-width: 760px;
+  color: var(--ink-paper);
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-size: clamp(38px, 6vw, 70px);
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-wrap: balance;
+  text-shadow: 0 0 34px rgba(var(--ink-accent-rgb), 0.1);
+}
+
+body[data-page] .page-title::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 3px;
+  margin-top: 20px;
+  background: linear-gradient(90deg, var(--ink-accent), transparent);
+  box-shadow: 0 0 16px rgba(var(--ink-accent-rgb), 0.38);
+}
+
+body[data-page] .page-summary {
+  max-width: 670px;
+  color: var(--ink-paper-soft);
+  font-size: clamp(16px, 2vw, 18px);
+  line-height: 1.85;
+}
+
+body[data-page] .hero-status {
+  align-self: end;
+  padding: 18px 20px;
+  border-color: rgba(var(--ink-accent-rgb), 0.2);
+  border-radius: 1px 12px 1px 12px;
+  background: rgba(3, 9, 7, 0.72);
+  box-shadow: inset 3px 0 0 rgba(var(--ink-accent-rgb), 0.28);
+  backdrop-filter: blur(20px) saturate(0.8);
+}
+
+body[data-page] .status-row,
+body[data-page] .kv-row {
+  color: var(--ink-muted);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+body[data-page] .status-value,
+body[data-page] .kv-row strong,
+body[data-page] .status-row strong {
+  color: var(--ink-paper);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 11px;
+}
+
+body[data-page] .status-value.ok { color: #95d9aa; }
+body[data-page] .status-value.warn { color: #dfb47d; }
+
+body[data-page] .layout-grid {
+  gap: 20px;
+}
+
+body[data-page] .stack {
+  gap: 16px;
+}
+
+body[data-page] .panel,
+body[data-page] .tile,
+body[data-page] .notice-item {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--ink-line);
+  border-radius: 2px 14px 2px 14px;
+  background:
+    linear-gradient(135deg, rgba(224, 237, 232, 0.028), transparent 36%),
+    var(--ink-panel);
+  box-shadow: inset 0 1px 0 rgba(229, 239, 235, 0.035), 0 18px 50px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(20px) saturate(0.82);
+}
+
+body[data-page] .panel::before,
+body[data-page] .tile::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(42%, 210px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--ink-accent), transparent);
+  opacity: 0.58;
+}
+
+body[data-page] .panel {
+  padding: 24px;
+}
+
+body[data-page] .panel-title {
+  color: var(--ink-paper);
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+body[data-page] .panel-title::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border: 1px solid var(--ink-accent);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px rgba(var(--ink-accent-rgb), 0.32);
+}
+
+body[data-page] .panel-note,
+body[data-page] .empty-note,
+body[data-page] .form-note,
+body[data-page] .profile-meta,
+body[data-page] .notice-copy,
+body[data-page] .preference-row p,
+body[data-page] .health-row p {
+  color: var(--ink-paper-soft);
+}
+
+body[data-page] .tile {
+  min-height: 118px;
+  padding: 20px;
+}
+
+body[data-page] .tile-label {
+  color: var(--ink-muted);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+body[data-page] .tile-value {
+  color: var(--ink-accent);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 21px;
+  text-shadow: 0 0 18px rgba(var(--ink-accent-rgb), 0.2);
+}
+
+body[data-page] .detail-list li,
+body[data-page] .route-list a,
+body[data-page] .link-list a,
+body[data-page] .preference-row,
+body[data-page] .health-row {
+  border-bottom-color: var(--ink-line-soft);
+}
+
+body[data-page] .detail-list li,
+body[data-page] .route-list a,
+body[data-page] .link-list a {
+  color: var(--ink-paper-soft);
+}
+
+body[data-page] .route-list a,
+body[data-page] .link-list a {
+  position: relative;
+  padding-right: 14px;
+  transition: color 160ms ease, padding-left 160ms ease;
+}
+
+body[data-page] .route-list a::after,
+body[data-page] .link-list a::after {
+  content: "↗";
+  color: rgba(var(--ink-accent-rgb), 0.5);
+  font-family: "Cascadia Mono", monospace;
+}
+
+body[data-page] .route-list a:hover,
+body[data-page] .link-list a:hover {
+  padding-left: 7px;
+  color: var(--ink-accent);
+}
+
+body[data-page] .button,
+body[data-page] .action-link {
+  position: relative;
+  min-height: 42px;
+  overflow: hidden;
+  border-color: rgba(var(--ink-accent-rgb), 0.32);
+  border-radius: 1px 9px 1px 9px;
+  background: linear-gradient(110deg, rgba(var(--ink-accent-rgb), 0.12), rgba(var(--ink-accent-rgb), 0.025));
+  color: var(--ink-paper);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+body[data-page] .button:hover,
+body[data-page] .action-link:hover {
+  border-color: var(--ink-accent);
+  box-shadow: 0 0 22px rgba(var(--ink-accent-rgb), 0.16), inset 0 0 20px rgba(var(--ink-accent-rgb), 0.04);
+  transform: translateY(-1px);
+}
+
+body[data-page] .button.secondary,
+body[data-page] .action-link.secondary {
+  border-color: var(--ink-line);
+  background: rgba(221, 234, 229, 0.035);
+}
+
+body[data-page] .button.danger {
+  border-color: rgba(var(--ink-seal-rgb), 0.46);
+  background: rgba(var(--ink-seal-rgb), 0.08);
+}
+
+body[data-page] .avatar {
+  border-color: rgba(var(--ink-accent-rgb), 0.42);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(231, 242, 237, 0.16), transparent 8%),
+    linear-gradient(145deg, rgba(var(--ink-accent-rgb), 0.18), rgba(4, 10, 8, 0.72));
+  color: var(--ink-paper);
+  font-family: "Songti SC", "STSong", serif;
+  box-shadow: 0 0 35px rgba(var(--ink-accent-rgb), 0.12);
+}
+
+body[data-page] .profile-name {
+  color: var(--ink-paper);
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-weight: 600;
+}
+
+body[data-page] .badge,
+body[data-page] .code-chip {
+  border-color: rgba(var(--ink-accent-rgb), 0.28);
+  border-radius: 2px 8px 2px 8px;
+  background: rgba(var(--ink-accent-rgb), 0.06);
+  color: var(--ink-accent);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+}
+
+body[data-page] .switch span {
+  border-color: var(--ink-line);
+  background: rgba(218, 232, 226, 0.05);
+}
+
+body[data-page] .switch input:focus-visible + span {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 3px;
+}
+
+body[data-page] .switch input:checked + span {
+  border-color: rgba(var(--ink-accent-rgb), 0.45);
+  background: rgba(var(--ink-accent-rgb), 0.12);
+}
+
+body[data-page] .switch input:checked + span::before {
+  background: var(--ink-accent);
+  box-shadow: 0 0 12px rgba(var(--ink-accent-rgb), 0.5);
+}
+
+body[data-page] .notice-item {
+  padding: 0;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+body[data-page] .notice-action {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 17px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+body[data-page] .notice-item:hover,
+body[data-page] .notice-item:focus-within {
+  border-color: rgba(var(--ink-accent-rgb), 0.38);
+  background: rgba(var(--ink-accent-rgb), 0.04);
+}
+
+body[data-page] .notice-dot {
+  background: var(--ink-accent);
+  box-shadow: 0 0 14px rgba(var(--ink-accent-rgb), 0.52);
+}
+
+body[data-page] .notice-copy {
+  display: block;
+}
+
+body[data-page] .notice-time {
+  color: var(--ink-muted);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 11px;
+}
+
+body[data-page] .field label {
+  color: var(--ink-paper-soft);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+body[data-page] .field input,
+body[data-page] .field textarea,
+body[data-page] .field select {
+  border-color: var(--ink-line);
+  border-radius: 1px 10px 1px 10px;
+  background: rgba(2, 7, 5, 0.58);
+  color: var(--ink-paper);
+}
+
+body[data-page] .field input:focus,
+body[data-page] .field textarea:focus,
+body[data-page] .field select:focus {
+  border-color: var(--ink-accent);
+  box-shadow: 0 0 0 3px rgba(var(--ink-accent-rgb), 0.09), inset 3px 0 0 rgba(var(--ink-accent-rgb), 0.18);
+}
+
+body[data-page] .field ::placeholder {
+  color: #61726d;
+}
+
+body[data-page] .form-status.ok { color: #95d9aa; }
+body[data-page] .form-status.error { color: #e18b80; }
+
+body[data-page] .page-footer {
+  position: relative;
+  border-top-color: var(--ink-line-soft);
+  color: var(--ink-muted);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body[data-page] .page-footer::after {
+  content: "BYTEFORGE / INK SIGNAL";
+  float: right;
+  color: rgba(var(--ink-accent-rgb), 0.55);
+}
+
+body[data-page] :is(a, button, input, select, textarea):focus-visible,
+body.ink-nav :is(a, button):focus-visible {
+  outline: 2px solid var(--ink-accent);
+  outline-offset: 4px;
+}
+
+body[data-compact="true"] .page-hero {
+  min-height: 260px;
+  padding-block: 30px;
+}
+
+body[data-compact="true"] .panel {
+  padding: 18px;
+}
+
+body[data-compact="true"] .stack,
+body[data-compact="true"] .layout-grid {
+  gap: 12px;
+}
+
+/* Navigation center overrides */
+body.ink-nav .nav-container {
+  width: min(1400px, calc(100% - 48px));
+  max-width: none;
+  padding: 52px 0 64px;
+}
+
+body.ink-nav .nav-header {
+  position: relative;
+  margin-bottom: 48px;
+  padding: clamp(28px, 5vw, 58px);
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  border-radius: 2px 28px 2px 28px;
+  background: linear-gradient(115deg, rgba(6, 13, 11, 0.94), rgba(8, 17, 14, 0.74));
+  text-align: left;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+}
+
+body.ink-nav .nav-header::before {
+  content: "航";
+  position: absolute;
+  top: 28px;
+  right: 32px;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(var(--ink-seal-rgb), 0.72);
+  background: rgba(var(--ink-seal-rgb), 0.1);
+  color: #eb8d80;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 27px;
+  transform: rotate(3deg);
+}
+
+body.ink-nav .nav-header::after {
+  content: "";
+  position: absolute;
+  right: clamp(70px, 11vw, 168px);
+  bottom: -85px;
+  width: 290px;
+  height: 290px;
+  border: 1px solid rgba(var(--ink-accent-rgb), 0.2);
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 32px, rgba(var(--ink-accent-rgb), 0.045) 33px 34px);
+  box-shadow: 0 0 70px rgba(var(--ink-accent-rgb), 0.08);
+}
+
+body.ink-nav .header-line {
+  position: relative;
+  z-index: 1;
+  justify-content: flex-start;
+}
+
+body.ink-nav .header-bracket {
+  color: var(--ink-accent);
+  font-family: "Cascadia Mono", monospace;
+  font-weight: 400;
+  animation: none;
+}
+
+body.ink-nav .header-title {
+  max-width: 780px;
+  background: linear-gradient(90deg, var(--ink-paper), var(--ink-accent));
+  background-clip: text;
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-size: clamp(30px, 5vw, 54px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  -webkit-background-clip: text;
+}
+
+body.ink-nav .header-subtitle {
+  position: relative;
+  z-index: 1;
+  color: var(--ink-paper-soft);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  letter-spacing: 0.13em;
+}
+
+body.ink-nav .status-bar {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(var(--ink-accent-rgb), 0.22);
+  border-radius: 2px 12px 2px 12px;
+  background: rgba(var(--ink-accent-rgb), 0.055);
+}
+
+body.ink-nav .status-item {
+  color: #95d9aa;
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+}
+
+body.ink-nav .nav-grid {
+  gap: 44px;
+}
+
+body.ink-nav .nav-section {
+  position: relative;
+  padding-left: 22px;
+}
+
+body.ink-nav .nav-section::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(var(--ink-accent-rgb), 0.62), transparent 82%);
+}
+
+body.ink-nav .section-title {
+  color: var(--ink-paper);
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+  font-size: 14px;
+  letter-spacing: 0.15em;
+}
+
+body.ink-nav .section-icon {
+  color: var(--ink-accent);
+}
+
+body.ink-nav .cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+body.ink-nav .nav-card {
+  min-height: 190px;
+  padding: 27px 24px;
+  border-color: var(--ink-line);
+  border-radius: 2px 18px 2px 18px;
+  background:
+    linear-gradient(135deg, rgba(226, 239, 234, 0.035), transparent 38%),
+    var(--ink-panel);
+  box-shadow: inset 0 1px 0 rgba(232, 242, 238, 0.035), 0 16px 42px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(18px) saturate(0.82);
+}
+
+body.ink-nav .nav-card::before {
+  top: 0;
+  right: auto;
+  width: 42%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ink-accent), transparent);
+  opacity: 0.48;
+}
+
+body.ink-nav .nav-card::after {
+  background: radial-gradient(circle, rgba(var(--ink-accent-rgb), 0.11), transparent 68%);
+}
+
+body.ink-nav .nav-card:hover {
+  border-color: rgba(var(--ink-accent-rgb), 0.48);
+  box-shadow: 0 22px 58px rgba(0, 0, 0, 0.24), 0 0 24px rgba(var(--ink-accent-rgb), 0.08);
+  transform: translateY(-3px);
+}
+
+body.ink-nav .card-icon {
+  color: var(--ink-accent);
+  font-family: "Songti SC", "STSong", serif;
+  font-size: 38px;
+  filter: grayscale(1) contrast(0.8);
+  opacity: 0.88;
+}
+
+body.ink-nav .nav-card:hover .card-icon {
+  filter: grayscale(0.4) drop-shadow(0 0 12px rgba(var(--ink-accent-rgb), 0.22));
+  transform: scale(1.04);
+}
+
+body.ink-nav .card-title {
+  color: var(--ink-paper);
+  font-family: "Songti SC", "STSong", "SimSun", serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+body.ink-nav .card-desc {
+  color: var(--ink-paper-soft);
+}
+
+body.ink-nav .card-glow {
+  background: linear-gradient(90deg, transparent, var(--ink-accent), transparent);
+}
+
+body.ink-nav .nav-footer {
+  border-top-color: var(--ink-line);
+}
+
+body.ink-nav .stat-label,
+body.ink-nav .stat-value,
+body.ink-nav .back-home {
+  font-family: "Cascadia Mono", "Fira Code", monospace;
+}
+
+body.ink-nav .stat-value {
+  color: var(--ink-accent);
+}
+
+body.ink-nav .back-home {
+  border-color: rgba(var(--ink-accent-rgb), 0.3);
+  border-radius: 1px 10px 1px 10px;
+  background: rgba(var(--ink-accent-rgb), 0.06);
+  color: var(--ink-accent);
+}
+
+body.ink-nav .back-home:hover {
+  border-color: var(--ink-accent);
+  background: rgba(var(--ink-accent-rgb), 0.1);
+  box-shadow: 0 0 22px rgba(var(--ink-accent-rgb), 0.12);
+}
+
+@media (max-width: 900px) {
+  body[data-page] .page-hero {
+    min-height: auto;
+  }
+
+  body[data-page] .page-hero::before {
+    right: -62px;
+    opacity: 0.42;
+  }
+
+  body[data-page] .hero-status {
+    max-width: 540px;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-page] .page-shell,
+  body.ink-nav .nav-container {
+    width: min(100% - 28px, 1200px);
+  }
+
+  body[data-page] .page-hero {
+    padding: 26px 20px;
+    border-radius: 2px 18px 2px 18px;
+  }
+
+  body[data-page] .page-hero::after {
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    font-size: 19px;
+  }
+
+  body[data-page] .page-title {
+    max-width: calc(100% - 42px);
+    font-size: clamp(34px, 12vw, 48px);
+  }
+
+  body[data-page] .topnav {
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+  body[data-page] .nav-link {
+    flex: 0 0 auto;
+  }
+
+  body[data-page] .notice-action {
+    grid-template-columns: 12px minmax(0, 1fr);
+  }
+
+  body[data-page] .notice-time {
+    grid-column: 2;
+  }
+
+  body[data-page] .page-footer::after {
+    display: block;
+    float: none;
+    margin-top: 8px;
+  }
+
+  body.ink-nav .nav-container {
+    padding-top: 24px;
+  }
+
+  body.ink-nav .nav-header {
+    padding: 28px 20px;
+  }
+
+  body.ink-nav .nav-header::before {
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  body.ink-nav .header-line {
+    gap: 8px;
+    padding-right: 34px;
+  }
+
+  body.ink-nav .header-bracket {
+    font-size: 20px;
+  }
+
+  body.ink-nav .header-title {
+    font-size: clamp(24px, 8vw, 34px);
+    letter-spacing: 0.035em;
+  }
+
+  body.ink-nav .status-bar {
+    gap: 16px;
+  }
+
+  body.ink-nav .nav-section {
+    padding-left: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  body[data-page]::before,
+  body.ink-nav::before,
+  body.ink-nav .nav-section,
+  body.ink-nav .status-dot,
+  body.ink-nav .header-bracket {
+    animation: none !important;
+  }
+
+  body[data-page] *,
+  body[data-page] *::before,
+  body[data-page] *::after,
+  body.ink-nav *,
+  body.ink-nav *::before,
+  body.ink-nav *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body[data-reduced-motion="true"]::before,
+body[data-reduced-motion="true"] *,
+body[data-reduced-motion="true"] *::before,
+body[data-reduced-motion="true"] *::after {
+  animation: none !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}

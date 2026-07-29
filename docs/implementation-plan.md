@@ -68,7 +68,7 @@
 - 已新增 `check:content`，检查用户可见内容乱码、内容集合字段、路由定义、搜索索引和重复 id。
 - 已新增 `check:static`、`check:source` 和官方 registry `audit` 脚本，统一 `pnpm run check` 会覆盖结构、内容、构建、路由 head、静态产物和源码质量。
 - 已新增 `check:visual`，使用本机 Chrome/Edge 对构建后的 `/`、`/logs/`、`/deployments/`、`/search/`、`/academic/` 做桌面和移动视口的浏览器级回归检查，覆盖 CSS 生效、内容面板、内容元信息、空白截图、横向溢出和控制台/资源错误。
-- 通过 `pnpm.overrides` 将 Vite 传递依赖 `esbuild` 固定到安全版本，依赖审计当前无已知漏洞。
+- 通过 `pnpm-workspace.yaml` 的 `overrides` 将 Vite 传递依赖 `esbuild` 固定到安全版本，依赖审计当前无已知漏洞。
 
 ## 阶段 3：搜索与归档
 

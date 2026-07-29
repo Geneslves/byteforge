@@ -1,71 +1,61 @@
-# ByteForge - Node.js/Express Docker Image
-# Multi-stage build for optimized production image
+ARG NODE_VERSION=22.23.1
+ARG ALPINE_VERSION=3.23
 
-# Stage 1: Build stage
-FROM node:20-alpine AS builder
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS toolchain
+
+ENV PNPM_HOME=/pnpm
+ENV PATH="${PNPM_HOME}:${PATH}"
+
+RUN corepack enable \
+  && corepack prepare pnpm@10.33.0 --activate \
+  && test "$(pnpm --version)" = "10.33.0"
 
 WORKDIR /app
 
-# Install build dependencies
+FROM toolchain AS builder
+
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Install all dependencies (including devDependencies for build)
-ENV NODE_ENV=development
-RUN pnpm install --frozen-lockfile --ignore-scripts && pnpm approve-builds esbuild sharp workerd && pnpm install --frozen-lockfile
-
-# Copy source code
 COPY . .
-
-# Build the application
 RUN pnpm run build
 
-# Stage 2: Production stage
-FROM node:20-alpine
+FROM toolchain AS production-dependencies
 
-WORKDIR /app
-
-# Install production dependencies only
-RUN npm install -g pnpm
-
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install production dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/server ./server
-COPY --from=builder /app/functions ./functions
-COPY --from=builder /app/schema ./schema
-COPY --from=builder /app/scripts ./scripts
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS runtime
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+ARG VCS_REF=unknown
+ARG BUILD_DATE=unknown
+ARG REPOSITORY_URL=https://github.com/Geneslves/byteforge
 
-# Change ownership
-RUN chown -R nodejs:nodejs /app
+LABEL org.opencontainers.image.title="ByteForge" \
+  org.opencontainers.image.source="${REPOSITORY_URL}" \
+  org.opencontainers.image.revision="${VCS_REF}" \
+  org.opencontainers.image.created="${BUILD_DATE}"
 
-# Switch to non-root user
-USER nodejs
-
-# Expose port
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-
-# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Start the server
+WORKDIR /app
+
+COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
+COPY --from=production-dependencies --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=node:node /app/server ./server
+COPY --from=builder --chown=node:node /app/functions ./functions
+COPY --from=builder --chown=node:node /app/schema ./schema
+COPY --from=builder --chown=node:node /app/scripts ./scripts
+
+USER node
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:3000/api/health/ready', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+
 CMD ["node", "server/index.js"]

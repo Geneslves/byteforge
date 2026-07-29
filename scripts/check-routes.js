@@ -1,13 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { documentRoutes, planetRoutes, routeData } from '../src/data/index.js';
+import { SITE_URL, siteUrl } from '../site.config.js';
 
 const errors = [];
 const warnings = [];
 
 const normalizeRoutePath = (value) => {
   if (!value) return null;
-  const url = new URL(value, 'https://byteforge.dev');
+  const url = new URL(value, SITE_URL);
   const pathname = url.pathname.replace(/\/$/, '') || '/';
   return pathname;
 };
@@ -29,7 +30,18 @@ const escapeHtml = (value) =>
 
 const routes = new Set(Object.keys(routeData));
 const contentRoutes = new Set([...routes, ...Object.keys(documentRoutes)]);
-const publicStaticRoutes = new Set(['/pages/login.html', '/pages/nav.html', '/pages/admin.html', '/pages/admin-v2.html']);
+const publicStaticRoutes = new Set([
+  '/pages/login.html',
+  '/pages/nav.html',
+  '/pages/admin.html',
+  '/pages/admin-v2.html',
+  '/pages/profile.html',
+  '/pages/account.html',
+  '/pages/notifications.html',
+  '/pages/help.html',
+  '/pages/about.html',
+  '/pages/contact.html',
+]);
 const routeEntries = Object.entries(routeData);
 const planetConfigs = Object.entries(planetRoutes).map(([label, config]) =>
   normalizePlanetConfig(label, config)
@@ -104,10 +116,10 @@ if (!routingModule.includes("link.addEventListener('click', (event) => {")) {
   errors.push('CLI nav links must be intercepted by SPA routing instead of forcing a full page reload');
 }
 
-const sitemap = existsSync('public/sitemap.xml') ? readFileSync('public/sitemap.xml', 'utf8') : '';
+const sitemap = existsSync('dist/sitemap.xml') ? readFileSync('dist/sitemap.xml', 'utf8') : '';
 for (const routePath of routes) {
   const publicPath = routePath === '/' ? '/' : `${routePath}/`;
-  if (!sitemap.includes(`https://byteforge.dev${publicPath}`)) {
+  if (!sitemap.includes(siteUrl(publicPath))) {
     errors.push(`sitemap is missing route: ${publicPath}`);
   }
 }
@@ -123,7 +135,7 @@ if (existsSync('dist/index.html')) {
 
     const routeHtml = readFileSync(staticEntry, 'utf8');
     const publicPath = `${routePath}/`;
-    const canonicalUrl = `https://byteforge.dev${publicPath}`;
+    const canonicalUrl = siteUrl(publicPath);
     const routeTitle = escapeHtml(`${config.title} - ByteForge`);
     const routeDescription = escapeHtml(config.summary);
 

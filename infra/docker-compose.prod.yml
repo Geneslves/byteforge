@@ -1,0 +1,74 @@
+name: byteforge-${DEPLOY_ENV:?DEPLOY_ENV is required}
+
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:15.18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - type: bind
+        source: ${BYTEFORGE_BACKUP_ROOT:?BYTEFORGE_BACKUP_ROOT is required}
+        target: /backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    logging: *default-logging
+
+  app:
+    image: ${BYTEFORGE_IMAGE:?BYTEFORGE_IMAGE is required}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ${BYTEFORGE_ENV_FILE:?BYTEFORGE_ENV_FILE is required}
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${BYTEFORGE_HTTP_PORT:?BYTEFORGE_HTTP_PORT is required}:3000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/api/health/ready', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend
+    logging: *default-logging
+
+networks:
+  backend:
+    name: byteforge-${DEPLOY_ENV}-backend
+
+volumes:
+  postgres_data:
+    name: byteforge-${DEPLOY_ENV}-postgres-data

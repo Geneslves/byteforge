@@ -93,7 +93,7 @@ export const documentRoutes = Object.fromEntries(contentDocuments.map((document)
 
 export const rssItems = contentDocuments.map((document) => ({
   title: document.title,
-  url: `https://byteforge.dev${document.url}`,
+  url: document.url,
   description: document.summary,
   pubDate: new Date(`${document.publishedAt}T00:00:00Z`).toUTCString(),
   guid: `byteforge:${document.id}`,

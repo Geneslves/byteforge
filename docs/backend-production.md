@@ -37,8 +37,10 @@ Required non-secret variables:
 
 | Name | Purpose | Example |
 | --- | --- | --- |
-| `SITE_ORIGIN` | Canonical production origin | `https://byteforge.dev` |
-| `ALLOWED_ORIGINS` | Comma-separated CORS allowlist | `https://byteforge.dev` |
+| `SITE_URL` | Canonical build-time site URL | `https://www.thebyte.tech` |
+| `SITE_ORIGIN` | Canonical production origin | `https://www.thebyte.tech` |
+| `ALLOWED_ORIGINS` | Comma-separated CORS allowlist | `https://www.thebyte.tech` |
+| `REGISTRATION_ENABLED` | Explicit public registration switch | `false` |
 
 Required secret:
 
@@ -56,8 +58,10 @@ Local `.dev.vars`:
 
 ```text
 JWT_SECRET=replace-with-a-long-random-local-secret
+NODE_ENV=development
 SITE_ORIGIN=http://localhost:8788
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8788
+REGISTRATION_ENABLED=true
 ```
 
 ## Database
@@ -107,7 +111,9 @@ Public endpoints:
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/health` | Health check |
+| `GET` | `/api/health/live` | Node/Worker process liveness |
+| `GET` | `/api/health/ready` | Readiness including `SELECT 1` |
+| `GET` | `/api/health` | Backward-compatible liveness alias |
 | `POST` | `/api/feedback` | Store public feedback |
 | `POST` | `/api/content-events` | Store content analytics events |
 
@@ -116,13 +122,15 @@ Auth endpoints:
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/auth/register` | Create user and return token |
+| `GET` | `/api/auth/registration-status` | Read the public registration switch |
 | `POST` | `/api/auth/login` | Login and return token |
 | `GET` | `/api/auth/me` | Return current user |
 | `POST` | `/api/v1/auth/refresh` | Exchange refresh token for a new access token |
 
 Rate limiting is implemented in `functions/_middleware.js` for `/api/*`
-routes. `/api/health` is intentionally skipped; use an authenticated endpoint
-such as `/api/auth/me` when manually verifying 15-minute/100-request limits.
+routes and in Express for sensitive authentication endpoints. Login,
+registration, and refresh share the strict 10-attempt/15-minute preset.
+Health endpoints are intentionally skipped.
 
 Admin endpoints:
 
@@ -131,7 +139,7 @@ Admin endpoints:
 | `GET` | `/api/admin/analytics` | Aggregate dashboard stats |
 | `GET` | `/api/admin/content-stats` | Per-document analytics |
 | `GET` | `/api/admin/feedback` | Feedback list |
-| `DELETE` | `/api/admin/feedback/delete/:id` | Delete feedback |
+| `DELETE` | `/api/admin/feedback/:id` | Delete feedback |
 | `GET` | `/api/admin/settings` | Read settings |
 | `PUT` | `/api/admin/settings` | Update settings |
 | `GET` | `/api/admin/users` | List users |
@@ -144,6 +152,26 @@ code. Add origins through `ALLOWED_ORIGINS`.
 
 500 responses return stable public messages and log structured JSON internally.
 Do not return raw `error.message` to clients.
+
+The Express runtime disables `X-Powered-By`, trusts exactly one reverse proxy,
+uses Helmet for baseline headers and HSTS, and emits CSP in Report-Only mode.
+Review CSP reports before changing it to an enforced policy.
+
+## Production Perimeter
+
+Repository defaults cannot apply provider control-plane settings. Before
+publishing:
+
+1. Set Cloudflare SSL/TLS mode to **Full (strict)** and verify the origin
+   certificate.
+2. Restrict the DigitalOcean firewall to inbound HTTP/HTTPS (`80`, `443`);
+   permit SSH (`22`) only from trusted administrator IP ranges.
+3. Rotate `JWT_SECRET`, PostgreSQL credentials, and any credential that may
+   have used an example/default value. Redeploy after rotation.
+4. Keep `REGISTRATION_ENABLED=false` until authentication and abuse controls
+   have been reviewed.
+5. Configure Caddy, Docker, and external monitors to use
+   `/api/health/ready`; use `/api/health/live` only for process diagnostics.
 
 ## Verification
 
@@ -179,11 +207,12 @@ Initial launch:
 2. Put `database_id` into `wrangler.toml`.
 3. Apply `schema/d1.sql`.
 4. Set `JWT_SECRET`.
-5. Set `SITE_ORIGIN` and `ALLOWED_ORIGINS`.
+5. Set `SITE_ORIGIN`, `ALLOWED_ORIGINS`, and `REGISTRATION_ENABLED=false`.
 6. Build with `pnpm build`.
 7. Deploy to Cloudflare Pages.
-8. Register the first user; this account becomes admin.
-9. Disable public registration in admin settings if open signup is not desired.
+8. Provision the initial admin during a controlled maintenance window by
+   temporarily setting `REGISTRATION_ENABLED=true`.
+9. Restore `REGISTRATION_ENABLED=false` immediately after provisioning.
 
 Routine operations:
 

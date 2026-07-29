@@ -1,5 +1,12 @@
 // ByteForge Navigation Center - Interactive Grid Background
 
+const NAV_REDUCED_MOTION_KEY = 'byteforge:reduced-motion';
+
+function navMotionIsReduced() {
+  return localStorage.getItem(NAV_REDUCED_MOTION_KEY) === '1' ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 // ===== 粒子系统 =====
 class Particle {
   constructor(canvas) {
@@ -51,6 +58,7 @@ class GridBackground {
     this.gridSize = 40;
     this.offset = { x: 0, y: 0 };
     this.mouse = { x: null, y: null };
+    this.animationFrameId = null;
 
     // 创建粒子
     this.particles = [];
@@ -82,6 +90,7 @@ class GridBackground {
   }
 
   draw() {
+    this.animationFrameId = null;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // 绘制网格线
@@ -137,7 +146,9 @@ class GridBackground {
     // 绘制粒子连线
     this.drawParticleConnections();
 
-    requestAnimationFrame(() => this.draw());
+    if (!document.hidden && !navMotionIsReduced()) {
+      this.animationFrameId = requestAnimationFrame(() => this.draw());
+    }
   }
 
   drawParticleConnections() {
@@ -186,14 +197,15 @@ function checkPermissions() {
   }
 
   // 更新登录卡片
-  const loginCard = document.querySelector('a[href="/login.html"]');
+  const loginCard = document.querySelector('a[href="/pages/login.html"]');
   if (loginCard && isLoggedIn) {
     loginCard.querySelector('.card-title').textContent = 'Account';
     loginCard.querySelector('.card-desc').textContent = '账号管理';
+    loginCard.href = '/pages/account.html';
   }
 
   // 处理管理后台卡片
-  const adminCard = document.querySelector('a[href="/admin-v2.html"]');
+  const adminCard = document.querySelector('a[href="/pages/admin.html"]');
   if (adminCard) {
     if (!isAdmin) {
       // 非管理员：禁用卡片
@@ -201,6 +213,8 @@ function checkPermissions() {
       adminCard.style.pointerEvents = 'none';
       adminCard.style.filter = 'grayscale(1)';
       adminCard.title = '仅限管理员访问';
+      adminCard.setAttribute('aria-disabled', 'true');
+      adminCard.tabIndex = -1;
 
       // 添加锁定图标
       const cardTitle = adminCard.querySelector('.card-title');
@@ -218,6 +232,8 @@ function checkPermissions() {
       adminCard.style.opacity = '1';
       adminCard.style.pointerEvents = 'auto';
       adminCard.style.filter = 'none';
+      adminCard.removeAttribute('aria-disabled');
+      adminCard.removeAttribute('tabindex');
     }
   }
 
@@ -226,7 +242,7 @@ function checkPermissions() {
   if (systemSection) {
     const titleEl = systemSection.querySelector('.section-title');
     if (isAdmin) {
-      titleEl.innerHTML = '<span class="section-icon">▸</span>SYSTEM ADMIN <span style="color: #10b981; font-size: 12px; margin-left: 8px;">● AUTHORIZED</span>';
+      titleEl.innerHTML = '<span class="section-icon">▸</span>USER WORKSPACE <span style="color: #10b981; font-size: 12px; margin-left: 8px;">● AUTHORIZED</span>';
     }
   }
 
@@ -249,6 +265,14 @@ function updateClock() {
 // ===== 卡片入场动画 =====
 function initCardAnimations() {
   const cards = document.querySelectorAll('.nav-card');
+
+  if (navMotionIsReduced()) {
+    cards.forEach((card) => {
+      card.style.opacity = '1';
+      card.style.transform = 'none';
+    });
+    return;
+  }
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry, index) => {
@@ -287,10 +311,15 @@ function initKeyboardShortcuts() {
 
 // ===== 初始化 =====
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.dataset.reducedMotion = navMotionIsReduced() ? 'true' : 'false';
+
   // 初始化网格背景
   const canvas = document.getElementById('grid-canvas');
   const grid = new GridBackground(canvas);
   grid.draw();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && grid.animationFrameId === null) grid.draw();
+  });
 
   // 更新时钟
   updateClock();

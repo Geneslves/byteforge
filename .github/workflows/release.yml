@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image.outputs.repository }}@${{ steps.build.outputs.digest }}
+      release_id: ${{ github.event.workflow_run.head_sha }}
+
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Normalize GHCR repository
+        id: image
+        shell: bash
+        run: |
+          repository=$(printf 'ghcr.io/%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          echo "repository=$repository" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push tested image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.repository }}:sha-${{ github.event.workflow_run.head_sha }}
+            ${{ steps.image.outputs.repository }}:candidate
+          build-args: |
+            VCS_REF=${{ github.event.workflow_run.head_sha }}
+            BUILD_DATE=${{ github.event.workflow_run.updated_at }}
+            REPOSITORY_URL=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy_staging:
+    name: Deploy and smoke staging
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: deploy-staging
+    environment:
+      name: staging
+      url: https://staging.thebyte.tech
+
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.publish.outputs.release_id }}
+
+      - name: Deploy immutable image to staging
+        shell: bash
+        env:
+          DEPLOY_ENV: staging
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          BYTEFORGE_IMAGE: ${{ needs.publish.outputs.image }}
+          RELEASE_ID: ${{ needs.publish.outputs.release_id }}
+        run: bash infra/scripts/ci-deploy.sh
+
+      - name: Public staging smoke or rollback
+        shell: bash
+        env:
+          DEPLOY_ENV: staging
+          DEPLOY_URL: https://staging.thebyte.tech
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: bash infra/scripts/ci-smoke-or-rollback.sh
+
+  deploy_production:
+    name: Approve, deploy, and smoke production
+    needs: [publish, deploy_staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: deploy-production
+    environment:
+      name: production
+      url: https://www.thebyte.tech
+
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.publish.outputs.release_id }}
+
+      - name: Deploy staging-tested image to production
+        shell: bash
+        env:
+          DEPLOY_ENV: production
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          BYTEFORGE_IMAGE: ${{ needs.publish.outputs.image }}
+          RELEASE_ID: ${{ needs.publish.outputs.release_id }}
+        run: bash infra/scripts/ci-deploy.sh
+
+      - name: Public production smoke or rollback
+        shell: bash
+        env:
+          DEPLOY_ENV: production
+          DEPLOY_URL: https://www.thebyte.tech
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: bash infra/scripts/ci-smoke-or-rollback.sh
