@@ -133,6 +133,21 @@ expectIncludes(
 );
 expectIncludes(
   ambientCanvasModule,
+  'MAX_SCENE_DELTA_SECONDS = 0.05',
+  'ambient motion should cap elapsed time after dropped or hidden frames'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'hasRays: index % 5 === 0',
+  'only a sparse subset of ambient stars should render cross rays'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'driftDuration:',
+  'ambient stars should drift instead of flashing at fixed positions'
+);
+expectIncludes(
+  ambientCanvasModule,
   'particle.size * 2',
   'inbound particles should render a visible glow trail'
 );
@@ -210,8 +225,40 @@ expectIncludes(
 );
 expectIncludes(
   styleSheet,
+  '.orbit-layer:has(.planet:hover) .planet',
+  'the complete planet system should pause together while one node is hovered'
+);
+expectIncludes(
+  styleSheet,
   'animation-play-state: paused;',
-  'planet orbits should pause immediately while hovered or focused'
+  'planet orbits should pause synchronously while hovered or focused'
+);
+expectIncludes(
+  styleSheet,
+  'animation: orbit-point 48s linear infinite;',
+  'planet orbits should share one angular velocity to preserve separation'
+);
+expectIncludes(
+  styleSheet,
+  'animation-duration: 48s;',
+  'future planets should share the same angular velocity as ready planets'
+);
+expectNotIncludes(
+  styleSheet,
+  'translateX(calc(var(--r)',
+  'future planets should not use eccentric paths that cross neighboring orbits'
+);
+
+const themeSheet = readFileSync('src/styles/themes.css', 'utf8');
+expectIncludes(
+  themeSheet,
+  '.hub-v2[data-theme="light"] .planet::before',
+  'light-theme planet glow should be limited to the visible planet core'
+);
+expectNotIncludes(
+  themeSheet,
+  '.hub-v2[data-theme="light"] .planet,\nhtml[data-theme-init="light"] .hub-v2 .planet {',
+  'light-theme glow should not cover the full planet hit target'
 );
 expectIncludes(
   styleSheet,

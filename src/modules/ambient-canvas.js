@@ -20,6 +20,11 @@ const createScene = (hub) => ({
     duration: customNumber(node, '--t', 5.5),
     delay: customNumber(node, '--d'),
     depth: 0.35 + (index % 7) * 0.08,
+    driftRadiusX: 5 + (index % 6) * 1.7,
+    driftRadiusY: 3 + (index % 5) * 1.35,
+    driftDuration: 24 + (index % 9) * 2.9,
+    driftPhase: modulo(index * 0.61803398875, 1) * TAU,
+    hasRays: index % 5 === 0,
   })),
   streams: [...hub.querySelectorAll('.stream-line')].map((node, index) => ({
     x: customNumber(node, '--x') / 100,
@@ -54,6 +59,7 @@ const createScene = (hub) => ({
 });
 
 const STAR_BASE_PULSE = 0.24;
+const MAX_SCENE_DELTA_SECONDS = 0.05;
 const PARTICLE_CYCLE_DURATION = 8.6;
 const PARTICLE_ACTIVE_WINDOW = 0.105;
 
@@ -66,27 +72,39 @@ const starPulse = (phase) => {
 };
 
 const drawStar = (context, star, width, height, time, pointer, lightTheme) => {
-  const phase = modulo(time + star.delay, star.duration) / star.duration;
+  const twinkleDuration = star.duration * (lightTheme ? 1 : 0.72);
+  const phase = modulo(time + star.delay, twinkleDuration) / twinkleDuration;
   const pulse = starPulse(phase);
-  const alpha = star.opacity * pulse * (lightTheme ? 0.66 : 1);
+  const alpha = star.opacity * pulse * (lightTheme ? 0.34 : 1);
   const twinkle = clamp((pulse - STAR_BASE_PULSE) / (1 - STAR_BASE_PULSE), 0, 1);
 
-  const x = star.x * width + pointer.x * star.depth * 10;
-  const y = star.y * height + pointer.y * star.depth * 7;
-  const ray = star.ray * (0.62 + twinkle * 0.8);
+  const driftPhase = time / star.driftDuration * TAU + star.driftPhase;
+  const x = star.x * width + Math.sin(driftPhase) * star.driftRadiusX + pointer.x * star.depth * 10;
+  const y = star.y * height + Math.cos(driftPhase) * star.driftRadiusY + pointer.y * star.depth * 7;
+  const rayStrength = (twinkle - 0.58) / 0.42;
+  const ray = Math.min(star.ray, 15) * (0.62 + rayStrength * 0.38);
   const cos = Math.cos(star.rotation);
   const sin = Math.sin(star.rotation);
   const halfRay = ray / 2;
+  const crossRay = halfRay * 0.34;
 
-  context.strokeStyle = star.color;
-  context.lineWidth = 0.7;
-  context.globalAlpha = alpha * (0.18 + twinkle * 0.58);
+  if (star.hasRays && twinkle >= 0.58) {
+    context.strokeStyle = star.color;
+    context.lineWidth = 0.7;
+    context.globalAlpha = alpha * rayStrength * (lightTheme ? 0.16 : 0.34);
+    context.beginPath();
+    context.moveTo(x - cos * halfRay, y - sin * halfRay);
+    context.lineTo(x + cos * halfRay, y + sin * halfRay);
+    context.moveTo(x + sin * crossRay, y - cos * crossRay);
+    context.lineTo(x - sin * crossRay, y + cos * crossRay);
+    context.stroke();
+  }
+
+  context.fillStyle = star.color;
+  context.globalAlpha = alpha * (lightTheme ? 0.08 : 0.18);
   context.beginPath();
-  context.moveTo(x - cos * halfRay, y - sin * halfRay);
-  context.lineTo(x + cos * halfRay, y + sin * halfRay);
-  context.moveTo(x + sin * halfRay, y - cos * halfRay);
-  context.lineTo(x - sin * halfRay, y + cos * halfRay);
-  context.stroke();
+  context.arc(x, y, Math.max(1.2, star.size * (1.35 + twinkle * 0.5)), 0, TAU);
+  context.fill();
 
   context.fillStyle = star.color;
   context.globalAlpha = alpha;
@@ -297,6 +315,9 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   let nextMeteorAt = 2.4 + Math.random() * 0.5;
   let nextBurstAt = 6 + Math.random() * 4;
   let lastFrameAt = 0;
+  let lastSceneFrameAt = 0;
+  let lastDrawSceneTime = 0;
+  let sceneTime = 0;
   let animationFrame = 0;
   let running = false;
   let resizeFrame = 0;
@@ -378,9 +399,8 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
     };
   };
 
-  const draw = (timeMs) => {
+  const draw = (timeMs, time = sceneTime) => {
     const drawStartedAt = performance.now();
-    const time = timeMs / 1000;
     const lightTheme = hub.dataset.theme === 'light';
     if (cadence.lastDrawAt) {
       const interval = timeMs - cadence.lastDrawAt;
@@ -392,8 +412,11 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
       }
     }
     cadence.lastDrawAt = timeMs;
-    pointer.x += (pointer.targetX - pointer.x) * 0.075;
-    pointer.y += (pointer.targetY - pointer.y) * 0.075;
+    const drawDelta = clamp(time - lastDrawSceneTime, 0, MAX_SCENE_DELTA_SECONDS * 3);
+    const pointerBlend = 1 - Math.exp(-8 * drawDelta);
+    lastDrawSceneTime = time;
+    pointer.x += (pointer.targetX - pointer.x) * pointerBlend;
+    pointer.y += (pointer.targetY - pointer.y) * pointerBlend;
 
     context.clearRect(0, 0, layout.width, layout.height);
     for (const stream of scene.streams) drawStream(context, stream, layout.width, layout.height, time, pointer, lightTheme);
@@ -443,6 +466,15 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   const tick = (now) => {
     if (!running) return;
     animationFrame = requestAnimationFrame(tick);
+    if (lastSceneFrameAt) {
+      const frameDelta = clamp(
+        (now - lastSceneFrameAt) / 1000,
+        0,
+        MAX_SCENE_DELTA_SECONDS,
+      );
+      sceneTime += frameDelta;
+    }
+    lastSceneFrameAt = now;
     if (cadence.lastRafAt) {
       const interval = now - cadence.lastRafAt;
       if (interval > 2 && interval < 40 && cadence.rafIntervals.length < 24) {
@@ -460,13 +492,15 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
     if (!targetFrameMs && cadence.rafFrames % cadence.renderStride !== 0) return;
     if (targetFrameMs && now - lastFrameAt < targetFrameMs - 0.75) return;
     lastFrameAt = targetFrameMs ? now - modulo(now - lastFrameAt, targetFrameMs) : now;
-    draw(now);
+    draw(now, sceneTime);
   };
 
   const start = () => {
     if (running || reducedMotion) return;
     running = true;
     lastFrameAt = 0;
+    lastSceneFrameAt = 0;
+    lastDrawSceneTime = sceneTime;
     cadence.lastRafAt = 0;
     cadence.rafFrames = 0;
     cadence.rafIntervals = [];

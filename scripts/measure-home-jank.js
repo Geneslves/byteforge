@@ -192,6 +192,7 @@ try {
     source: `
       (() => {
         const scenario = ${JSON.stringify(scenario)};
+        if (scenario === 'light-theme') localStorage.setItem('byteforge:theme', 'light');
         if (scenario === 'block-idle') {
           window.requestIdleCallback = () => 0;
           window.cancelIdleCallback = () => {};
@@ -303,6 +304,7 @@ try {
       const boot = document.querySelector('.boot-sequence');
       const meteorCount = document.querySelectorAll('.meteor').length;
       const planet = document.querySelector('.planet[data-state="ready"]');
+      const planets = [...document.querySelectorAll('.planet')];
       const planetRect = planet?.getBoundingClientRect();
       const planetCenter = planetRect ? {
         x: planetRect.left + planetRect.width / 2,
@@ -317,6 +319,28 @@ try {
       const orbitAnimation = planet?.getAnimations().find((animation) =>
         animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
       );
+      const orbitPlayStates = planets.map((node) => ({
+        label: node.getAttribute('aria-label'),
+        state: node.getAnimations().find((animation) =>
+          animation.animationName === 'orbit-point' || animation.animationName === 'orbit-drift'
+        )?.playState || '',
+      }));
+      const planetCores = planets.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          radius: Number.parseFloat(getComputedStyle(node, '::before').width) / 2,
+        };
+      });
+      let minimumPlanetGap = Infinity;
+      for (let i = 0; i < planetCores.length; i += 1) {
+        for (let j = i + 1; j < planetCores.length; j += 1) {
+          const first = planetCores[i];
+          const second = planetCores[j];
+          minimumPlanetGap = Math.min(minimumPlanetGap, Math.hypot(first.x - second.x, first.y - second.y) - first.radius - second.radius);
+        }
+      }
       const activeAnimations = document.getAnimations().filter((animation) => animation.playState === 'running');
       const animationCounts = activeAnimations.reduce((counts, animation) => {
         const name = animation.animationName || 'unnamed';
@@ -325,6 +349,7 @@ try {
       }, {});
       return {
         readyState: document.readyState,
+        theme: hub?.dataset.theme || '',
         hubClass: hub?.className || '',
         bootDisplay: boot ? getComputedStyle(boot).display : '',
         bootVisibility: boot ? getComputedStyle(boot).visibility : '',
@@ -332,11 +357,14 @@ try {
         activeAnimationCount: activeAnimations.length,
         animationCounts,
         ambientCanvas: window.__byteforgeAmbientStats || null,
+        minimumPlanetGap: Number(minimumPlanetGap.toFixed(1)),
+        orbitPlayStates,
         planetProbe: planet ? {
           label: planet.getAttribute('aria-label'),
           cssWidth: getComputedStyle(planet).width,
           hovered: planet.matches(':hover'),
           orbitPlayState: orbitAnimation?.playState || '',
+          glow: getComputedStyle(planet, '::before').boxShadow,
           hitSamples,
           ...window.__byteforgeHoverProbe,
         } : null,
@@ -376,6 +404,7 @@ try {
     targetUrl,
     scenario,
     readyState: value.readyState,
+    theme: value.theme,
     hubClass: value.hubClass,
     bootDisplay: value.bootDisplay,
     bootVisibility: value.bootVisibility,
@@ -383,6 +412,8 @@ try {
     activeAnimationCount: value.activeAnimationCount,
     animationCounts: value.animationCounts,
     ambientCanvas: value.ambientCanvas,
+    minimumPlanetGap: value.minimumPlanetGap,
+    orbitPlayStates: value.orbitPlayStates,
     performanceMetrics,
     planetProbe: value.planetProbe,
     windows,

@@ -147,7 +147,7 @@ body {
       0 0 8px var(--c),
       var(--glow-sm) color-mix(in srgb, var(--c), transparent 35%),
       0 0 2px 1px rgba(255, 255, 255, .6);
-    animation: star-twinkle var(--t) steps(1,end) infinite;
+    animation: star-twinkle var(--t) ease-in-out infinite;
     animation-delay: var(--d);
     will-change: opacity, transform;
   }
@@ -166,21 +166,20 @@ body {
     height: 1px;
     transform: translate(-50%, -50%);
     background: linear-gradient(90deg, transparent, var(--c), transparent);
-    opacity: .62;
+    opacity: .28;
     filter: none;
   }
 
   .star-glint::after {
     transform: translate(-50%, -50%) rotate(90deg);
-    opacity: .52;
+    width: calc(var(--ray-w, 18px) * .36);
+    opacity: .18;
   }
 
   @keyframes star-twinkle {
-    0%, 48%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.2) rotate(var(--r)); }
-    52% { opacity: var(--o); transform: translate(-50%, -50%) scale(2.1) rotate(var(--r)); }
-    56% { opacity: .16; transform: translate(-50%, -50%) scale(.65) rotate(var(--r)); }
-    61% { opacity: .42; transform: translate(-50%, -50%) scale(1.35) rotate(var(--r)); }
-    66% { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(var(--r)); }
+    0%, 100% { opacity: calc(var(--o) * .28); transform: translate(-50%, -50%) scale(.72) rotate(var(--r)); }
+    45% { opacity: calc(var(--o) * .58); transform: translate(calc(-50% + 3px), calc(-50% - 2px)) scale(.92) rotate(var(--r)); }
+    72% { opacity: var(--o); transform: translate(calc(-50% + 5px), calc(-50% + 2px)) scale(1.12) rotate(var(--r)); }
   }
 
   /* ===== Data Streams ===== */
@@ -529,15 +528,15 @@ body {
     touch-action: manipulation;
     user-select: none;
     transform: rotate(var(--a)) translateX(var(--r));
-    animation: orbit-point var(--speed) linear infinite;
-    animation-delay: var(--phase, 0s);
+    animation: orbit-point 48s linear infinite;
+    animation-delay: 0s;
     will-change: transform;
     transition: opacity 0.16s ease;
   }
 
-  .planet:hover,
-  .planet:focus-visible,
-  .planet.is-locked {
+  .orbit-layer:has(.planet:hover) .planet,
+  .orbit-layer:has(.planet:focus-visible) .planet,
+  .orbit-layer:has(.planet.is-locked) .planet {
     animation-play-state: paused;
   }
 
@@ -614,7 +613,7 @@ body {
 
   .planet[data-kind="future"] {
     animation-name: orbit-drift;
-    animation-duration: calc(var(--speed) * 3);
+    animation-duration: 48s;
     opacity: .38;
     cursor: not-allowed;
   }
@@ -644,13 +643,13 @@ body {
       transform: rotate(var(--a)) translateX(var(--r)) rotate(0deg);
     }
     25% {
-      transform: rotate(calc(var(--a) + 90deg)) translateX(calc(var(--r) * 1.32)) rotate(-90deg);
+      transform: rotate(calc(var(--a) + 90deg)) translateX(var(--r)) rotate(-90deg);
     }
     50% {
-      transform: rotate(calc(var(--a) + 180deg)) translateX(calc(var(--r) * 0.74)) rotate(-180deg);
+      transform: rotate(calc(var(--a) + 180deg)) translateX(var(--r)) rotate(-180deg);
     }
     75% {
-      transform: rotate(calc(var(--a) + 270deg)) translateX(calc(var(--r) * 1.26)) rotate(-270deg);
+      transform: rotate(calc(var(--a) + 270deg)) translateX(var(--r)) rotate(-270deg);
     }
     100% {
       transform: rotate(calc(var(--a) + 360deg)) translateX(var(--r)) rotate(-360deg);
