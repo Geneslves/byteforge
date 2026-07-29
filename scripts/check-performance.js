@@ -113,8 +113,18 @@ expectIncludes(
 );
 expectIncludes(
   ambientCanvasModule,
-  'cadence.renderStride',
-  'ambient canvas should use refresh-synchronized frame strides'
+  'renderStride: 1',
+  'ambient canvas should render every native frame by default'
+);
+expectIncludes(
+  ambientCanvasModule,
+  'Math.round(cadence.refreshFps / 60)',
+  'constrained ambient rendering should target approximately 60 fps'
+);
+expectNotIncludes(
+  ambientCanvasModule,
+  'cadence.refreshFps / (constrained ? 30 : 75)',
+  'ambient canvas should not use uneven legacy 30/75 fps frame skipping'
 );
 expectIncludes(
   ambientCanvasModule,
@@ -128,7 +138,7 @@ expectIncludes(
 );
 expectIncludes(
   ambientCanvasModule,
-  'STAR_BASE_PULSE = 0.24',
+  'STAR_BASE_PULSE = 0.36',
   'ambient stars should retain a visible baseline between twinkles'
 );
 expectIncludes(
@@ -138,8 +148,8 @@ expectIncludes(
 );
 expectIncludes(
   ambientCanvasModule,
-  'hasRays: index % 5 === 0',
-  'only a sparse subset of ambient stars should render cross rays'
+  'hasRays: index % 4 === 0',
+  'a sparse subset of ambient stars should render subtle cross rays'
 );
 expectIncludes(
   ambientCanvasModule,
@@ -235,13 +245,23 @@ expectIncludes(
 );
 expectIncludes(
   styleSheet,
-  'animation: orbit-point 48s linear infinite;',
-  'planet orbits should share one angular velocity to preserve separation'
+  'animation: orbit-point calc(var(--speed) * .8) linear infinite;',
+  'planet orbits should use faster independent angular velocities'
 );
 expectIncludes(
   styleSheet,
-  'animation-duration: 48s;',
-  'future planets should share the same angular velocity as ready planets'
+  'animation-delay: var(--phase, 0s);',
+  'planet orbits should retain independent starting phases'
+);
+expectIncludes(
+  styleSheet,
+  '--r: var(--mobile-r) !important;',
+  'mobile planets should keep their distinct orbit radii'
+);
+expectNotIncludes(
+  styleSheet,
+  'min(var(--mobile-r), 220px)',
+  'mobile planet orbits should not collapse onto a shared outer radius'
 );
 expectNotIncludes(
   styleSheet,

@@ -528,8 +528,8 @@ body {
     touch-action: manipulation;
     user-select: none;
     transform: rotate(var(--a)) translateX(var(--r));
-    animation: orbit-point 48s linear infinite;
-    animation-delay: 0s;
+    animation: orbit-point calc(var(--speed) * .8) linear infinite;
+    animation-delay: var(--phase, 0s);
     will-change: transform;
     transition: opacity 0.16s ease;
   }
@@ -613,7 +613,7 @@ body {
 
   .planet[data-kind="future"] {
     animation-name: orbit-drift;
-    animation-duration: 48s;
+    animation-duration: calc(var(--speed) * .8);
     opacity: .38;
     cursor: not-allowed;
   }
@@ -1993,7 +1993,7 @@ body {
     .hub-v2 { min-height: 820px; }
     .left-panel-container { left: 22px; top: 24px; bottom: 98px; width: calc(100% - 44px); }
     .stage { width: 100vw; height: 560px; top: 55%; }
-    .planet { --r: min(var(--mobile-r), 220px) !important; }
+    .planet { --r: var(--mobile-r) !important; }
     .choreo-strip { display: none; }
     .cli-nav { left: 22px; right: 22px; bottom: 28px; gap: 12px; justify-content: space-between; }
     .nav-item { font-size: 12px; }

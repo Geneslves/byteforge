@@ -24,7 +24,8 @@ const createScene = (hub) => ({
     driftRadiusY: 3 + (index % 5) * 1.35,
     driftDuration: 24 + (index % 9) * 2.9,
     driftPhase: modulo(index * 0.61803398875, 1) * TAU,
-    hasRays: index % 5 === 0,
+    shimmerPhase: modulo(index * 0.38196601125, 1),
+    hasRays: index % 4 === 0,
   })),
   streams: [...hub.querySelectorAll('.stream-line')].map((node, index) => ({
     x: customNumber(node, '--x') / 100,
@@ -58,40 +59,38 @@ const createScene = (hub) => ({
   })),
 });
 
-const STAR_BASE_PULSE = 0.24;
+const STAR_BASE_PULSE = 0.36;
 const MAX_SCENE_DELTA_SECONDS = 0.05;
 const PARTICLE_CYCLE_DURATION = 8.6;
 const PARTICLE_ACTIVE_WINDOW = 0.105;
 
-const starPulse = (phase) => {
-  if (phase < 0.34 || phase > 0.76) return STAR_BASE_PULSE;
-  if (phase < 0.44) return STAR_BASE_PULSE + ((phase - 0.34) / 0.1) * (1 - STAR_BASE_PULSE);
-  if (phase < 0.52) return 1 - ((phase - 0.44) / 0.08) * 0.58;
-  if (phase < 0.62) return 0.42 + ((phase - 0.52) / 0.1) * 0.3;
-  return 0.72 - ((phase - 0.62) / 0.14) * (0.72 - STAR_BASE_PULSE);
+const starPulse = (phase, shimmerPhase) => {
+  const breathe = 0.5 - Math.cos(phase * TAU) * 0.5;
+  const shimmer = Math.max(0, Math.sin((phase * 2 + shimmerPhase) * TAU)) ** 6;
+  return clamp(STAR_BASE_PULSE + breathe * 0.42 + shimmer * 0.3, STAR_BASE_PULSE, 1);
 };
 
 const drawStar = (context, star, width, height, time, pointer, lightTheme) => {
   const twinkleDuration = star.duration * (lightTheme ? 1 : 0.72);
   const phase = modulo(time + star.delay, twinkleDuration) / twinkleDuration;
-  const pulse = starPulse(phase);
+  const pulse = starPulse(phase, star.shimmerPhase);
   const alpha = star.opacity * pulse * (lightTheme ? 0.34 : 1);
   const twinkle = clamp((pulse - STAR_BASE_PULSE) / (1 - STAR_BASE_PULSE), 0, 1);
 
   const driftPhase = time / star.driftDuration * TAU + star.driftPhase;
   const x = star.x * width + Math.sin(driftPhase) * star.driftRadiusX + pointer.x * star.depth * 10;
   const y = star.y * height + Math.cos(driftPhase) * star.driftRadiusY + pointer.y * star.depth * 7;
-  const rayStrength = (twinkle - 0.58) / 0.42;
-  const ray = Math.min(star.ray, 15) * (0.62 + rayStrength * 0.38);
+  const rayStrength = clamp((twinkle - 0.42) / 0.58, 0, 1);
+  const ray = Math.min(star.ray, 14) * (0.68 + rayStrength * 0.32);
   const cos = Math.cos(star.rotation);
   const sin = Math.sin(star.rotation);
   const halfRay = ray / 2;
-  const crossRay = halfRay * 0.34;
+  const crossRay = halfRay * 0.24;
 
-  if (star.hasRays && twinkle >= 0.58) {
+  if (star.hasRays && twinkle >= 0.42) {
     context.strokeStyle = star.color;
     context.lineWidth = 0.7;
-    context.globalAlpha = alpha * rayStrength * (lightTheme ? 0.16 : 0.34);
+    context.globalAlpha = alpha * rayStrength * (lightTheme ? 0.12 : 0.3);
     context.beginPath();
     context.moveTo(x - cos * halfRay, y - sin * halfRay);
     context.lineTo(x + cos * halfRay, y + sin * halfRay);
@@ -101,7 +100,7 @@ const drawStar = (context, star, width, height, time, pointer, lightTheme) => {
   }
 
   context.fillStyle = star.color;
-  context.globalAlpha = alpha * (lightTheme ? 0.08 : 0.18);
+  context.globalAlpha = alpha * (lightTheme ? 0.08 : 0.3);
   context.beginPath();
   context.arc(x, y, Math.max(1.2, star.size * (1.35 + twinkle * 0.5)), 0, TAU);
   context.fill();
@@ -309,7 +308,7 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
   const layout = { left: 0, top: 0, width: 1, height: 1, pixelRatio: 1, stage: { x: 0, y: 0, width: 1, height: 1 } };
   const stats = { frames: 0, drawTime: 0, maxDrawTime: 0, measuredAt: performance.now(), measuredFrames: 0, fps: 0 };
   const meteors = [];
-  const cadence = { lastRafAt: 0, rafIntervals: [], rafFrames: 0, refreshFps: 60, renderStride: constrained ? 2 : 1, lastDrawAt: 0, intervalTotal: 0, intervalSquared: 0, intervalSamples: 0, maxInterval: 0 };
+  const cadence = { lastRafAt: 0, rafIntervals: [], rafFrames: 0, refreshFps: 60, renderStride: 1, lastDrawAt: 0, intervalTotal: 0, intervalSquared: 0, intervalSamples: 0, maxInterval: 0 };
   let meteorEvents = 0;
   let targetFrameMs = 0;
   let nextMeteorAt = 2.4 + Math.random() * 0.5;
@@ -483,7 +482,9 @@ export const initAmbientCanvas = (hub, { constrained = false } = {}) => {
           const ordered = [...cadence.rafIntervals].sort((a, b) => a - b);
           const median = ordered[Math.floor(ordered.length / 2)];
           cadence.refreshFps = clamp(1000 / median, 30, 360);
-          cadence.renderStride = Math.max(1, Math.round(cadence.refreshFps / (constrained ? 30 : 75)));
+          cadence.renderStride = constrained
+            ? Math.max(1, Math.round(cadence.refreshFps / 60))
+            : 1;
         }
       }
     }
